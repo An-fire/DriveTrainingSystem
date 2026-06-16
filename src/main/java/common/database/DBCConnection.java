@@ -29,7 +29,7 @@ public class DBCConnection {
             return DriverManager.getConnection(URL, USERNAME, PASSWORD);
         } catch (SQLException e) {
             e.printStackTrace();
-            return null;
+            throw new RuntimeException("数据库连接失败: " + e.getMessage(), e);
         }
     }
 

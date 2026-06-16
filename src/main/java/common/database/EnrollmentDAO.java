@@ -136,4 +136,54 @@ public class EnrollmentDAO {
         }
         return list;
     }
+
+    public List<Enrollment> findAll() {
+        String sql = "SELECT * FROM enrollment ORDER BY applyTime DESC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Enrollment> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Enrollment enrollment = new Enrollment();
+                enrollment.setId(rs.getString("id"));
+                enrollment.setStudentId(rs.getString("studentId"));
+                enrollment.setCoachId(rs.getString("coachId"));
+                enrollment.setSubjectType(rs.getString("subjectType"));
+                enrollment.setStatus(rs.getString("status"));
+                enrollment.setApplyTime(rs.getTimestamp("applyTime"));
+                enrollment.setAuditTime(rs.getTimestamp("auditTime"));
+                list.add(enrollment);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
+    public int countByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM enrollment WHERE status = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, status);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return 0;
+    }
 }

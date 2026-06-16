@@ -87,7 +87,7 @@ button {
   z-index: 1000;
   height: var(--nav-h);
   backdrop-filter: var(--blur);
-  background: linear-gradient(to bottom, rgba(5,6,10,0.9), rgba(5,6,10,0.6));
+  background: linear-gradient(to bottom, rgba(5,6,10,0.95), rgba(5,6,10,0.85));
   border-bottom: 1px solid var(--border);
 }
 .section-shell {
@@ -103,6 +103,9 @@ button {
   gap: 24px;
 }
 .brand {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -142,8 +145,10 @@ button {
 .site-nav {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 32px;
   font-size: 14px;
+  width: 100%;
 }
 .site-nav a {
   color: var(--muted);
@@ -153,6 +158,16 @@ button {
 }
 .site-nav a:hover {
   color: var(--text);
+}
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 .nav-login {
   margin-left: 0;
@@ -244,6 +259,12 @@ main {
 }
 
 @media (max-width: 860px) {
+  .brand {
+    position: static;
+    transform: none;
+    width: 100%;
+    justify-content: center;
+  }
   .site-nav {
     position: fixed;
     top: var(--nav-h);
@@ -257,11 +278,23 @@ main {
     align-items: flex-start;
     box-shadow: var(--shadow-soft);
     display: none;
+    gap: 12px;
   }
   .site-nav.open {
     display: flex;
   }
+  .site-nav .nav-left,
+  .site-nav .nav-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
   .menu-toggle {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
     display: block;
   }
   .nav-login {

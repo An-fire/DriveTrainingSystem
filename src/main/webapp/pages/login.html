@@ -16,40 +16,42 @@
         .auth-card {
             position: relative;
             width: 100%;
-            max-width: 440px;
-            background: rgba(15,23,42,0.7);
+            max-width: 420px;
+            background: rgba(15,23,42,0.75);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px;
-            padding: 26px 24px 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-            backdrop-filter: blur(18px);
+            padding: 32px 28px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
         }
         .auth-top {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 24px;
         }
         .auth-top .brand-mini {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
         .brand-mini .dot {
-            width: 30px; height: 30px;
-            border-radius: 10px;
+            width: 34px; height: 34px;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--primary), var(--primary-2));
             display: grid; place-items: center;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.3);
         }
         .brand-mini .dot span {
-            width: 14px; height: 14px;
+            width: 16px; height: 16px;
             border-radius: 6px;
-            border: 2px solid rgba(255,255,255,0.85);
+            border: 2px solid rgba(255,255,255,0.9);
             transform: rotate(15deg);
         }
         .auth-top h1 {
-            font-size: 22px;
-            margin: 0 0 6px;
+            font-size: 24px;
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
         }
         .auth-top p {
             margin: 0;
@@ -57,17 +59,18 @@
             color: var(--muted);
         }
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
         .form-group label {
             display: block;
             font-size: 13px;
             color: var(--muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
         .form-group input {
             width: 100%;
-            padding: 12px 14px;
+            padding: 14px 16px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.12);
             background: rgba(5,6,10,0.7);
@@ -80,47 +83,18 @@
             border-color: rgba(59,130,246,0.6);
             box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
         }
-        .role-pill-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-        .role-pill {
-            flex: 1;
-            display: flex; align-items: center; justify-content: center;
-            gap: 8px;
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.04);
-            cursor: pointer;
-            user-select: none;
-            transition: border-color .2s, background .2s, transform .1s;
-        }
-        .role-pill input {
-            display: none;
-        }
-        .role-pill.active {
-            border-color: rgba(59,130,246,0.6);
-            background: rgba(59,130,246,0.12);
-        }
-        .role-pill small {
-            display: block;
-            font-size: 11px;
-            color: var(--muted);
-        }
-        .role-pill span {
-            font-weight: 700;
-            font-size: 14px;
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.3);
         }
         .btn-row {
-            margin-top: 10px;
+            margin-top: 12px;
         }
         .sub-note {
             text-align: center;
-            margin-top: 16px;
+            margin-top: 20px;
             font-size: 13px;
             color: var(--muted);
+            line-height: 1.8;
         }
         .sub-note a {
             color: var(--primary);
@@ -132,7 +106,8 @@
             gap: 6px;
             color: var(--muted);
             font-size: 13px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            transition: color .2s;
         }
         .back-link:hover { color: var(--text); }
     </style>
@@ -151,21 +126,10 @@
                 <strong>SuperDriver</strong>
             </div>
             <h1>欢迎回来</h1>
-            <p>登录您的账号继续使用</p>
+            <p>登录账号继续使用平台服务</p>
         </div>
 
         <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
-            <div class="role-pill-row">
-                <label class="role-pill active">
-                    <input type="radio" name="loginType" value="student" checked>
-                    <div><span>学员</span><small>学员账号</small></div>
-                </label>
-                <label class="role-pill">
-                    <input type="radio" name="loginType" value="staff">
-                    <div><span>员工</span><small>管理员/教练</small></div>
-                </label>
-            </div>
-
             <div class="form-group">
                 <label>手机号</label>
                 <input type="tel" id="phone" placeholder="请输入手机号" autocomplete="tel">
@@ -181,27 +145,19 @@
         </form>
 
         <div class="sub-note">
-            <span>还没有账号？</span>
-            <a href="register.html">立即注册</a>
+            <span>还没有账号？</span><br>
+            <a href="register-student.html">学员注册</a>
+            <span style="margin:0 8px;">·</span>
+            <a href="register-staff.html">员工注册</a>
         </div>
     </div>
 </main>
 
 <script src="../js/home.js"></script>
 <script>
-    document.querySelectorAll('#loginForm .role-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-            document.querySelectorAll('#loginForm .role-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            const input = pill.querySelector('input');
-            if (input) input.checked = true;
-        });
-    });
-
     function handleLogin() {
         const phone = document.getElementById('phone').value.trim();
         const pwd = document.getElementById('password').value;
-        const type = document.querySelector('#loginForm input[name="loginType"]:checked').value;
 
         if (!phone || !pwd) {
             alert('请填写完整信息');
@@ -211,7 +167,7 @@
         fetch('../login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pwd) + '&type=' + type
+            body: 'phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pwd)
         }).then(res => res.json()).then(data => {
             if (data.code === 1) {
                 alert(data.msg);

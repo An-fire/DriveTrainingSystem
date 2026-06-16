@@ -26,7 +26,6 @@ public class LoginServlet extends HttpServlet {
 
         String phone = request.getParameter("phone");
         String pwd = request.getParameter("password");
-        String loginType = request.getParameter("type");
 
         if (phone == null || "".equals(phone) || pwd == null || "".equals(pwd)) {
             result.put("code", 0);
@@ -39,35 +38,34 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         try {
-            if ("student".equals(loginType)) {
-                User user = userDAO.login(phone, md5Pwd);
-                if (user != null) {
-                    session.setAttribute("user", user);
-                    session.setAttribute("role", user.getRole());
-                    result.put("code", 1);
-                    result.put("msg", "登录成功");
-                    result.put("url", "pages/student.html");
-                } else {
-                    result.put("code", 0);
-                    result.put("msg", "学员账号或密码错误");
-                }
-            } else {
-                Staff staff = staffDAO.login(phone, md5Pwd);
-                if (staff != null) {
-                    session.setAttribute("staff", staff);
-                    session.setAttribute("role", staff.getRole());
-                    result.put("code", 1);
-                    result.put("msg", "登录成功");
-                    if ("admin".equals(staff.getRole())) {
-                        result.put("url", "pages/admin.html");
-                    } else {
-                        result.put("url", "pages/coach.html");
-                    }
-                } else {
-                    result.put("code", 0);
-                    result.put("msg", "员工账号或密码错误");
-                }
+            User user = userDAO.login(phone, md5Pwd);
+            if (user != null) {
+                session.setAttribute("user", user);
+                session.setAttribute("role", user.getRole());
+                result.put("code", 1);
+                result.put("msg", "登录成功");
+                result.put("url", "pages/student.html");
+                response.getWriter().write(result.toString());
+                return;
             }
+
+            Staff staff = staffDAO.login(phone, md5Pwd);
+            if (staff != null) {
+                session.setAttribute("staff", staff);
+                session.setAttribute("role", staff.getRole());
+                result.put("code", 1);
+                result.put("msg", "登录成功");
+                if ("admin".equals(staff.getRole())) {
+                    result.put("url", "pages/admin.html");
+                } else {
+                    result.put("url", "pages/coach.html");
+                }
+                response.getWriter().write(result.toString());
+                return;
+            }
+
+            result.put("code", 0);
+            result.put("msg", "账号或密码错误");
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 0);

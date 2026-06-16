@@ -163,4 +163,84 @@ public class StaffDAO {
             DBCConnection.close(conn, pstmt);
         }
     }
+
+    public int countCoaches() {
+        String sql = "SELECT COUNT(*) FROM staff WHERE role = 'coach'";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return 0;
+    }
+
+    public Staff findById(String id) {
+        String sql = "SELECT * FROM staff WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, id);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Staff staff = new Staff();
+                staff.setId(rs.getString("id"));
+                staff.setName(rs.getString("name"));
+                staff.setIdCard(rs.getString("idCard"));
+                staff.setPhone(rs.getString("phone"));
+                staff.setPassword(rs.getString("password"));
+                staff.setRole(rs.getString("role"));
+                staff.setSubject(rs.getString("subject"));
+                staff.setCreateTime(rs.getTimestamp("createTime"));
+                return staff;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return null;
+    }
+
+    public List<Staff> findAll() {
+        String sql = "SELECT * FROM staff ORDER BY createTime DESC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Staff> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Staff staff = new Staff();
+                staff.setId(rs.getString("id"));
+                staff.setName(rs.getString("name"));
+                staff.setIdCard(rs.getString("idCard"));
+                staff.setPhone(rs.getString("phone"));
+                staff.setPassword(rs.getString("password"));
+                staff.setRole(rs.getString("role"));
+                staff.setSubject(rs.getString("subject"));
+                staff.setCreateTime(rs.getTimestamp("createTime"));
+                list.add(staff);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
 }

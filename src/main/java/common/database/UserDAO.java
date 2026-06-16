@@ -5,6 +5,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDAO {
     public User login(String phone, String pwd) {
@@ -121,5 +123,55 @@ public class UserDAO {
             DBCConnection.close(conn, pstmt, rs);
         }
         return null;
+    }
+
+    public List<User> findAll() {
+        String sql = "SELECT * FROM user ORDER BY createTime DESC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<User> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                User user = new User();
+                user.setId(rs.getString("id"));
+                user.setName(rs.getString("name"));
+                user.setIdCard(rs.getString("idCard"));
+                user.setPhone(rs.getString("phone"));
+                user.setPassword(rs.getString("password"));
+                user.setRole(rs.getString("role"));
+                user.setSubject(rs.getString("subject"));
+                user.setCreateTime(rs.getTimestamp("createTime"));
+                list.add(user);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM user";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return 0;
     }
 }

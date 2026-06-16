@@ -1,10 +1,691 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台 - SuperDriver</title>
+    <link rel="stylesheet" href="../css/auth-common.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 240px;
+            background: #1e293b;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+        }
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .sidebar-header h2 {
+            font-size: 18px;
+            color: #60a5fa;
+        }
+        .sidebar-header p {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .sidebar-nav {
+            flex: 1;
+            padding: 12px 0;
+        }
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all .2s;
+            cursor: pointer;
+        }
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(96,165,250,0.1);
+            color: #60a5fa;
+        }
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .sidebar-footer button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: transparent;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all .2s;
+        }
+        .sidebar-footer button:hover {
+            background: rgba(239,68,68,0.1);
+            color: #f87171;
+            border-color: rgba(239,68,68,0.2);
+        }
+        .main {
+            flex: 1;
+            margin-left: 240px;
+            padding: 24px 32px;
+        }
+        .main-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .main-header h1 {
+            font-size: 22px;
+            font-weight: 600;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .stat-card .stat-label {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+        }
+        .stat-card .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #60a5fa;
+        }
+        .section {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success {
+            background: #22c55e;
+            color: white;
+        }
+        .btn-success:hover { background: #16a34a; }
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        th {
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 12px;
+        }
+        tr:hover td {
+            background: rgba(255,255,255,0.02);
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+        }
+        .badge-pending { background: rgba(234,179,8,0.15); color: #eab308; }
+        .badge-approved { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .badge-rejected { background: rgba(239,68,68,0.15); color: #ef4444; }
+        .badge-admin { background: rgba(139,92,246,0.15); color: #a78bfa; }
+        .badge-coach { background: rgba(59,130,246,0.15); color: #60a5fa; }
+        .hidden { display: none !important; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal {
+            background: #1e293b;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            padding: 24px;
+            width: 420px;
+            max-width: 90vw;
+        }
+        .modal h3 {
+            margin-bottom: 16px;
+        }
+        .modal .form-group {
+            margin-bottom: 12px;
+        }
+        .modal .form-group label {
+            display: block;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .modal .form-group input, .modal .form-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 13px;
+        }
+        .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+        .empty-tip {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h2>SuperDriver</h2>
+            <p>管理员控制台</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a class="active" onclick="showTab('dashboard')">&#128200; 数据概览</a>
+            <a onclick="showTab('enrollments')">&#128196; 报名审核</a>
+            <a onclick="showTab('bookings')">&#128663; 练车记录</a>
+            <a onclick="showTab('staff')">&#128100; 员工管理</a>
+            <a onclick="showTab('students')">&#127891; 学员管理</a>
+        </nav>
+        <div class="sidebar-footer">
+            <button onclick="logout()">退出登录</button>
+        </div>
+    </aside>
 
+    <main class="main">
+        <div class="main-header">
+            <h1 id="pageTitle">数据概览</h1>
+            <span id="adminName" style="color:#94a3b8;font-size:13px;"></span>
+        </div>
+
+        <!-- 数据概览 -->
+        <div id="tab-dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-label">学员总数</div><div class="stat-value" id="statStudents">-</div></div>
+                <div class="stat-card"><div class="stat-label">教练总数</div><div class="stat-value" id="statCoaches">-</div></div>
+                <div class="stat-card"><div class="stat-label">待审核报名</div><div class="stat-value" id="statPendingEnroll">-</div></div>
+                <div class="stat-card"><div class="stat-label">已审核报名</div><div class="stat-value" id="statApprovedEnroll">-</div></div>
+                <div class="stat-card"><div class="stat-label">练车预约总数</div><div class="stat-value" id="statBookings">-</div></div>
+                <div class="stat-card"><div class="stat-label">已同意预约</div><div class="stat-value" id="statApprovedBook">-</div></div>
+            </div>
+        </div>
+
+        <!-- 报名审核 -->
+        <div id="tab-enrollments" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3>待审核报名</h3>
+                    <button class="btn btn-primary btn-sm" onclick="loadPendingEnrollments()">刷新</button>
+                </div>
+                <div id="pendingList">
+                    <div class="empty-tip">加载中...</div>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-header">
+                    <h3>所有报名记录</h3>
+                    <button class="btn btn-primary btn-sm" onclick="loadAllEnrollments()">刷新</button>
+                </div>
+                <div id="allEnrollmentList">
+                    <div class="empty-tip">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 练车记录 -->
+        <div id="tab-bookings" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3>所有练车预约</h3>
+                    <button class="btn btn-primary btn-sm" onclick="loadAllBookings()">刷新</button>
+                </div>
+                <div id="bookingList">
+                    <div class="empty-tip">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 员工管理 -->
+        <div id="tab-staff" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3>员工列表</h3>
+                    <button class="btn btn-primary btn-sm" onclick="openAddStaffModal()">+ 新增员工</button>
+                </div>
+                <div id="staffList">
+                    <div class="empty-tip">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 学员管理 -->
+        <div id="tab-students" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3>学员列表</h3>
+                    <button class="btn btn-primary btn-sm" onclick="loadStudents()">刷新</button>
+                </div>
+                <div id="studentList">
+                    <div class="empty-tip">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- 新增/编辑员工弹窗 -->
+<div class="modal-overlay" id="staffModal">
+    <div class="modal">
+        <h3 id="staffModalTitle">新增员工</h3>
+        <input type="hidden" id="editStaffId">
+        <div class="form-group">
+            <label>姓名</label>
+            <input type="text" id="modalStaffName" placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+            <label>身份证号</label>
+            <input type="text" id="modalStaffIdCard" placeholder="请输入身份证号">
+        </div>
+        <div class="form-group">
+            <label>手机号</label>
+            <input type="text" id="modalStaffPhone" placeholder="请输入手机号">
+        </div>
+        <div class="form-group">
+            <label>角色</label>
+            <select id="modalStaffRole" onchange="toggleSubjectField()">
+                <option value="coach">教练</option>
+                <option value="admin">管理员</option>
+            </select>
+        </div>
+        <div class="form-group" id="modalSubjectGroup">
+            <label>负责科目</label>
+            <select id="modalStaffSubject">
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+                <option value="C3">C3</option>
+            </select>
+        </div>
+        <div class="form-group" id="modalPasswordGroup">
+            <label>密码</label>
+            <input type="password" id="modalStaffPassword" placeholder="至少6位">
+        </div>
+        <div class="modal-actions">
+            <button class="btn" onclick="closeModal()" style="background:rgba(255,255,255,0.1);color:#e2e8f0;">取消</button>
+            <button class="btn btn-primary" onclick="saveStaff()">保存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== 页面切换 =====
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav a').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    event.target.classList.add('active');
+
+    const titles = {
+        dashboard: '数据概览',
+        enrollments: '报名审核',
+        bookings: '练车记录',
+        staff: '员工管理',
+        students: '学员管理'
+    };
+    document.getElementById('pageTitle').textContent = titles[tabId];
+
+    if (tabId === 'dashboard') loadStats();
+    if (tabId === 'enrollments') { loadPendingEnrollments(); loadAllEnrollments(); }
+    if (tabId === 'bookings') loadAllBookings();
+    if (tabId === 'staff') loadStaffList();
+    if (tabId === 'students') loadStudents();
+}
+
+// ===== 通用请求 =====
+function apiGet(url, callback) {
+    fetch(url).then(r => r.json()).then(d => callback(d)).catch(e => { console.error(e); alert('请求失败'); });
+}
+function apiPost(url, body, callback) {
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body
+    }).then(r => r.json()).then(d => callback(d)).catch(e => { console.error(e); alert('请求失败'); });
+}
+
+// ===== 退出登录 =====
+function logout() {
+    if (confirm('确定要退出登录吗？')) {
+        window.location.href = 'login.html';
+    }
+}
+
+// ===== 数据概览 =====
+function loadStats() {
+    apiGet('../admin/query?action=stats', function(data) {
+        if (data.code === 1) {
+            const s = data.data;
+            document.getElementById('statStudents').textContent = s.totalStudents;
+            document.getElementById('statCoaches').textContent = s.totalCoaches;
+            document.getElementById('statPendingEnroll').textContent = s.pendingEnrollments;
+            document.getElementById('statApprovedEnroll').textContent = s.approvedEnrollments;
+            document.getElementById('statBookings').textContent = s.totalBookings;
+            document.getElementById('statApprovedBook').textContent = s.approvedBookings;
+        }
+    });
+}
+
+// ===== 报名审核 =====
+function loadPendingEnrollments() {
+    apiGet('../admin/audit?action=pending', function(data) {
+        const container = document.getElementById('pendingList');
+        if (data.code !== 1 || !data.data || data.data.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
+            return;
+        }
+        let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>申请时间</th><th>操作</th></tr></thead><tbody>';
+        data.data.forEach(item => {
+            html += '<tr>'
+                + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
+                + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
+                + '<td>' + (item.subjectType || '-') + '</td>'
+                + '<td>' + (item.applyTime ? item.applyTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '<td>'
+                + '<button class="btn btn-success btn-sm" onclick="auditEnrollment(\'' + item.id + '\',\'approve\')">通过</button> '
+                + '<button class="btn btn-danger btn-sm" onclick="auditEnrollment(\'' + item.id + '\',\'reject\')">拒绝</button>'
+                + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
+}
+
+function loadAllEnrollments() {
+    apiGet('../admin/audit?action=all', function(data) {
+        const container = document.getElementById('allEnrollmentList');
+        if (data.code !== 1 || !data.data || data.data.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无报名记录</div>';
+            return;
+        }
+        let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>状态</th><th>申请时间</th><th>审核时间</th></tr></thead><tbody>';
+        data.data.forEach(item => {
+            const statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">待审核</span>' :
+                item.status === 'approved' ? '<span class="badge badge-approved">已通过</span>' :
+                '<span class="badge badge-rejected">已拒绝</span>';
+            html += '<tr>'
+                + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
+                + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
+                + '<td>' + (item.subjectType || '-') + '</td>'
+                + '<td>' + statusBadge + '</td>'
+                + '<td>' + (item.applyTime ? item.applyTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '<td>' + (item.auditTime ? item.auditTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
+}
+
+function auditEnrollment(id, action) {
+    const msg = action === 'approve' ? '确定要通过该报名申请吗？' : '确定要拒绝该报名申请吗？';
+    if (!confirm(msg)) return;
+    apiPost('../admin/audit', 'action=' + action + '&enrollmentId=' + encodeURIComponent(id), function(data) {
+        alert(data.msg);
+        if (data.code === 1) {
+            loadPendingEnrollments();
+            loadAllEnrollments();
+            loadStats();
+        }
+    });
+}
+
+// ===== 练车记录 =====
+function loadAllBookings() {
+    apiGet('../admin/query?action=bookings', function(data) {
+        const container = document.getElementById('bookingList');
+        if (data.code !== 1 || !data.data || data.data.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无练车预约记录</div>';
+            return;
+        }
+        let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>学员评分</th><th>教练评分</th><th>可考试</th></tr></thead><tbody>';
+        data.data.forEach(item => {
+            const statusBadge = item.status === 'approved' ? '<span class="badge badge-approved">同意</span>' :
+                '<span class="badge badge-rejected">拒绝</span>';
+            html += '<tr>'
+                + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
+                + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
+                + '<td>' + (item.subjectType || '-') + '</td>'
+                + '<td>' + (item.startTime ? item.startTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '<td>' + (item.endTime ? item.endTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '<td>' + statusBadge + '</td>'
+                + '<td>' + (item.studentScore || '-') + '</td>'
+                + '<td>' + (item.coachScore || '-') + '</td>'
+                + '<td>' + (item.canExam ? '是' : '否') + '</td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
+}
+
+// ===== 员工管理 =====
+function loadStaffList() {
+    apiGet('../admin/staff?action=list', function(data) {
+        const container = document.getElementById('staffList');
+        if (data.code !== 1 || !data.data || data.data.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无员工记录</div>';
+            return;
+        }
+        let html = '<table><thead><tr><th>姓名</th><th>手机号</th><th>角色</th><th>负责科目</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+        data.data.forEach(item => {
+            const roleBadge = item.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-coach">教练</span>';
+            html += '<tr>'
+                + '<td>' + item.name + '</td>'
+                + '<td>' + item.phone + '</td>'
+                + '<td>' + roleBadge + '</td>'
+                + '<td>' + (item.subject || '-') + '</td>'
+                + '<td>' + (item.createTime ? item.createTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '<td>'
+                + '<button class="btn btn-primary btn-sm" onclick="editStaff(\'' + item.id + '\')">编辑</button> '
+                + '<button class="btn btn-danger btn-sm" onclick="deleteStaff(\'' + item.id + '\')">删除</button>'
+                + '</td></tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
+}
+
+function openAddStaffModal() {
+    document.getElementById('staffModalTitle').textContent = '新增员工';
+    document.getElementById('editStaffId').value = '';
+    document.getElementById('modalStaffName').value = '';
+    document.getElementById('modalStaffIdCard').value = '';
+    document.getElementById('modalStaffPhone').value = '';
+    document.getElementById('modalStaffRole').value = 'coach';
+    document.getElementById('modalStaffSubject').value = 'C2';
+    document.getElementById('modalStaffPassword').value = '';
+    document.getElementById('modalPasswordGroup').style.display = 'block';
+    toggleSubjectField();
+    document.getElementById('staffModal').classList.add('show');
+}
+
+function editStaff(id) {
+    apiGet('../admin/staff?action=detail&id=' + encodeURIComponent(id), function(data) {
+        if (data.code !== 1) { alert('获取信息失败'); return; }
+        const item = data.data;
+        document.getElementById('staffModalTitle').textContent = '编辑员工';
+        document.getElementById('editStaffId').value = item.id;
+        document.getElementById('modalStaffName').value = item.name;
+        document.getElementById('modalStaffIdCard').value = item.idCard || '';
+        document.getElementById('modalStaffPhone').value = item.phone;
+        document.getElementById('modalStaffRole').value = item.role;
+        document.getElementById('modalStaffSubject').value = item.subject || 'C2';
+        document.getElementById('modalStaffPassword').value = '';
+        document.getElementById('modalPasswordGroup').style.display = 'none';
+        toggleSubjectField();
+        document.getElementById('staffModal').classList.add('show');
+    });
+}
+
+function toggleSubjectField() {
+    const role = document.getElementById('modalStaffRole').value;
+    document.getElementById('modalSubjectGroup').style.display = role === 'coach' ? 'block' : 'none';
+}
+
+function closeModal() {
+    document.getElementById('staffModal').classList.remove('show');
+}
+
+function saveStaff() {
+    const id = document.getElementById('editStaffId').value;
+    const name = document.getElementById('modalStaffName').value.trim();
+    const idCard = document.getElementById('modalStaffIdCard').value.trim();
+    const phone = document.getElementById('modalStaffPhone').value.trim();
+    const role = document.getElementById('modalStaffRole').value;
+    const subject = role === 'coach' ? document.getElementById('modalStaffSubject').value : '';
+    const password = document.getElementById('modalStaffPassword').value;
+
+    if (!name || !phone || !role) {
+        alert('请填写完整信息');
+        return;
+    }
+
+    let body = 'action=' + (id ? 'update' : 'add')
+        + '&name=' + encodeURIComponent(name)
+        + '&idCard=' + encodeURIComponent(idCard)
+        + '&phone=' + encodeURIComponent(phone)
+        + '&role=' + encodeURIComponent(role)
+        + '&subject=' + encodeURIComponent(subject);
+    if (id) {
+        body += '&id=' + encodeURIComponent(id);
+    } else {
+        if (!password || password.length < 6) {
+            alert('密码至少6位');
+            return;
+        }
+        body += '&password=' + encodeURIComponent(password);
+    }
+
+    apiPost('../admin/staff', body, function(data) {
+        alert(data.msg);
+        if (data.code === 1) {
+            closeModal();
+            loadStaffList();
+            loadStats();
+        }
+    });
+}
+
+function deleteStaff(id) {
+    if (!confirm('确定要删除该员工吗？')) return;
+    apiPost('../admin/staff', 'action=delete&id=' + encodeURIComponent(id), function(data) {
+        alert(data.msg);
+        if (data.code === 1) {
+            loadStaffList();
+            loadStats();
+        }
+    });
+}
+
+// ===== 学员管理 =====
+function loadStudents() {
+    apiGet('../admin/query?action=students', function(data) {
+        const container = document.getElementById('studentList');
+        if (data.code !== 1 || !data.data || data.data.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无学员记录</div>';
+            return;
+        }
+        let html = '<table><thead><tr><th>姓名</th><th>手机号</th><th>身份证号</th><th>报考科目</th><th>创建时间</th></tr></thead><tbody>';
+        data.data.forEach(item => {
+            html += '<tr>'
+                + '<td>' + item.name + '</td>'
+                + '<td>' + item.phone + '</td>'
+                + '<td>' + item.idCard + '</td>'
+                + '<td>' + (item.subject || '-') + '</td>'
+                + '<td>' + (item.createTime ? item.createTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                + '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
+}
+
+// ===== 页面加载 =====
+window.onload = function() {
+    loadStats();
+};
+</script>
 </body>
 </html>
