@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SuperDriver智慧驾培平台，提供学员注册、报名审核、教练选择、练车预约和双向评价服务。">
+    <title>SuperDriver 智慧驾培平台</title>
+    <link rel="stylesheet" href="../css/auth-common.css">
+    <link rel="stylesheet" href="../css/home.css">
+</head>
+<body>
+<canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+<div class="aurora aurora-one" aria-hidden="true"></div>
+<div class="aurora aurora-two" aria-hidden="true"></div>
+
+<header class="site-header" id="siteHeader">
+    <a class="brand" href="home.html" aria-label="SuperDriver首页">
+        <span class="brand-mark"><span></span></span>
+        <span class="brand-copy"><strong>SuperDriver</strong><small>智慧驾培平台</small></span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" type="button" aria-label="打开导航">☰</button>
+    <nav class="site-nav" id="siteNav">
+        <a href="#advantages">平台优势</a>
+        <a href="#process">学车流程</a>
+        <a href="#roles">角色服务</a>
+        <a class="nav-login" href="login.html">登录</a>
+        <a class="btn btn-primary nav-register" href="login.html#register">立即注册</a>
+    </nav>
+</header>
+
+<main>
+    <section class="hero section-shell">
+        <div class="hero-copy reveal">
+            <div class="eyebrow"><span class="pulse-dot"></span>一站式驾校练车信息管理</div>
+            <h1>智慧学车，<br><span>每一步都清晰可见</span></h1>
+            <p class="hero-description">从学员注册、报名审核到教练选择、练车预约和双向评价，一套系统贯通完整驾培流程。</p>
+            <div class="hero-actions">
+                <a class="btn btn-primary btn-large light-sweep" href="register.html">立即开始学车</a>
+                <a class="btn btn-ghost btn-large" href="#process">查看学车流程</a>
+            </div>
+            <div class="trust-row">
+                <span>✓ 预约冲突自动检测</span>
+                <span>✓ 练车记录随时查询</span>
+                <span>✓ 教练学员双向评价</span>
+            </div>
+        </div>
+
+        <div class="hero-visual reveal" aria-label="智慧练车动态面板">
+            <div class="orbit orbit-large"></div>
+            <div class="orbit orbit-small"></div>
+            <div class="dashboard-card">
+                <div class="dashboard-head">
+                    <div><small>今日驾培中心</small><strong>运行状态良好</strong></div>
+                    <span class="status-chip">实时</span>
+                </div>
+                <div class="road-panel">
+                    <div class="road-grid"></div>
+                    <div class="route-line"></div>
+                    <div class="smart-car">
+                        <div class="car-top">
+                            <div class="car-window"></div>
+                        </div>
+                        <div class="car-body">
+                            <div class="car-light left"></div>
+                            <div class="car-light right"></div>
+                            <div class="car-wheel back"></div>
+                            <div class="car-wheel front"></div>
+                        </div>
+                    </div>
+                    <div class="route-point point-a"></div>
+                    <div class="route-point point-b"></div>
+                    <div class="route-point point-c"></div>
+                </div>
+                <div class="dashboard-stats">
+                    <article><span>今日预约</span><strong data-count="28">0</strong><small>人次</small></article>
+                    <article><span>空闲时段</span><strong data-count="16">0</strong><small>个</small></article>
+                    <article><span>审核通过</span><strong data-count="96">0</strong><small>%</small></article>
+                </div>
+            </div>
+            <div class="float-card float-one"><span>科目二</span><strong>张教练</strong><small>09:00—10:00 可预约</small></div>
+            <div class="float-card float-two"><span>报名进度</span><strong>审核已通过</strong><small>可进入练车申请</small></div>
+        </div>
+    </section>
+
+    <section class="value-strip section-shell reveal" aria-label="平台数据">
+        <div><strong data-count="1280">0</strong><span>累计服务学员</span></div>
+        <div><strong data-count="36">0</strong><span>专业指导教练</span></div>
+        <div><strong data-count="5680">0</strong><span>累计练车预约</span></div>
+        <div><strong data-count="98">0</strong><span>平台满意度%</span></div>
+    </section>
+
+    <section class="content-section section-shell" id="advantages">
+        <div class="section-heading reveal">
+            <span>核心卖点</span>
+            <h2>让学车更省心，让管理更高效</h2>
+            <p>围绕中国驾培业务流程设计，信息明确、操作简单、状态可追踪。</p>
+        </div>
+        <div class="feature-grid">
+            <article class="feature-card reveal"><div class="feature-icon">报</div><h3>在线报名</h3><p>填写身份信息，选择C2或C3科目，注册状态实时反馈。</p><span>01</span></article>
+            <article class="feature-card reveal"><div class="feature-icon">约</div><h3>智能预约</h3><p>查看教练空闲时间，系统自动判断学员与教练时间冲突。</p><span>02</span></article>
+            <article class="feature-card reveal"><div class="feature-icon">查</div><h3>进度查询</h3><p>报名审核、预约结果、练车评分和考试资格清晰可查。</p><span>03</span></article>
+            <article class="feature-card reveal"><div class="feature-icon">评</div><h3>双向评价</h3><p>学员评价教学服务，教练记录学习表现，过程更加透明。</p><span>04</span></article>
+        </div>
+    </section>
+
+    <section class="content-section process-section" id="process">
+        <div class="section-shell">
+            <div class="section-heading reveal">
+                <span>学车流程</span>
+                <h2>从注册到申请考试，一条路线走到底</h2>
+            </div>
+            <div class="process-road reveal">
+                <div class="road-progress" id="roadProgress"></div>
+                <article><b>1</b><h3>身份注册</h3><p>录入姓名、身份证和手机号</p></article>
+                <article><b>2</b><h3>选择科目</h3><p>选择C2或C3学习方向</p></article>
+                <article><b>3</b><h3>选择教练</h3><p>根据科目选择指导教练</p></article>
+                <article><b>4</b><h3>报名审核</h3><p>管理员审核报名申请</p></article>
+                <article><b>5</b><h3>预约练车</h3><p>选择教练空闲时间提交</p></article>
+                <article><b>6</b><h3>评分记录</h3><p>练车后双方确认并评价</p></article>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section section-shell" id="roles">
+        <div class="section-heading reveal">
+            <span>角色服务</span>
+            <h2>学员、教练、管理员各司其职</h2>
+        </div>
+        <div class="role-grid">
+            <article class="role-card student-role reveal"><div class="role-label">学员端</div><h3>我的学车进度</h3><ul><li>在线注册与报名</li><li>自主选择教练</li><li>预约练车时间</li><li>查看成绩与评价</li></ul><a href="login.html">进入学员中心 →</a></article>
+            <article class="role-card coach-role reveal"><div class="role-label">教练端</div><h3>高效教学管理</h3><ul><li>查看练车安排</li><li>记录学员评分</li><li>判定考试资格</li><li>查看学员评价</li></ul><a href="login.html">进入教练工作台 →</a></article>
+            <article class="role-card admin-role reveal"><div class="role-label">管理员端</div><h3>全局数据管理</h3><ul><li>审核学员报名</li><li>管理教练信息</li><li>查询练车记录</li><li>统计业务数据</li></ul><a href="login.html">进入管理后台 →</a></article>
+        </div>
+    </section>
+
+    <section class="cta-section section-shell reveal">
+        <div><span>安全学车 · 规范练车 · 文明驾驶</span><h2>准备好开启智慧学车之旅了吗？</h2><p>创建学员账号，马上查看自己的注册和报名状态。</p></div>
+        <a class="btn btn-primary btn-large light-sweep" href="login.html#register">立即注册</a>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="section-shell"><div><strong>SuperDriver</strong><span>智慧驾培平台</span></div><p>Java Web课程设计 · Servlet + JDBC + MySQL</p><p>© 2026 SuperDriver</p></div>
+</footer>
+<script src="../js/home.js"></script>
+</body>
+</html>
