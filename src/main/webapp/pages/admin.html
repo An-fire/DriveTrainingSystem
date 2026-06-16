@@ -356,10 +356,6 @@
             <input type="text" id="modalStaffName" placeholder="请输入姓名">
         </div>
         <div class="form-group">
-            <label>身份证号</label>
-            <input type="text" id="modalStaffIdCard" placeholder="请输入身份证号">
-        </div>
-        <div class="form-group">
             <label>手机号</label>
             <input type="text" id="modalStaffPhone" placeholder="请输入手机号">
         </div>
@@ -571,7 +567,6 @@ function openAddStaffModal() {
     document.getElementById('staffModalTitle').textContent = '新增员工';
     document.getElementById('editStaffId').value = '';
     document.getElementById('modalStaffName').value = '';
-    document.getElementById('modalStaffIdCard').value = '';
     document.getElementById('modalStaffPhone').value = '';
     document.getElementById('modalStaffRole').value = 'coach';
     document.getElementById('modalStaffSubject').value = 'C2';
@@ -588,7 +583,6 @@ function editStaff(id) {
         document.getElementById('staffModalTitle').textContent = '编辑员工';
         document.getElementById('editStaffId').value = item.id;
         document.getElementById('modalStaffName').value = item.name;
-        document.getElementById('modalStaffIdCard').value = item.idCard || '';
         document.getElementById('modalStaffPhone').value = item.phone;
         document.getElementById('modalStaffRole').value = item.role;
         document.getElementById('modalStaffSubject').value = item.subject || 'C2';
@@ -611,7 +605,6 @@ function closeModal() {
 function saveStaff() {
     const id = document.getElementById('editStaffId').value;
     const name = document.getElementById('modalStaffName').value.trim();
-    const idCard = document.getElementById('modalStaffIdCard').value.trim();
     const phone = document.getElementById('modalStaffPhone').value.trim();
     const role = document.getElementById('modalStaffRole').value;
     const subject = role === 'coach' ? document.getElementById('modalStaffSubject').value : '';
@@ -624,7 +617,6 @@ function saveStaff() {
 
     let body = 'action=' + (id ? 'update' : 'add')
         + '&name=' + encodeURIComponent(name)
-        + '&idCard=' + encodeURIComponent(idCard)
         + '&phone=' + encodeURIComponent(phone)
         + '&role=' + encodeURIComponent(role)
         + '&subject=' + encodeURIComponent(subject);

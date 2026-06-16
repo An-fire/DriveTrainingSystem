@@ -23,13 +23,12 @@ public class RegisterStaffServlet extends HttpServlet {
         JSONObject result = new JSONObject();
 
         String name = request.getParameter("name");
-        String idCard = request.getParameter("idCard");
         String phone = request.getParameter("phone");
         String password = request.getParameter("password");
         String role = request.getParameter("role");
         String subject = request.getParameter("subject");
 
-        if (name == null || name.isEmpty() || idCard == null || idCard.isEmpty() ||
+        if (name == null || name.isEmpty() ||
             phone == null || phone.isEmpty() || password == null || password.isEmpty() || role == null || role.isEmpty()) {
             result.put("code", 0);
             result.put("msg", "请填写完整信息");
@@ -63,7 +62,6 @@ public class RegisterStaffServlet extends HttpServlet {
             Staff staff = new Staff();
             staff.setId(UUIDUtil.getUUID());
             staff.setName(name);
-            staff.setIdCard(idCard);
             staff.setPhone(phone);
             staff.setPassword(MD5Util.md5(password));
             staff.setRole(role);

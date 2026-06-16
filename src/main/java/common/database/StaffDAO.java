@@ -54,7 +54,6 @@ public class StaffDAO {
                 Staff staff = new Staff();
                 staff.setId(rs.getString("id"));
                 staff.setName(rs.getString("name"));
-                staff.setIdCard(rs.getString("idCard"));
                 staff.setPhone(rs.getString("phone"));
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
@@ -84,7 +83,6 @@ public class StaffDAO {
                 Staff staff = new Staff();
                 staff.setId(rs.getString("id"));
                 staff.setName(rs.getString("name"));
-                staff.setIdCard(rs.getString("idCard"));
                 staff.setPhone(rs.getString("phone"));
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
@@ -101,7 +99,7 @@ public class StaffDAO {
     }
 
     public int insert(Staff staff) {
-        String sql = "INSERT INTO staff(id, name, idCard, phone, password, role, subject, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO staff(id, name, phone, password, role, subject, createTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -109,12 +107,11 @@ public class StaffDAO {
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, staff.getId());
             pstmt.setString(2, staff.getName());
-            pstmt.setString(3, staff.getIdCard());
-            pstmt.setString(4, staff.getPhone());
-            pstmt.setString(5, staff.getPassword());
-            pstmt.setString(6, staff.getRole());
-            pstmt.setString(7, staff.getSubject());
-            pstmt.setTimestamp(8, staff.getCreateTime() != null ? new java.sql.Timestamp(staff.getCreateTime().getTime()) : new java.sql.Timestamp(System.currentTimeMillis()));
+            pstmt.setString(3, staff.getPhone());
+            pstmt.setString(4, staff.getPassword());
+            pstmt.setString(5, staff.getRole());
+            pstmt.setString(6, staff.getSubject());
+            pstmt.setTimestamp(7, staff.getCreateTime() != null ? new java.sql.Timestamp(staff.getCreateTime().getTime()) : new java.sql.Timestamp(System.currentTimeMillis()));
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -142,19 +139,18 @@ public class StaffDAO {
     }
 
     public int update(Staff staff) {
-        String sql = "UPDATE staff SET name=?, idCard=?, phone=?, password=?, role=?, subject=? WHERE id=?";
+        String sql = "UPDATE staff SET name=?, phone=?, password=?, role=?, subject=? WHERE id=?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
             conn = DBCConnection.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, staff.getName());
-            pstmt.setString(2, staff.getIdCard());
-            pstmt.setString(3, staff.getPhone());
-            pstmt.setString(4, staff.getPassword());
-            pstmt.setString(5, staff.getRole());
-            pstmt.setString(6, staff.getSubject());
-            pstmt.setString(7, staff.getId());
+            pstmt.setString(2, staff.getPhone());
+            pstmt.setString(3, staff.getPassword());
+            pstmt.setString(4, staff.getRole());
+            pstmt.setString(5, staff.getSubject());
+            pstmt.setString(6, staff.getId());
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -198,7 +194,6 @@ public class StaffDAO {
                 Staff staff = new Staff();
                 staff.setId(rs.getString("id"));
                 staff.setName(rs.getString("name"));
-                staff.setIdCard(rs.getString("idCard"));
                 staff.setPhone(rs.getString("phone"));
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
@@ -228,7 +223,6 @@ public class StaffDAO {
                 Staff staff = new Staff();
                 staff.setId(rs.getString("id"));
                 staff.setName(rs.getString("name"));
-                staff.setIdCard(rs.getString("idCard"));
                 staff.setPhone(rs.getString("phone"));
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));

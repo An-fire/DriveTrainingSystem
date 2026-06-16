@@ -46,7 +46,6 @@ public class StaffManageServlet extends HttpServlet {
         try {
             if ("add".equals(action)) {
                 String name = request.getParameter("name");
-                String idCard = request.getParameter("idCard");
                 String phone = request.getParameter("phone");
                 String password = request.getParameter("password");
                 String role = request.getParameter("role");
@@ -78,7 +77,6 @@ public class StaffManageServlet extends HttpServlet {
                 Staff staff = new Staff();
                 staff.setId(UUIDUtil.getUUID());
                 staff.setName(name);
-                staff.setIdCard(idCard);
                 staff.setPhone(phone);
                 staff.setPassword(MD5Util.md5(password));
                 staff.setRole(role);
@@ -98,7 +96,6 @@ public class StaffManageServlet extends HttpServlet {
             } else if ("update".equals(action)) {
                 String id = request.getParameter("id");
                 String name = request.getParameter("name");
-                String idCard = request.getParameter("idCard");
                 String phone = request.getParameter("phone");
                 String role = request.getParameter("role");
                 String subject = request.getParameter("subject");
@@ -130,7 +127,6 @@ public class StaffManageServlet extends HttpServlet {
                 Staff staff = new Staff();
                 staff.setId(id);
                 staff.setName(name);
-                staff.setIdCard(idCard);
                 staff.setPhone(phone);
                 staff.setPassword(exist.getPassword());
                 staff.setRole(role);
