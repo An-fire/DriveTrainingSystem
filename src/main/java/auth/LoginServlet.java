@@ -44,7 +44,7 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("role", user.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
-                result.put("url", "pages/student.html");
+                result.put("url", request.getContextPath() + "/pages/student.html");
                 response.getWriter().write(result.toString());
                 return;
             }
@@ -56,9 +56,9 @@ public class LoginServlet extends HttpServlet {
                 result.put("code", 1);
                 result.put("msg", "登录成功");
                 if ("admin".equals(staff.getRole())) {
-                    result.put("url", "pages/admin.html");
+                    result.put("url", request.getContextPath() + "/pages/admin.html");
                 } else {
-                    result.put("url", "pages/coach.html");
+                    result.put("url", request.getContextPath() + "/pages/coach.html");
                 }
                 response.getWriter().write(result.toString());
                 return;

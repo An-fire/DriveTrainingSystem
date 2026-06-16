@@ -9,18 +9,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UserDAO {
-    public User login(String phone, String pwd) {
+    public User login(String account, String pwd) {
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
         User user = null;
-        String sql = "select * from user where phone=? and password=?";
+        String sql = "select * from user where (phone=? or name=?) and password=?";
 
         try {
             conn = DBCConnection.getConnection();
             pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, phone);
-            pstmt.setString(2, pwd);
+            pstmt.setString(1, account);
+            pstmt.setString(2, account);
+            pstmt.setString(3, pwd);
             rs = pstmt.executeQuery();
             if (rs.next()) {
                 user = new User();
