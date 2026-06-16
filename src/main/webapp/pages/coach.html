@@ -1,10 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>教练工作台 - 驾校练车系统</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* 临时样式，确保页面可读 */
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        button { padding: 5px 10px; cursor: pointer; }
+        input[type="number"] { width: 60px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
 </head>
 <body>
-
+<div class="container">
+    <h1>教练工作台</h1>
+    <div>
+        <h2>待评分练车记录</h2>
+        <table id="pendingTable">
+            <thead>
+            <tr><th>学员姓名</th><th>练车时段</th><th>评分（1-5）</th><th>可参加考试</th><th>操作</th></tr>
+            </thead>
+            <tbody id="pendingBody">
+            <tr><td colspan="5">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+    <div>
+        <h2>学员对我的评价</h2>
+        <ul id="commentList">
+            <li>加载中...</li>
+        </ul>
+    </div>
+</div>
+<script src="../js/common.js"></script>
+<script src="../js/coach.js"></script>
 </body>
 </html>
