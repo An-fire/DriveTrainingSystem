@@ -92,4 +92,34 @@ public class UserDAO {
         }
         return null;
     }
+
+    public User findByPhone(String phone) {
+        String sql = "SELECT * FROM user WHERE phone = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, phone);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                User user = new User();
+                user.setId(rs.getString("id"));
+                user.setName(rs.getString("name"));
+                user.setIdCard(rs.getString("idCard"));
+                user.setPhone(rs.getString("phone"));
+                user.setPassword(rs.getString("password"));
+                user.setRole(rs.getString("role"));
+                user.setSubject(rs.getString("subject"));
+                user.setCreateTime(rs.getTimestamp("createTime"));
+                return user;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return null;
+    }
 }

@@ -1,14 +1,14 @@
 package common.filter;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 
 public class AuthFilter implements Filter {
@@ -18,24 +18,71 @@ public class AuthFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) resp;
         
-        HttpSession session = request.getSession(false);
-        
-        // 获取请求路径
         String uri = request.getRequestURI();
+        String contextPath = request.getContextPath();
         
-        // 登录页面和登录接口不需要验证
-        if (uri.contains("login.html") || uri.contains("/login")) {
+        // 获取相对路径
+        String path = uri;
+        if (contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath)) {
+            path = uri.substring(contextPath.length());
+        }
+        
+        // ========== 必须放行的资源（简单粗暴，全部放行）==========
+        
+        // 1. 所有 HTML 页面
+        if (path.endsWith(".html")) {
             chain.doFilter(req, resp);
             return;
         }
         
-        // 检查是否已登录
+        // 2. 所有 CSS 文件
+        if (path.endsWith(".css")) {
+            chain.doFilter(req, resp);
+            return;
+        }
+        
+        // 3. 所有 JS 文件
+        if (path.endsWith(".js")) {
+            chain.doFilter(req, resp);
+            return;
+        }
+        
+        // 4. 所有图片文件
+        if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") || 
+            path.endsWith(".gif") || path.endsWith(".svg") || path.endsWith(".ico") ||
+            path.endsWith(".webp") || path.endsWith(".bmp")) {
+            chain.doFilter(req, resp);
+            return;
+        }
+        
+        // 5. 所有字体文件
+        if (path.endsWith(".woff") || path.endsWith(".woff2") || path.endsWith(".ttf") || 
+            path.endsWith(".eot") || path.endsWith(".otf")) {
+            chain.doFilter(req, resp);
+            return;
+        }
+        
+        // 6. 登录注册相关接口
+        if (path.startsWith("/login") || path.startsWith("/register")) {
+            chain.doFilter(req, resp);
+            return;
+        }
+        
+        // 7. 根路径
+        if (path.equals("/") || path.isEmpty()) {
+            chain.doFilter(req, resp);
+            return;
+        }
+        
+        // ========== 其他所有请求需要登录验证 ==========
+        
+        HttpSession session = request.getSession(false);
+        
         if (session == null || (session.getAttribute("user") == null && session.getAttribute("staff") == null)) {
             response.sendRedirect(request.getContextPath() + "/pages/login.html");
             return;
         }
         
-        // 已登录，放行
         chain.doFilter(req, resp);
     }
 

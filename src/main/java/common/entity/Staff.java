@@ -7,6 +7,7 @@ import java.util.Date;
 public class Staff {
     private String id;
     private String name;
+    private String idCard;
     private String phone;
     private String password;
     private String role;
