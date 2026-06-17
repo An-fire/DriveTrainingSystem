@@ -1,10 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>学员中心</title>
+    <!-- 保留原有样式，未做任何修改 -->
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* 仅布局样式，不改动你原有 style.css */
+        .tab { margin: 20px 0; }
+        .tab-item {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #eee;
+            cursor: pointer;
+            margin-right: 8px;
+            border-radius: 8px 8px 0 0;
+        }
+        .tab-item.active {
+            background: #667eea;
+            color: #fff;
+        }
+        .tab-content {
+            display: none;
+            padding: 25px;
+            border: 1px solid #ddd;
+            border-radius: 0 8px 8px 8px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table { width: 100%; border-collapse: collapse; margin-top:15px; }
+        th,td { border:1px solid #ccc; padding:10px; text-align:center; }
+
+        /* 我的报名信息 标题：居中、改字体颜色、调整字号 */
+        .info-title{
+            text-align: center;
+            color: #4A6CF7;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        /* 报名信息内容居中 */
+        #enrollInfoBox{
+            text-align: center;
+            line-height: 2.2;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
+<div class="home-container">
+    <div class="home-header">
+        <h1>驾校学员中心</h1>
+        <p>报名、练车预约、一站式服务</p>
+    </div>
 
+    <div class="home-content">
+        <!-- 标签栏：统一使用英文ID，和JS完全匹配（修复核心bug） -->
+        <div class="tab">
+            <div class="tab-item active" id="tab-enroll" onclick="switchTab('enroll')">驾校报名</div>
+            <div class="tab-item" id="tab-book" onclick="switchTab('book')">练车预约</div>
+            <div class="tab-item" id="tab-record" onclick="switchTab('record')">我的预约记录</div>
+            <div style="float:right;">
+                <button class="btn btn-primary" onclick="logout()">退出登录</button>
+                <!-- 新增：修改密码跳转按钮 -->
+                <button class="btn btn-primary" style="margin-left: 10px;" onclick="location.href='modifyPwd.html'">修改密码</button>
+            </div>
+        </div>
+
+        <!-- 驾校报名区域 -->
+        <div class="tab-content active" id="content-enroll">
+            <div class="form-group">
+                <label>选择授课教练：</label>
+                <select id="enrollCoach"></select>
+            </div>
+            <!-- 报考驾照：下拉选择 3个选项 C1/C2/C3 -->
+            <div class="form-group">
+                <label>报考驾照类型：</label>
+                <select id="enrollSubject">
+                    <option value="C1" selected>C1 手动挡</option>
+                    <option value="C2">C2 自动挡</option>
+                    <option value="C3">C3 低速载货汽车</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="submitEnroll()">提交报名</button>
+
+            <hr style="margin:20px 0;">
+            <h3 class="info-title">我的报名信息</h3>
+            <div id="enrollInfoBox"></div>
+        </div>
+
+        <!-- 练车预约区域（修复ID：content-book） -->
+        <div class="tab-content" id="content-book">
+            <div class="form-group">
+                <label>选择练车教练：</label>
+                <select id="bookCoach"></select>
+            </div>
+            <!-- 练习科目：下拉选择 3个选项 C1/C2/C3 -->
+            <div class="form-group">
+                <label>练习科目：</label>
+                <select id="bookSubject">
+                    <option value="C1" selected>C1 手动挡</option>
+                    <option value="C2">C2 自动挡</option>
+                    <option value="C3">C3 低速载货汽车</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>预约开始时间：</label>
+                <input type="datetime-local" id="startTime">
+            </div>
+            <div class="form-group">
+                <label>预约结束时间：</label>
+                <input type="datetime-local" id="endTime">
+            </div>
+            <button class="btn btn-primary" onclick="submitBook()">提交预约</button>
+        </div>
+
+        <!-- 我的预约记录区域 -->
+        <div class="tab-content" id="content-record">
+            <h3 style="text-align: center;color: #4A6CF7;font-size: 18px;margin-bottom: 15px;">我的预约记录</h3>
+            <table>
+                <thead>
+                <tr>
+                    <th>预约ID</th>
+                    <th>教练ID</th>
+                    <th>练习科目</th>
+                    <th>开始时间</th>
+                    <th>结束时间</th>
+                    <th>状态</th>
+                </tr>
+                </thead>
+                <tbody id="bookTbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="home-footer">
+        <p>驾校管理系统 &copy; 2026</p>
+    </div>
+</div>
+
+<script src="../js/student.js"></script>
 </body>
 </html>
