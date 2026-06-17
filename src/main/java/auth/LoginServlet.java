@@ -38,23 +38,28 @@ public class LoginServlet extends HttpServlet {
         HttpSession session = request.getSession();
 
         try {
+            // 1. 尝试学员登录
             User user = userDAO.login(phone, md5Pwd);
             if (user != null) {
                 session.setAttribute("user", user);
                 session.setAttribute("role", user.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
+                result.put("userId", user.getId());  // ✅ 返回学员真实 ID
                 result.put("url", request.getContextPath() + "/pages/student.html");
                 response.getWriter().write(result.toString());
                 return;
             }
 
+            // 2. 尝试工作人员登录（教练/管理员）
             Staff staff = staffDAO.login(phone, md5Pwd);
             if (staff != null) {
                 session.setAttribute("staff", staff);
                 session.setAttribute("role", staff.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
+                result.put("userId", staff.getId());  // ✅ 返回工作人员真实 ID
+
                 if ("admin".equals(staff.getRole())) {
                     result.put("url", request.getContextPath() + "/pages/admin.html");
                 } else {
@@ -64,13 +69,16 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
+            // 3. 账号或密码错误
             result.put("code", 0);
             result.put("msg", "账号或密码错误");
+
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 0);
             result.put("msg", "系统异常，请稍后重试");
         }
+
         response.getWriter().write(result.toString());
     }
 
