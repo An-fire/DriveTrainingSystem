@@ -2,7 +2,6 @@ package coach.servlet;
 
 import com.alibaba.fastjson.JSONObject;
 import common.database.DBCConnection;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,11 +14,11 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet("/coach/score")
-public class ScoreServlet extends HttpServlet {
+@WebServlet("/coach/pending")
+public class PendingServlet extends HttpServlet {
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
         JSONObject result = new JSONObject();
 
@@ -38,11 +37,11 @@ public class ScoreServlet extends HttpServlet {
 
         try {
             conn = DBCConnection.getConnection();
-            String sql = "SELECT u.name as studentName, b.studentScore, b.coachScore, b.createTime " +
+            String sql = "SELECT b.id as bookingId, u.name as studentName, b.subjectType, b.startTime, b.status " +
                     "FROM booking b " +
                     "JOIN user u ON b.studentId = u.id " +
-                    "WHERE b.coachId = ? AND b.studentScore IS NOT NULL " +
-                    "ORDER BY b.createTime DESC";
+                    "WHERE b.coachId = ? AND b.status = 'approved' AND b.coachScore IS NULL " +
+                    "ORDER BY b.startTime DESC";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, coachId);
             rs = pstmt.executeQuery();
@@ -50,10 +49,11 @@ public class ScoreServlet extends HttpServlet {
             List<JSONObject> list = new ArrayList<>();
             while (rs.next()) {
                 JSONObject item = new JSONObject();
+                item.put("bookingId", rs.getString("bookingId"));
                 item.put("studentName", rs.getString("studentName"));
-                item.put("studentScore", rs.getInt("studentScore"));
-                item.put("coachScore", rs.getInt("coachScore"));
-                item.put("createTime", rs.getString("createTime"));
+                item.put("subject", rs.getString("subjectType"));
+                item.put("startTime", rs.getString("startTime"));
+                item.put("status", rs.getString("status"));
                 list.add(item);
             }
 
