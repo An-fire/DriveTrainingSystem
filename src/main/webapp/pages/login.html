@@ -225,8 +225,9 @@
             // 组长后端返回 code === 1 表示成功
             if (res.data.code === 1) {
                 // 保存用户信息到 localStorage（供 coach.html 使用）
-                var userInfo = {
-                    id: phone,
+               var userInfo = {
+                    id: res.data.userId,
+                    phone: phone,
                     role: role,
                     name: role === 'coach' ? '教练' : (role === 'admin' ? '管理员' : '学员')
                 };

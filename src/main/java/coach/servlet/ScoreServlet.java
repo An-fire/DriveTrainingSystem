@@ -1,72 +1,65 @@
 package coach.servlet;
 
 import com.alibaba.fastjson.JSONObject;
-import common.database.DBCConnection;
-import jakarta.servlet.ServletException;
+import coach.service.CoachService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.List;
 
 @WebServlet("/coach/score")
 public class ScoreServlet extends HttpServlet {
 
+    private CoachService coachService = new CoachService();
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
         JSONObject result = new JSONObject();
 
-        String coachId = req.getParameter("coachId");
+        // 读取 JSON 请求体
+        StringBuilder sb = new StringBuilder();
+        String line;
+        BufferedReader reader = req.getReader();
+        while ((line = reader.readLine()) != null) {
+            sb.append(line);
+        }
+        JSONObject params = JSONObject.parseObject(sb.toString());
 
-        if (coachId == null || coachId.isEmpty()) {
+        String bookingId = params.getString("bookingId");
+        Integer score = params.getInteger("score");
+        Boolean canExam = params.getBoolean("canExam");
+
+        if (bookingId == null || score == null) {
             result.put("code", 400);
-            result.put("message", "教练ID不能为空");
+            result.put("message", "预约ID和评分不能为空");
             resp.getWriter().write(result.toString());
             return;
         }
 
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
+        if (score < 1 || score > 5) {
+            result.put("code", 400);
+            result.put("message", "评分必须在1-5之间");
+            resp.getWriter().write(result.toString());
+            return;
+        }
 
         try {
-            conn = DBCConnection.getConnection();
-            String sql = "SELECT u.name as studentName, b.studentScore, b.coachScore, b.createTime " +
-                    "FROM booking b " +
-                    "JOIN user u ON b.studentId = u.id " +
-                    "WHERE b.coachId = ? AND b.studentScore IS NOT NULL " +
-                    "ORDER BY b.createTime DESC";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, coachId);
-            rs = pstmt.executeQuery();
-
-            List<JSONObject> list = new ArrayList<>();
-            while (rs.next()) {
-                JSONObject item = new JSONObject();
-                item.put("studentName", rs.getString("studentName"));
-                item.put("studentScore", rs.getInt("studentScore"));
-                item.put("coachScore", rs.getInt("coachScore"));
-                item.put("createTime", rs.getString("createTime"));
-                list.add(item);
+            boolean success = coachService.submitScore(bookingId, score, canExam != null && canExam);
+            if (success) {
+                result.put("code", 200);
+                result.put("message", "评分成功");
+            } else {
+                result.put("code", 404);
+                result.put("message", "未找到该预约记录");
             }
-
-            result.put("code", 200);
-            result.put("message", "success");
-            result.put("data", list);
-
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 500);
             result.put("message", "系统异常：" + e.getMessage());
-        } finally {
-            DBCConnection.close(conn, pstmt, rs);
         }
 
         resp.getWriter().write(result.toString());

@@ -1,21 +1,19 @@
 package coach.servlet;
 
 import com.alibaba.fastjson.JSONObject;
-import common.database.DBCConnection;
+import coach.service.CoachService;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/coach/pending")
 public class PendingServlet extends HttpServlet {
+
+    private CoachService coachService = new CoachService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -31,42 +29,15 @@ public class PendingServlet extends HttpServlet {
             return;
         }
 
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
         try {
-            conn = DBCConnection.getConnection();
-            String sql = "SELECT b.id as bookingId, u.name as studentName, b.subjectType, b.startTime, b.status " +
-                    "FROM booking b " +
-                    "JOIN user u ON b.studentId = u.id " +
-                    "WHERE b.coachId = ? AND b.status = 'approved' AND b.coachScore IS NULL " +
-                    "ORDER BY b.startTime DESC";
-            pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, coachId);
-            rs = pstmt.executeQuery();
-
-            List<JSONObject> list = new ArrayList<>();
-            while (rs.next()) {
-                JSONObject item = new JSONObject();
-                item.put("bookingId", rs.getString("bookingId"));
-                item.put("studentName", rs.getString("studentName"));
-                item.put("subject", rs.getString("subjectType"));
-                item.put("startTime", rs.getString("startTime"));
-                item.put("status", rs.getString("status"));
-                list.add(item);
-            }
-
+            List<JSONObject> list = coachService.getPendingList(coachId);
             result.put("code", 200);
             result.put("message", "success");
             result.put("data", list);
-
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 500);
             result.put("message", "系统异常：" + e.getMessage());
-        } finally {
-            DBCConnection.close(conn, pstmt, rs);
         }
 
         resp.getWriter().write(result.toString());
