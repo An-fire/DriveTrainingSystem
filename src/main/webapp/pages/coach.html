@@ -3,42 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <title>教练工作台 - 驾校练车系统</title>
+    <!-- 通用样式（组长提供） -->
     <link rel="stylesheet" href="../css/style.css">
     <style>
-        /* 临时样式，确保页面可读 */
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .container { max-width: 1200px; margin: 0 auto; }
-        button { padding: 5px 10px; cursor: pointer; }
-        input[type="number"] { width: 60px; }
-        .success { color: green; }
-        .error { color: red; }
+        /* 教练专属样式（与组长风格不冲突） */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 small {
+            font-size: 16px;
+            font-weight: 400;
+            color: #64748b;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            padding: 24px;
+            margin-bottom: 32px;
+            border: 1px solid #e9edf2;
+        }
+        .card h2 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-top: 0;
+            margin-bottom: 16px;
+            color: #0f172a;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th {
+            text-align: left;
+            padding: 12px 12px;
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        tr:hover td {
+            background: #fafcff;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .badge-pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .badge-approved {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .badge-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            background: #e2e8f0;
+            color: #1e293b;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:hover {
+            background: #cbd5e1;
+        }
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-success {
+            background: #16a34a;
+            color: #fff;
+        }
+        .btn-success:hover {
+            background: #15803d;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: #fff;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        .comment-item {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            border-left: 4px solid #2563eb;
+        }
+        .comment-item strong {
+            font-size: 15px;
+            color: #0f172a;
+        }
+        .comment-item .stars {
+            color: #f59e0b;
+            letter-spacing: 2px;
+        }
+        .comment-item .time {
+            color: #94a3b8;
+            font-size: 13px;
+            float: right;
+        }
+        .comment-item .content {
+            margin-top: 6px;
+            color: #334155;
+        }
+        .empty {
+            text-align: center;
+            padding: 30px 0;
+            color: #94a3b8;
+        }
+        /* 模态框（打分弹窗） */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.5);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+        }
+        .modal-box {
+            background: #fff;
+            border-radius: 20px;
+            padding: 32px 36px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        .modal-box h3 {
+            margin-top: 0;
+            font-size: 22px;
+        }
+        .modal-box label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+        .modal-box select, .modal-box input[type="checkbox"] {
+            margin-bottom: 16px;
+        }
+        .modal-box select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid #d1d5db;
+            font-size: 15px;
+            background: #fff;
+        }
+        .modal-box .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+        .modal-box .btn-row button {
+            padding: 10px 28px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .modal-box .btn-row .btn-cancel {
+            background: #e2e8f0;
+            color: #1e293b;
+        }
+        .modal-box .btn-row .btn-confirm {
+            background: #2563eb;
+            color: #fff;
+        }
+        .modal-box .btn-row .btn-confirm:hover {
+            background: #1d4ed8;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: #f1f5f9;
+            border-radius: 40px;
+            font-size: 15px;
+        }
+        .user-info .name {
+            font-weight: 600;
+        }
+        .user-info .logout {
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid #cbd5e1;
+            padding: 6px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .user-info .logout:hover {
+            background: #fee2e2;
+            border-color: #f87171;
+            color: #b91c1c;
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>教练工作台</h1>
-    <div>
-        <h2>待评分练车记录</h2>
+
+    <!-- 顶部信息栏 -->
+    <div class="user-info">
+        <span>👋 欢迎，<span class="name" id="coachName">教练</span></span>
+        <span class="badge" id="coachSubject" style="background:#dbeafe;color:#1e40af;">C1</span>
+        <button class="logout" onclick="logout()">退出登录</button>
+    </div>
+
+    <h1>📋 教练工作台 <small>评分 · 反馈 · 考试资格</small></h1>
+
+    <!-- 待评分卡片 -->
+    <div class="card">
+        <h2>📌 待评分练车记录</h2>
         <table id="pendingTable">
             <thead>
-            <tr><th>学员姓名</th><th>练车时段</th><th>评分（1-5）</th><th>可参加考试</th><th>操作</th></tr>
+            <tr>
+                <th>学员姓名</th>
+                <th>科目</th>
+                <th>练车时段</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
             </thead>
             <tbody id="pendingBody">
-            <tr><td colspan="5">加载中...</td></tr>
+            <tr><td colspan="5" class="empty">加载中...</td></tr>
             </tbody>
         </table>
     </div>
-    <div>
-        <h2>学员对我的评价</h2>
-        <ul id="commentList">
-            <li>加载中...</li>
-        </ul>
+
+    <!-- 评价列表 -->
+    <div class="card">
+        <h2>💬 学员对我的评价</h2>
+        <div id="commentList">
+            <div class="empty">加载中...</div>
+        </div>
     </div>
 </div>
+
+<!-- ================== 打分模态框 ================== -->
+<div class="modal-overlay" id="scoreModal">
+    <div class="modal-box">
+        <h3>✏️ 给学员打分</h3>
+        <p style="color:#475569;margin-bottom:20px;">学员：<strong id="modalStudentName">—</strong></p>
+        <label for="modalScore">表现评分 (1-5)</label>
+        <select id="modalScore">
+            <option value="5">⭐⭐⭐⭐⭐ 非常优秀 (5分)</option>
+            <option value="4" selected>⭐⭐⭐⭐ 良好 (4分)</option>
+            <option value="3">⭐⭐⭐ 一般 (3分)</option>
+            <option value="2">⭐⭐ 较差 (2分)</option>
+            <option value="1">⭐ 极差 (1分)</option>
+        </select>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:8px;">
+            <input type="checkbox" id="modalCanExam"> ✅ 授予该学员考试资格
+        </label>
+        <div class="btn-row">
+            <button class="btn-cancel" onclick="closeScoreModal()">取消</button>
+            <button class="btn-confirm" onclick="confirmScore()">确认提交</button>
+        </div>
+    </div>
+</div>
+
+<!-- ================== JavaScript（正确顺序） ================== -->
+<!-- 顺序1：必须先加载 axios 库 -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- 顺序2：再加载 common.js（依赖 axios） -->
 <script src="../js/common.js"></script>
+<!-- 顺序3：最后加载教练业务逻辑 -->
 <script src="../js/coach.js"></script>
+
+<!-- 额外的交互绑定（模态框控制） -->
+<script>
+    // 以下函数会暴露到全局，供 HTML 元素 onclick 调用
+    // 实际的提交逻辑在 coach.js 的 submitCoachScore 中
+
+    var currentBookingId = null;
+
+    // 打开模态框（由 coach.js 调用）
+    function showScoreModal(bookingId, studentName) {
+        currentBookingId = bookingId;
+        document.getElementById('modalStudentName').innerText = studentName || '未知学员';
+        document.getElementById('scoreModal').style.display = 'flex';
+    }
+
+    // 关闭模态框
+    function closeScoreModal() {
+        document.getElementById('scoreModal').style.display = 'none';
+        currentBookingId = null;
+    }
+
+    // 确认打分（调用 coach.js 的提交函数）
+    function confirmScore() {
+        if (!currentBookingId) {
+            alert('错误：没有选中的预约记录');
+            return;
+        }
+        var score = document.getElementById('modalScore').value;
+        var canExam = document.getElementById('modalCanExam').checked;
+        // 调用 coach.js 中暴露的全局函数
+        if (window.submitCoachScore) {
+            window.submitCoachScore(currentBookingId, score, canExam);
+        } else {
+            alert('提交函数未加载，请检查 coach.js 是否正常引入');
+        }
+    }
+
+    // 退出登录（也暴露给全局）
+    function logout() {
+        localStorage.removeItem('userInfo');
+        window.location.href = 'login.html';
+    }
+
+    // 页面加载时初始化教练名称
+    document.addEventListener('DOMContentLoaded', function() {
+        var info = JSON.parse(localStorage.getItem('userInfo') || '{}');
+        var nameSpan = document.getElementById('coachName');
+        if (nameSpan && info.name) {
+            nameSpan.innerText = info.name;
+        }
+        // 如果有科目信息也可以显示
+        if (info.subject) {
+            document.getElementById('coachSubject').innerText = info.subject;
+        }
+        // 调用 coach.js 的加载函数
+        if (window.loadDashboard) {
+            window.loadDashboard();
+        }
+    });
+
+    // 暴露必要的函数到全局
+    window.showScoreModal = showScoreModal;
+    window.closeScoreModal = closeScoreModal;
+    window.confirmScore = confirmScore;
+    window.logout = logout;
+</script>
 </body>
 </html>
