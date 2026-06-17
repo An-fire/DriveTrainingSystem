@@ -386,298 +386,309 @@
 </div>
 
 <script>
-// ===== 页面切换 =====
-function showTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.sidebar-nav a').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tabId).classList.add('active');
-    event.target.classList.add('active');
-
-    const titles = {
-        dashboard: '数据概览',
-        enrollments: '报名审核',
-        bookings: '练车记录',
-        staff: '员工管理',
-        students: '学员管理'
-    };
-    document.getElementById('pageTitle').textContent = titles[tabId];
-
-    if (tabId === 'dashboard') loadStats();
-    if (tabId === 'enrollments') { loadPendingEnrollments(); loadAllEnrollments(); }
-    if (tabId === 'bookings') loadAllBookings();
-    if (tabId === 'staff') loadStaffList();
-    if (tabId === 'students') loadStudents();
-}
-
-// ===== 通用请求 =====
-function apiGet(url, callback) {
-    fetch(url).then(r => r.json()).then(d => callback(d)).catch(e => { console.error(e); alert('请求失败'); });
-}
-function apiPost(url, body, callback) {
-    fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body
-    }).then(r => r.json()).then(d => callback(d)).catch(e => { console.error(e); alert('请求失败'); });
-}
-
-// ===== 退出登录 =====
-function logout() {
-    if (confirm('确定要退出登录吗？')) {
+    // ===== 检查是否登录且角色为管理员 =====
+    var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!userInfo.id || userInfo.role !== 'admin') {
+        alert('请使用管理员账号登录');
         window.location.href = 'login.html';
     }
-}
 
-// ===== 数据概览 =====
-function loadStats() {
-    apiGet('../admin/query?action=stats', function(data) {
-        if (data.code === 1) {
-            const s = data.data;
-            document.getElementById('statStudents').textContent = s.totalStudents;
-            document.getElementById('statCoaches').textContent = s.totalCoaches;
-            document.getElementById('statPendingEnroll').textContent = s.pendingEnrollments;
-            document.getElementById('statApprovedEnroll').textContent = s.approvedEnrollments;
-            document.getElementById('statBookings').textContent = s.totalBookings;
-            document.getElementById('statApprovedBook').textContent = s.approvedBookings;
-        }
-    });
-}
+    // 显示管理员名称
+    document.getElementById('adminName').textContent = '👤 ' + (userInfo.name || '管理员');
 
-// ===== 报名审核 =====
-function loadPendingEnrollments() {
-    apiGet('../admin/audit?action=pending', function(data) {
-        const container = document.getElementById('pendingList');
-        if (data.code !== 1 || !data.data || data.data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
-            return;
+    // ===== 页面切换 =====
+    function showTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.sidebar-nav a').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabId).classList.add('active');
+        event.target.classList.add('active');
+
+        const titles = {
+            dashboard: '数据概览',
+            enrollments: '报名审核',
+            bookings: '练车记录',
+            staff: '员工管理',
+            students: '学员管理'
+        };
+        document.getElementById('pageTitle').textContent = titles[tabId];
+
+        if (tabId === 'dashboard') loadStats();
+        if (tabId === 'enrollments') { loadPendingEnrollments(); loadAllEnrollments(); }
+        if (tabId === 'bookings') loadAllBookings();
+        if (tabId === 'staff') loadStaffList();
+        if (tabId === 'students') loadStudents();
+    }
+
+    // ===== 通用请求 =====
+    function apiGet(url, callback) {
+        fetch(url).then(r => r.json()).then(d => callback(d)).catch(e => { console.error(e); alert('请求失败'); });
+    }
+    function apiPost(url, body, callback) {
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body
+        }).then(r => r.json()).then(d => callback(d)).catch(e => { console.error(e); alert('请求失败'); });
+    }
+
+// ===== 退出登录 =====
+    function logout() {
+        if (confirm('确定要退出登录吗？')) {
+            localStorage.removeItem('userInfo');  // 清除本地存储
+            window.location.href = 'login.html';  // 调用登出接口
         }
-        let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>申请时间</th><th>操作</th></tr></thead><tbody>';
-        data.data.forEach(item => {
-            html += '<tr>'
-                + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
-                + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
-                + '<td>' + (item.subjectType || '-') + '</td>'
-                + '<td>' + (item.applyTime ? item.applyTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '<td>'
-                + '<button class="btn btn-success btn-sm" onclick="auditEnrollment(\'' + item.id + '\',\'approve\')">通过</button> '
-                + '<button class="btn btn-danger btn-sm" onclick="auditEnrollment(\'' + item.id + '\',\'reject\')">拒绝</button>'
-                + '</td></tr>';
+    }
+
+        // ===== 数据概览 =====
+        function loadStats() {
+            apiGet('../admin/query?action=stats', function(data) {
+                if (data.code === 1) {
+                    const s = data.data;
+                    document.getElementById('statStudents').textContent = s.totalStudents;
+                    document.getElementById('statCoaches').textContent = s.totalCoaches;
+                    document.getElementById('statPendingEnroll').textContent = s.pendingEnrollments;
+                    document.getElementById('statApprovedEnroll').textContent = s.approvedEnrollments;
+                    document.getElementById('statBookings').textContent = s.totalBookings;
+                    document.getElementById('statApprovedBook').textContent = s.approvedBookings;
+                }
+            });
+        }
+
+        // ===== 报名审核 =====
+        function loadPendingEnrollments() {
+            apiGet('../admin/audit?action=pending', function(data) {
+                const container = document.getElementById('pendingList');
+                if (data.code !== 1 || !data.data || data.data.length === 0) {
+                    container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>申请时间</th><th>操作</th></tr></thead><tbody>';
+                data.data.forEach(item => {
+                    html += '<tr>'
+                        + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
+                        + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
+                        + '<td>' + (item.subjectType || '-') + '</td>'
+                        + '<td>' + (item.applyTime ? item.applyTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                        + '<td>'
+                        + '<button class="btn btn-success btn-sm" onclick="auditEnrollment(\'' + item.id + '\',\'approve\')">通过</button> '
+                        + '<button class="btn btn-danger btn-sm" onclick="auditEnrollment(\'' + item.id + '\',\'reject\')">拒绝</button>'
+                        + '</td></tr>';
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            });
+        }
+
+        function loadAllEnrollments() {
+            apiGet('../admin/audit?action=all', function(data) {
+                const container = document.getElementById('allEnrollmentList');
+                if (data.code !== 1 || !data.data || data.data.length === 0) {
+                    container.innerHTML = '<div class="empty-tip">暂无报名记录</div>';
+                    return;
+                }
+                let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>状态</th><th>申请时间</th><th>审核时间</th></tr></thead><tbody>';
+                data.data.forEach(item => {
+                    const statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">待审核</span>' :
+                        item.status === 'approved' ? '<span class="badge badge-approved">已通过</span>' :
+                        '<span class="badge badge-rejected">已拒绝</span>';
+                    html += '<tr>'
+                        + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
+                        + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
+                        + '<td>' + (item.subjectType || '-') + '</td>'
+                        + '<td>' + statusBadge + '</td>'
+                        + '<td>' + (item.applyTime ? item.applyTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                        + '<td>' + (item.auditTime ? item.auditTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                        + '</tr>';
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            });
+        }
+
+        function auditEnrollment(id, action) {
+            const msg = action === 'approve' ? '确定要通过该报名申请吗？' : '确定要拒绝该报名申请吗？';
+            if (!confirm(msg)) return;
+            apiPost('../admin/audit', 'action=' + action + '&enrollmentId=' + encodeURIComponent(id), function(data) {
+                alert(data.msg);
+                if (data.code === 1) {
+                    loadPendingEnrollments();
+                    loadAllEnrollments();
+                    loadStats();
+                }
+            });
+        }
+
+    // ===== 练车记录 =====
+    function loadAllBookings() {
+        apiGet('../admin/query?action=bookings', function(data) {
+            const container = document.getElementById('bookingList');
+            if (data.code !== 1 || !data.data || data.data.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无练车预约记录</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>学员评分</th><th>教练评分</th><th>可考试</th></tr></thead><tbody>';
+            data.data.forEach(item => {
+                const statusBadge = item.status === 'approved' ? '<span class="badge badge-approved">同意</span>' :
+                    '<span class="badge badge-rejected">拒绝</span>';
+                html += '<tr>'
+                    + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
+                    + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
+                    + '<td>' + (item.subjectType || '-') + '</td>'
+                    + '<td>' + (item.startTime ? item.startTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                    + '<td>' + (item.endTime ? item.endTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                    + '<td>' + statusBadge + '</td>'
+                    + '<td>' + (item.studentScore || '-') + '</td>'
+                    + '<td>' + (item.coachScore || '-') + '</td>'
+                    + '<td>' + (item.canExam ? '是' : '否') + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    });
-}
+    }
 
-function loadAllEnrollments() {
-    apiGet('../admin/audit?action=all', function(data) {
-        const container = document.getElementById('allEnrollmentList');
-        if (data.code !== 1 || !data.data || data.data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无报名记录</div>';
-            return;
-        }
-        let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>状态</th><th>申请时间</th><th>审核时间</th></tr></thead><tbody>';
-        data.data.forEach(item => {
-            const statusBadge = item.status === 'pending' ? '<span class="badge badge-pending">待审核</span>' :
-                item.status === 'approved' ? '<span class="badge badge-approved">已通过</span>' :
-                '<span class="badge badge-rejected">已拒绝</span>';
-            html += '<tr>'
-                + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
-                + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
-                + '<td>' + (item.subjectType || '-') + '</td>'
-                + '<td>' + statusBadge + '</td>'
-                + '<td>' + (item.applyTime ? item.applyTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '<td>' + (item.auditTime ? item.auditTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '</tr>';
+    // ===== 员工管理 =====
+    function loadStaffList() {
+        apiGet('../admin/staff?action=list', function(data) {
+            const container = document.getElementById('staffList');
+            if (data.code !== 1 || !data.data || data.data.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无员工记录</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>姓名</th><th>手机号</th><th>角色</th><th>负责科目</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+            data.data.forEach(item => {
+                const roleBadge = item.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-coach">教练</span>';
+                html += '<tr>'
+                    + '<td>' + item.name + '</td>'
+                    + '<td>' + item.phone + '</td>'
+                    + '<td>' + roleBadge + '</td>'
+                    + '<td>' + (item.subject || '-') + '</td>'
+                    + '<td>' + (item.createTime ? item.createTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                    + '<td>'
+                    + '<button class="btn btn-primary btn-sm" onclick="editStaff(\'' + item.id + '\')">编辑</button> '
+                    + '<button class="btn btn-danger btn-sm" onclick="deleteStaff(\'' + item.id + '\')">删除</button>'
+                    + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    });
-}
+    }
 
-function auditEnrollment(id, action) {
-    const msg = action === 'approve' ? '确定要通过该报名申请吗？' : '确定要拒绝该报名申请吗？';
-    if (!confirm(msg)) return;
-    apiPost('../admin/audit', 'action=' + action + '&enrollmentId=' + encodeURIComponent(id), function(data) {
-        alert(data.msg);
-        if (data.code === 1) {
-            loadPendingEnrollments();
-            loadAllEnrollments();
-            loadStats();
-        }
-    });
-}
-
-// ===== 练车记录 =====
-function loadAllBookings() {
-    apiGet('../admin/query?action=bookings', function(data) {
-        const container = document.getElementById('bookingList');
-        if (data.code !== 1 || !data.data || data.data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无练车预约记录</div>';
-            return;
-        }
-        let html = '<table><thead><tr><th>学员ID</th><th>教练ID</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>学员评分</th><th>教练评分</th><th>可考试</th></tr></thead><tbody>';
-        data.data.forEach(item => {
-            const statusBadge = item.status === 'approved' ? '<span class="badge badge-approved">同意</span>' :
-                '<span class="badge badge-rejected">拒绝</span>';
-            html += '<tr>'
-                + '<td>' + (item.studentId ? item.studentId.substring(0,8)+'...' : '-') + '</td>'
-                + '<td>' + (item.coachId ? item.coachId.substring(0,8)+'...' : '-') + '</td>'
-                + '<td>' + (item.subjectType || '-') + '</td>'
-                + '<td>' + (item.startTime ? item.startTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '<td>' + (item.endTime ? item.endTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '<td>' + statusBadge + '</td>'
-                + '<td>' + (item.studentScore || '-') + '</td>'
-                + '<td>' + (item.coachScore || '-') + '</td>'
-                + '<td>' + (item.canExam ? '是' : '否') + '</td>'
-                + '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    });
-}
-
-// ===== 员工管理 =====
-function loadStaffList() {
-    apiGet('../admin/staff?action=list', function(data) {
-        const container = document.getElementById('staffList');
-        if (data.code !== 1 || !data.data || data.data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无员工记录</div>';
-            return;
-        }
-        let html = '<table><thead><tr><th>姓名</th><th>手机号</th><th>角色</th><th>负责科目</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
-        data.data.forEach(item => {
-            const roleBadge = item.role === 'admin' ? '<span class="badge badge-admin">管理员</span>' : '<span class="badge badge-coach">教练</span>';
-            html += '<tr>'
-                + '<td>' + item.name + '</td>'
-                + '<td>' + item.phone + '</td>'
-                + '<td>' + roleBadge + '</td>'
-                + '<td>' + (item.subject || '-') + '</td>'
-                + '<td>' + (item.createTime ? item.createTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '<td>'
-                + '<button class="btn btn-primary btn-sm" onclick="editStaff(\'' + item.id + '\')">编辑</button> '
-                + '<button class="btn btn-danger btn-sm" onclick="deleteStaff(\'' + item.id + '\')">删除</button>'
-                + '</td></tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    });
-}
-
-function openAddStaffModal() {
-    document.getElementById('staffModalTitle').textContent = '新增员工';
-    document.getElementById('editStaffId').value = '';
-    document.getElementById('modalStaffName').value = '';
-    document.getElementById('modalStaffPhone').value = '';
-    document.getElementById('modalStaffRole').value = 'coach';
-    document.getElementById('modalStaffSubject').value = 'C2';
-    document.getElementById('modalStaffPassword').value = '';
-    document.getElementById('modalPasswordGroup').style.display = 'block';
-    toggleSubjectField();
-    document.getElementById('staffModal').classList.add('show');
-}
-
-function editStaff(id) {
-    apiGet('../admin/staff?action=detail&id=' + encodeURIComponent(id), function(data) {
-        if (data.code !== 1) { alert('获取信息失败'); return; }
-        const item = data.data;
-        document.getElementById('staffModalTitle').textContent = '编辑员工';
-        document.getElementById('editStaffId').value = item.id;
-        document.getElementById('modalStaffName').value = item.name;
-        document.getElementById('modalStaffPhone').value = item.phone;
-        document.getElementById('modalStaffRole').value = item.role;
-        document.getElementById('modalStaffSubject').value = item.subject || 'C2';
+    function openAddStaffModal() {
+        document.getElementById('staffModalTitle').textContent = '新增员工';
+        document.getElementById('editStaffId').value = '';
+        document.getElementById('modalStaffName').value = '';
+        document.getElementById('modalStaffPhone').value = '';
+        document.getElementById('modalStaffRole').value = 'coach';
+        document.getElementById('modalStaffSubject').value = 'C2';
         document.getElementById('modalStaffPassword').value = '';
-        document.getElementById('modalPasswordGroup').style.display = 'none';
+        document.getElementById('modalPasswordGroup').style.display = 'block';
         toggleSubjectField();
         document.getElementById('staffModal').classList.add('show');
-    });
-}
-
-function toggleSubjectField() {
-    const role = document.getElementById('modalStaffRole').value;
-    document.getElementById('modalSubjectGroup').style.display = role === 'coach' ? 'block' : 'none';
-}
-
-function closeModal() {
-    document.getElementById('staffModal').classList.remove('show');
-}
-
-function saveStaff() {
-    const id = document.getElementById('editStaffId').value;
-    const name = document.getElementById('modalStaffName').value.trim();
-    const phone = document.getElementById('modalStaffPhone').value.trim();
-    const role = document.getElementById('modalStaffRole').value;
-    const subject = role === 'coach' ? document.getElementById('modalStaffSubject').value : '';
-    const password = document.getElementById('modalStaffPassword').value;
-
-    if (!name || !phone || !role) {
-        alert('请填写完整信息');
-        return;
     }
 
-    let body = 'action=' + (id ? 'update' : 'add')
-        + '&name=' + encodeURIComponent(name)
-        + '&phone=' + encodeURIComponent(phone)
-        + '&role=' + encodeURIComponent(role)
-        + '&subject=' + encodeURIComponent(subject);
-    if (id) {
-        body += '&id=' + encodeURIComponent(id);
-    } else {
-        if (!password || password.length < 6) {
-            alert('密码至少6位');
-            return;
-        }
-        body += '&password=' + encodeURIComponent(password);
-    }
-
-    apiPost('../admin/staff', body, function(data) {
-        alert(data.msg);
-        if (data.code === 1) {
-            closeModal();
-            loadStaffList();
-            loadStats();
-        }
-    });
-}
-
-function deleteStaff(id) {
-    if (!confirm('确定要删除该员工吗？')) return;
-    apiPost('../admin/staff', 'action=delete&id=' + encodeURIComponent(id), function(data) {
-        alert(data.msg);
-        if (data.code === 1) {
-            loadStaffList();
-            loadStats();
-        }
-    });
-}
-
-// ===== 学员管理 =====
-function loadStudents() {
-    apiGet('../admin/query?action=students', function(data) {
-        const container = document.getElementById('studentList');
-        if (data.code !== 1 || !data.data || data.data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无学员记录</div>';
-            return;
-        }
-        let html = '<table><thead><tr><th>姓名</th><th>手机号</th><th>身份证号</th><th>报考科目</th><th>创建时间</th></tr></thead><tbody>';
-        data.data.forEach(item => {
-            html += '<tr>'
-                + '<td>' + item.name + '</td>'
-                + '<td>' + item.phone + '</td>'
-                + '<td>' + item.idCard + '</td>'
-                + '<td>' + (item.subject || '-') + '</td>'
-                + '<td>' + (item.createTime ? item.createTime.substring(0,16).replace('T',' ') : '-') + '</td>'
-                + '</tr>';
+    function editStaff(id) {
+        apiGet('../admin/staff?action=detail&id=' + encodeURIComponent(id), function(data) {
+            if (data.code !== 1) { alert('获取信息失败'); return; }
+            const item = data.data;
+            document.getElementById('staffModalTitle').textContent = '编辑员工';
+            document.getElementById('editStaffId').value = item.id;
+            document.getElementById('modalStaffName').value = item.name;
+            document.getElementById('modalStaffPhone').value = item.phone;
+            document.getElementById('modalStaffRole').value = item.role;
+            document.getElementById('modalStaffSubject').value = item.subject || 'C2';
+            document.getElementById('modalStaffPassword').value = '';
+            document.getElementById('modalPasswordGroup').style.display = 'none';
+            toggleSubjectField();
+            document.getElementById('staffModal').classList.add('show');
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    });
-}
+    }
 
-// ===== 页面加载 =====
-window.onload = function() {
-    loadStats();
-};
+    function toggleSubjectField() {
+        const role = document.getElementById('modalStaffRole').value;
+        document.getElementById('modalSubjectGroup').style.display = role === 'coach' ? 'block' : 'none';
+    }
+
+    function closeModal() {
+        document.getElementById('staffModal').classList.remove('show');
+    }
+
+    function saveStaff() {
+        const id = document.getElementById('editStaffId').value;
+        const name = document.getElementById('modalStaffName').value.trim();
+        const phone = document.getElementById('modalStaffPhone').value.trim();
+        const role = document.getElementById('modalStaffRole').value;
+        const subject = role === 'coach' ? document.getElementById('modalStaffSubject').value : '';
+        const password = document.getElementById('modalStaffPassword').value;
+
+        if (!name || !phone || !role) {
+            alert('请填写完整信息');
+            return;
+        }
+
+        let body = 'action=' + (id ? 'update' : 'add')
+            + '&name=' + encodeURIComponent(name)
+            + '&phone=' + encodeURIComponent(phone)
+            + '&role=' + encodeURIComponent(role)
+            + '&subject=' + encodeURIComponent(subject);
+        if (id) {
+            body += '&id=' + encodeURIComponent(id);
+        } else {
+            if (!password || password.length < 6) {
+                alert('密码至少6位');
+                return;
+            }
+            body += '&password=' + encodeURIComponent(password);
+        }
+
+        apiPost('../admin/staff', body, function(data) {
+            alert(data.msg);
+            if (data.code === 1) {
+                closeModal();
+                loadStaffList();
+                loadStats();
+            }
+        });
+    }
+
+    function deleteStaff(id) {
+        if (!confirm('确定要删除该员工吗？')) return;
+        apiPost('../admin/staff', 'action=delete&id=' + encodeURIComponent(id), function(data) {
+            alert(data.msg);
+            if (data.code === 1) {
+                loadStaffList();
+                loadStats();
+            }
+        });
+    }
+
+    // ===== 学员管理 =====
+    function loadStudents() {
+        apiGet('../admin/query?action=students', function(data) {
+            const container = document.getElementById('studentList');
+            if (data.code !== 1 || !data.data || data.data.length === 0) {
+                container.innerHTML = '<div class="empty-tip">暂无学员记录</div>';
+                return;
+            }
+            let html = '<table><thead><tr><th>姓名</th><th>手机号</th><th>身份证号</th><th>报考科目</th><th>创建时间</th></tr></thead><tbody>';
+            data.data.forEach(item => {
+                html += '<tr>'
+                    + '<td>' + item.name + '</td>'
+                    + '<td>' + item.phone + '</td>'
+                    + '<td>' + item.idCard + '</td>'
+                    + '<td>' + (item.subject || '-') + '</td>'
+                    + '<td>' + (item.createTime ? item.createTime.substring(0,16).replace('T',' ') : '-') + '</td>'
+                    + '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        });
+    }
+
+    // ===== 页面加载 =====
+    window.onload = function() {
+        loadStats();
+    };
 </script>
 </body>
 </html>

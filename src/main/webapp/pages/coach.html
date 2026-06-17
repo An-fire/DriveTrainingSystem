@@ -322,6 +322,12 @@
     // 以下函数会暴露到全局，供 HTML 元素 onclick 调用
     // 实际的提交逻辑在 coach.js 的 submitCoachScore 中
 
+    // ===== 检查是否登录且角色为教练 =====
+    var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!userInfo.id || userInfo.role !== 'coach') {
+        alert('请使用教练账号登录');
+        window.location.href = 'login.html';
+    }
     var currentBookingId = null;
 
     // 打开模态框（由 coach.js 调用）
@@ -356,7 +362,7 @@
     // 退出登录（也暴露给全局）
     function logout() {
         localStorage.removeItem('userInfo');
-        window.location.href = 'login.html';
+        window.location.href = BASE_URL + '/logout';
     }
 
     // 页面加载时初始化教练名称

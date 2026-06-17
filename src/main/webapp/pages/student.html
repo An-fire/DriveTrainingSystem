@@ -345,6 +345,13 @@
 <script src="../js/common.js"></script>
 <script src="../js/student.js"></script>
 <script>
+    // ===== 检查是否登录且角色为学员 =====
+    var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (!userInfo.id || userInfo.role !== 'student') {
+        alert('请使用学员账号登录');
+        window.location.href = 'login.html';
+    }
+
     // Tab切换核心函数，点击三个标签正常切换面板
     function switchTab(tabName) {
         // 清除所有激活标签
@@ -361,7 +368,7 @@
     function safeLogout() {
         if (confirm("确定退出学员账号吗？")) {
             localStorage.removeItem("userInfo");
-            location.href = "login.html";
+            window.location.href = BASE_URL + '/logout';
         }
     }
 

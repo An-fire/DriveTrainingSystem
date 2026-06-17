@@ -1,5 +1,7 @@
 package common.filter;
 
+import common.entity.User;
+import common.entity.Staff;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -25,8 +27,17 @@ public class AuthFilter implements Filter {
             "/pages/home.html"
     ));
 
+    // 不需要登录即可访问的 API 接口
+    private static final Set<String> PUBLIC_API = new HashSet<>(Arrays.asList(
+            "/login",
+            "/register",
+            "/register-staff",
+            "/logout"
+    ));
+
     @Override
-    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
+            throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
         HttpServletResponse response = (HttpServletResponse) resp;
 
@@ -39,7 +50,7 @@ public class AuthFilter implements Filter {
             path = uri.substring(contextPath.length());
         }
 
-        // ========== 1. 静态资源全部放行（CSS/JS/图片/字体） ==========
+        // ========== 1. 静态资源全部放行 ==========
         if (path.endsWith(".css") || path.endsWith(".js") ||
                 path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg") ||
                 path.endsWith(".gif") || path.endsWith(".svg") || path.endsWith(".ico") ||
@@ -50,10 +61,12 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // ========== 2. 登录注册相关接口放行 ==========
-        if (path.startsWith("/login") || path.startsWith("/register") || path.startsWith("/register-staff")) {
-            chain.doFilter(req, resp);
-            return;
+        // ========== 2. 公开 API 接口放行 ==========
+        for (String api : PUBLIC_API) {
+            if (path.startsWith(api)) {
+                chain.doFilter(req, resp);
+                return;
+            }
         }
 
         // ========== 3. 根路径放行 ==========
@@ -62,34 +75,79 @@ public class AuthFilter implements Filter {
             return;
         }
 
-        // ========== 4. HTML 页面：只放行白名单中的页面 ==========
+        // ========== 4. HTML 页面处理 ==========
         if (path.endsWith(".html")) {
+            // 公开页面直接放行
             if (PUBLIC_PAGES.contains(path)) {
                 chain.doFilter(req, resp);
                 return;
             }
-            // 其他 HTML 页面需要登录验证
+
+            // 需要登录验证
             HttpSession session = request.getSession(false);
-            if (session == null || (session.getAttribute("user") == null && session.getAttribute("staff") == null)) {
+            if (session == null) {
                 response.sendRedirect(request.getContextPath() + "/pages/login.html");
                 return;
             }
+
+            // 获取登录用户信息
+            User user = (User) session.getAttribute("user");
+            Staff staff = (Staff) session.getAttribute("staff");
+
+            // ========== ✅ 新增：角色路径匹配 ==========
+            if (path.equals("/pages/admin.html")) {
+                // 只有管理员可以访问
+                if (staff == null || !"admin".equals(staff.getRole())) {
+                    response.sendRedirect(request.getContextPath() + "/pages/login.html");
+                    return;
+                }
+            } else if (path.equals("/pages/coach.html")) {
+                // 只有教练可以访问
+                if (staff == null || !"coach".equals(staff.getRole())) {
+                    response.sendRedirect(request.getContextPath() + "/pages/login.html");
+                    return;
+                }
+            } else if (path.equals("/pages/student.html")) {
+                // 只有学员可以访问
+                if (user == null || !"student".equals(user.getRole())) {
+                    response.sendRedirect(request.getContextPath() + "/pages/login.html");
+                    return;
+                }
+            }
+
             chain.doFilter(req, resp);
             return;
         }
 
-        // ========== 5. 其他所有请求（API接口等）需要登录验证 ==========
+        // ========== 5. API 接口角色权限检查 ==========
         HttpSession session = request.getSession(false);
-        if (session == null || (session.getAttribute("user") == null && session.getAttribute("staff") == null)) {
-            // 判断是否为 AJAX 请求
-            String ajaxHeader = request.getHeader("X-Requested-With");
-            if ("XMLHttpRequest".equals(ajaxHeader)) {
-                response.setContentType("application/json;charset=UTF-8");
-                response.getWriter().write("{\"code\":0,\"msg\":\"请先登录\"}");
-                return;
-            }
+        if (session == null) {
             response.sendRedirect(request.getContextPath() + "/pages/login.html");
             return;
+        }
+
+        User user = (User) session.getAttribute("user");
+        Staff staff = (Staff) session.getAttribute("staff");
+
+        // 检查 API 路径权限
+        if (path.startsWith("/admin/") || path.startsWith("/admin")) {
+            if (staff == null || !"admin".equals(staff.getRole())) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":0,\"msg\":\"权限不足，需要管理员权限\"}");
+                return;
+            }
+        } else if (path.startsWith("/coach/")) {
+            if (staff == null || !"coach".equals(staff.getRole())) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":0,\"msg\":\"权限不足，需要教练权限\"}");
+                return;
+            }
+        } else if (path.startsWith("/student/")) {
+            if (user == null || !"student".equals(user.getRole())) {
+                response.setContentType("application/json;charset=UTF-8");
+                response.getWriter().write("{\"code\":0,\"msg\":\"权限不足，需要学员权限\"}");
+                return;
+            }
         }
 
         chain.doFilter(req, resp);
