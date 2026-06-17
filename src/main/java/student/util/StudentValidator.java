@@ -36,6 +36,9 @@ public class StudentValidator {
         if (subject == null || subject.isBlank()) {
             throw new StudentException("驾照类型不能为空");
         }
+        if (!"C1".equals(subject) && !"C2".equals(subject) && !"C3".equals(subject)) {
+            throw new StudentException("仅支持 C1 / C2 / C3 驾照类型");
+        }
     }
 
     // 预约时间校验

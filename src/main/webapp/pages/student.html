@@ -2,144 +2,393 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>学员中心</title>
-    <!-- 保留原有样式，未做任何修改 -->
-    <link rel="stylesheet" href="../css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SuperDriver 智慧驾培平台 - 学员中心">
+    <title>学员中心 - SuperDriver 智慧驾培</title>
+    <link rel="stylesheet" href="../css/auth-common.css">
     <style>
-        /* 仅布局样式，不改动你原有 style.css */
-        .tab { margin: 20px 0; }
-        .tab-item {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #eee;
+        :root {
+            --primary-gradient: linear-gradient(90deg, #3b60e0, #8048e8);
+            --dark-bg: #0b0e1f;
+            --card-bg: rgba(20, 25, 48, 0.65);
+            --input-bg: #101428;
+            --text-white: #ffffff;
+            --muted-text: #b4b9d8;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            overflow-x: hidden;
+            background: var(--dark-bg);
+        }
+        /* ========== 底层驾驶主题漂浮SVG图标（解决图标不显示问题） ========== */
+        .bg-decor {
+            position: fixed;
+            z-index: 0;
+            opacity: 0.06;
+            pointer-events: none;
+            animation: float 14s ease-in-out infinite alternate;
+        }
+        .decor-car {
+            width: 110px;
+            top: 12%;
+            left: 4%;
+            animation-delay: 0s;
+        }
+        .decor-wheel {
+            width: 130px;
+            top: 65%;
+            right: 3%;
+            animation-delay: 4s;
+        }
+        .decor-sign {
+            width: 85px;
+            top: 32%;
+            right: 10%;
+            animation-delay: 7s;
+        }
+        .decor-road {
+            width: 160px;
+            bottom: 6%;
+            left: 7%;
+            animation-delay: 11s;
+        }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(-4deg); }
+            100% { transform: translateY(-28px) rotate(4deg); }
+        }
+        /* 页面主容器 */
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: 36px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        /* 顶部头部栏 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 48px;
+        }
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--primary-gradient);
+            display: grid;
+            place-items: center;
+        }
+        .logo-inner-ring {
+            width: 18px;
+            height: 18px;
+            border: 3px solid #ffdd33;
+            border-radius: 50%;
+        }
+        .logo-text {
+            color: var(--text-white);
+            font-size: 17px;
+            font-weight: 600;
+        }
+        .header-btn-group {
+            display: flex;
+            gap: 12px;
+        }
+        .top-small-btn {
+            padding: 8px 18px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--primary-gradient);
+            color: var(--text-white);
+            font-size: 14px;
             cursor: pointer;
-            margin-right: 8px;
-            border-radius: 8px 8px 0 0;
         }
-        .tab-item.active {
-            background: #667eea;
-            color: #fff;
+        /* 标签按钮容器 居中布局 */
+        .tab-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 36px;
         }
-        .tab-content {
+        .tab-btn {
+            width: 180px;
+            height: 68px;
+            display: grid;
+            place-items: center;
+            border-radius: var(--radius-md);
+            background: rgba(255,255,255,0.08);
+            color: var(--text-white);
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--primary-gradient);
+            box-shadow: 0 0 20px rgba(70, 110, 255, 0.32);
+        }
+        /* 内容卡片 匹配截图深色毛玻璃 */
+        .content-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            backdrop-filter: blur(16px);
             display: none;
-            padding: 25px;
-            border: 1px solid #ddd;
-            border-radius: 0 8px 8px 8px;
         }
-        .tab-content.active {
+        .content-card.active {
             display: block;
         }
-        table { width: 100%; border-collapse: collapse; margin-top:15px; }
-        th,td { border:1px solid #ccc; padding:10px; text-align:center; }
-
-        /* 我的报名信息 标题：居中、改字体颜色、调整字号 */
-        .info-title{
-            text-align: center;
-            color: #4A6CF7;
-            font-size: 18px;
-            font-weight: bold;
-            margin: 20px 0;
+        /* 表单输入项 */
+        .form-item {
+            margin-bottom: 24px;
         }
-        /* 报名信息内容居中 */
-        #enrollInfoBox{
-            text-align: center;
-            line-height: 2.2;
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: var(--muted-text);
+            margin-bottom: 8px;
+        }
+        .form-select {
+            width: 100%;
+            height: 48px;
+            padding: 0 14px;
+            border-radius: var(--radius-sm);
+            background: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.08);
+            color: var(--text-white);
+            font-size: 15px;
+        }
+        .form-select option {
+            background: #101428;
+            color: #fff;
+        }
+        /* 底部长条按钮 */
+        .long-gradient-btn {
+            width: 100%;
+            height: 52px;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--primary-gradient);
+            color: var(--text-white);
             font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+        .divider-line {
+            width: 100%;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+            margin: 30px 0;
+        }
+        /* 报名信息文字容器 */
+        #enrollInfoBox {
+            text-align: center;
+            color: var(--text-white);
+            line-height: 2.3;
+            font-size: 16px;
+        }
+        /* 预约记录表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 12px;
+            text-align: center;
+            color: var(--text-white);
+        }
+        th {
+            background: rgba(70,110,255,0.12);
+        }
+        /* 页面渐入动画 */
+        .fade-reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
+        }
+        .fade-reveal.show {
+            opacity: 1;
+            transform: translateY(0);
         }
     </style>
 </head>
 <body>
-<div class="home-container">
-    <div class="home-header">
-        <h1>驾校学员中心</h1>
-        <p>报名、练车预约、一站式服务</p>
-    </div>
+<!-- 底层SVG驾驶装饰图标（不会字体缺失，稳定显示） -->
+<svg class="bg-decor decor-car" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 18H6M4 11L5.2 7.4C5.5 6.5 6.3 6 7.2 6H16.8C17.7 6 18.5 6.5 18.8 7.4L20 11M4 11V16C4 17.1 4.9 18 6 18H18C19.1 18 20 17.1 20 16V11M9 11V14M15 11V14" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+<svg class="bg-decor decor-wheel" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="12" cy="12" r="3" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="12" y1="3" x2="12" y2="6" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="12" y1="18" x2="12" y2="21" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="3" y1="12" x2="6" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="18" y1="12" x2="21" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+<svg class="bg-decor decor-sign" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="4" width="14" height="10" rx="1" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="12" y1="14" x2="12" y2="20" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+<svg class="bg-decor decor-road" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="10" width="18" height="4" rx="1" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="7" y1="12" x2="10" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="14" y1="12" x2="17" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
 
-    <div class="home-content">
-        <!-- 标签栏：统一使用英文ID，和JS完全匹配（修复核心bug） -->
-        <div class="tab">
-            <div class="tab-item active" id="tab-enroll" onclick="switchTab('enroll')">驾校报名</div>
-            <div class="tab-item" id="tab-book" onclick="switchTab('book')">练车预约</div>
-            <div class="tab-item" id="tab-record" onclick="switchTab('record')">我的预约记录</div>
-            <div style="float:right;">
-                <button class="btn btn-primary" onclick="logout()">退出登录</button>
-                <!-- 新增：修改密码跳转按钮 -->
-                <button class="btn btn-primary" style="margin-left: 10px;" onclick="location.href='modifyPwd.html'">修改密码</button>
+<!-- 全局星空极光背景 -->
+<canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+<div class="aurora aurora-one" aria-hidden="true"></div>
+<div class="aurora aurora-two" aria-hidden="true"></div>
+
+<main class="page-wrap">
+    <!-- 顶部头部 -->
+    <div class="page-header fade-reveal">
+        <div class="logo-group">
+            <div class="logo-icon">
+                <div class="logo-inner-ring"></div>
             </div>
+            <span class="logo-text">SuperDriver智慧驾培平台</span>
         </div>
-
-        <!-- 驾校报名区域 -->
-        <div class="tab-content active" id="content-enroll">
-            <div class="form-group">
-                <label>选择授课教练：</label>
-                <select id="enrollCoach"></select>
-            </div>
-            <!-- 报考驾照：下拉选择 3个选项 C1/C2/C3 -->
-            <div class="form-group">
-                <label>报考驾照类型：</label>
-                <select id="enrollSubject">
-                    <option value="C1" selected>C1 手动挡</option>
-                    <option value="C2">C2 自动挡</option>
-                    <option value="C3">C3 低速载货汽车</option>
-                </select>
-            </div>
-            <button class="btn btn-primary" onclick="submitEnroll()">提交报名</button>
-
-            <hr style="margin:20px 0;">
-            <h3 class="info-title">我的报名信息</h3>
-            <div id="enrollInfoBox"></div>
-        </div>
-
-        <!-- 练车预约区域（修复ID：content-book） -->
-        <div class="tab-content" id="content-book">
-            <div class="form-group">
-                <label>选择练车教练：</label>
-                <select id="bookCoach"></select>
-            </div>
-            <!-- 练习科目：下拉选择 3个选项 C1/C2/C3 -->
-            <div class="form-group">
-                <label>练习科目：</label>
-                <select id="bookSubject">
-                    <option value="C1" selected>C1 手动挡</option>
-                    <option value="C2">C2 自动挡</option>
-                    <option value="C3">C3 低速载货汽车</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>预约开始时间：</label>
-                <input type="datetime-local" id="startTime">
-            </div>
-            <div class="form-group">
-                <label>预约结束时间：</label>
-                <input type="datetime-local" id="endTime">
-            </div>
-            <button class="btn btn-primary" onclick="submitBook()">提交预约</button>
-        </div>
-
-        <!-- 我的预约记录区域 -->
-        <div class="tab-content" id="content-record">
-            <h3 style="text-align: center;color: #4A6CF7;font-size: 18px;margin-bottom: 15px;">我的预约记录</h3>
-            <table>
-                <thead>
-                <tr>
-                    <th>预约ID</th>
-                    <th>教练ID</th>
-                    <th>练习科目</th>
-                    <th>开始时间</th>
-                    <th>结束时间</th>
-                    <th>状态</th>
-                </tr>
-                </thead>
-                <tbody id="bookTbody"></tbody>
-            </table>
+        <div class="header-btn-group">
+            <button class="top-small-btn" onclick="safeLogout()">退出登录</button>
         </div>
     </div>
 
-    <div class="home-footer">
-        <p>驾校管理系统 &copy; 2026</p>
+    <!-- 居中标签按钮 -->
+    <div class="tab-wrapper fade-reveal">
+        <button class="tab-btn active" data-target="enroll" onclick="switchTab('enroll')">驾校报名</button>
+        <button class="tab-btn" data-target="book" onclick="switchTab('book')">练车预约</button>
+        <button class="tab-btn" data-target="record" onclick="switchTab('record')">我的预约记录</button>
     </div>
-</div>
 
+    <!-- 驾校报名面板 -->
+    <div class="content-card active fade-reveal" id="content-enroll">
+        <div class="form-item">
+            <label class="form-label">选择授课教练</label>
+            <select id="enrollCoach" class="form-select"></select>
+        </div>
+        <div class="form-item">
+            <label class="form-label">报考驾照类型</label>
+            <select id="enrollSubject" class="form-select">
+                <option value="C1" selected>C1 手动挡</option>
+                <option value="C2">C2 自动挡</option>
+                <option value="C3">C3 低速载货汽车</option>
+            </select>
+        </div>
+        <button class="long-gradient-btn" onclick="submitEnroll()">提交报名</button>
+
+        <div class="divider-line"></div>
+        <button class="long-gradient-btn" disabled>我的报名信息</button>
+        <div id="enrollInfoBox"></div>
+    </div>
+
+    <!-- 练车预约面板 -->
+    <div class="content-card fade-reveal" id="content-book">
+        <div class="form-item">
+            <label class="form-label">选择练车教练</label>
+            <select id="bookCoach" class="form-select"></select>
+        </div>
+        <div class="form-item">
+            <label class="form-label">练习科目</label>
+            <select id="bookSubject" class="form-select">
+                <option value="C1" selected>C1 手动挡</option>
+                <option value="C2">C2 自动挡</option>
+                <option value="C3">C3 低速载货汽车</option>
+            </select>
+        </div>
+        <div class="form-item">
+            <label class="form-label">预约开始时间</label>
+            <input type="datetime-local" class="form-select" id="startTime">
+        </div>
+        <div class="form-item">
+            <label class="form-label">预约结束时间</label>
+            <input type="datetime-local" class="form-select" id="endTime">
+        </div>
+        <button class="long-gradient-btn" onclick="submitBook()">提交预约</button>
+    </div>
+
+    <!-- 预约记录面板 -->
+    <div class="content-card fade-reveal" id="content-record">
+        <h3 style="text-align:center;color:#fff;margin-bottom:20px;font-size:18px;">我的预约记录</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>预约ID</th>
+                <th>教练ID</th>
+                <th>练习科目</th>
+                <th>开始时间</th>
+                <th>结束时间</th>
+                <th>状态</th>
+            </tr>
+            </thead>
+            <tbody id="bookTbody"></tbody>
+        </table>
+    </div>
+</main>
+
+<script src="../js/common.js"></script>
 <script src="../js/student.js"></script>
+<script>
+    // Tab切换核心函数，点击三个标签正常切换面板
+    function switchTab(tabName) {
+        // 清除所有激活标签
+        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+        // 清除所有内容卡片
+        document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
+        // 激活当前点击标签
+        document.querySelector(`.tab-btn[data-target="${tabName}"]`).classList.add('active');
+        // 显示对应内容面板
+        document.getElementById(`content-${tabName}`).classList.add('active');
+    }
+
+    // 安全退出，防止误触直接跳转登录
+    function safeLogout() {
+        if (confirm("确定退出学员账号吗？")) {
+            localStorage.removeItem("userInfo");
+            location.href = "login.html";
+        }
+    }
+
+    // 页面加载完成执行动画+加载数据
+    window.addEventListener('DOMContentLoaded', function () {
+        setTimeout(() => {
+            document.querySelectorAll('.fade-reveal').forEach((item, idx) => {
+                setTimeout(() => item.classList.add('show'), idx * 110);
+            })
+            // 加载教练、报名、预约数据（调用student.js内置函数）
+            loadCoach();
+            loadMyEnrollInfo();
+            loadMyBooking();
+        }, 80);
+    })
+
+    // 接口401拦截，仅登录过期跳转，不会乱跳登录页
+    window.originFetch = window.fetch;
+    window.fetch = async function (url, opts) {
+        const res = await originFetch(url, opts);
+        if (!res.ok && res.status === 401) {
+            alert("登录已过期，请重新登录");
+            localStorage.removeItem("userInfo");
+            location.href = "login.html";
+        }
+        return res;
+    }
+</script>
 </body>
 </html>

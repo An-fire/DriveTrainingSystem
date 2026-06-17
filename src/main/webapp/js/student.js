@@ -251,38 +251,21 @@ async function loadMyBooking() {
     });
 }
 
-// ===================== 【新增】修改密码逻辑 =====================
-async function modifyPassword() {
-    let oldPwd = document.getElementById("oldPwd").value.trim();
-    let newPwd = document.getElementById("newPwd").value.trim();
-    let confirmPwd = document.getElementById("confirmPwd").value.trim();
+//===================== 取消预约 =====================
+async function cancelBook(id){
+    let res = await fetch(`/student/booking?bookingId=${id}`,{
+        method:"DELETE"
+    })
+    let json = await res.json();
+    alert(json.msg);
+    loadMyBooking();
+}
 
-    // 前端校验
-    if (!oldPwd || !newPwd || !confirmPwd) {
-        showMsg("所有密码项不能为空", true);
-        return;
-    }
-    if (newPwd.length < 6) {
-        showMsg("新密码长度不能少于6位", true);
-        return;
-    }
-    if (newPwd !== confirmPwd) {
-        showMsg("两次输入的新密码不一致", true);
-        return;
-    }
-
-    let res = await request("/student/modifyPwd", "POST", {
-        oldPwd: oldPwd,
-        newPwd: newPwd
-    });
-    if (res.success) {
-        showMsg("密码修改成功，请重新登录");
-        setTimeout(() => {
-            location.href = "login.html";
-        }, 1500);
-    } else {
-        showMsg(res.msg, true);
-    }
+// ===================== 冲突预校验 =====================
+async function checkConflict(coach,start,end){
+    let res = await fetch(`/student/booking/conflict?coachId=${coach}&start=${start}&end=${end}`)
+    let json = await res.json();
+    if(json.data) alert("时段冲突");
 }
 
 // ===================== 退出登录 =====================
