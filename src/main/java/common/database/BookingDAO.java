@@ -172,4 +172,112 @@ public class BookingDAO {
         }
         return false;
     }
+
+    public List<Booking> findAll() {
+        String sql = "SELECT * FROM booking ORDER BY startTime DESC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Booking> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Booking booking = new Booking();
+                booking.setId(rs.getString("id"));
+                booking.setStudentId(rs.getString("studentId"));
+                booking.setCoachId(rs.getString("coachId"));
+                booking.setSubjectType(rs.getString("subjectType"));
+                booking.setStartTime(rs.getTimestamp("startTime"));
+                booking.setEndTime(rs.getTimestamp("endTime"));
+                booking.setStatus(rs.getString("status"));
+                booking.setStudentScore(rs.getInt("studentScore"));
+                booking.setCoachScore(rs.getInt("coachScore"));
+                booking.setCanExam(rs.getBoolean("canExam"));
+                booking.setCreateTime(rs.getTimestamp("createTime"));
+                list.add(booking);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
+    public List<Booking> findByStatus(String status) {
+        String sql = "SELECT * FROM booking WHERE status = ? ORDER BY startTime DESC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Booking> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, status);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Booking booking = new Booking();
+                booking.setId(rs.getString("id"));
+                booking.setStudentId(rs.getString("studentId"));
+                booking.setCoachId(rs.getString("coachId"));
+                booking.setSubjectType(rs.getString("subjectType"));
+                booking.setStartTime(rs.getTimestamp("startTime"));
+                booking.setEndTime(rs.getTimestamp("endTime"));
+                booking.setStatus(rs.getString("status"));
+                booking.setStudentScore(rs.getInt("studentScore"));
+                booking.setCoachScore(rs.getInt("coachScore"));
+                booking.setCanExam(rs.getBoolean("canExam"));
+                booking.setCreateTime(rs.getTimestamp("createTime"));
+                list.add(booking);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM booking";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return 0;
+    }
+
+    public int countByStatus(String status) {
+        String sql = "SELECT COUNT(*) FROM booking WHERE status = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, status);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return 0;
+    }
 }

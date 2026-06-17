@@ -16,40 +16,45 @@
         .auth-card {
             position: relative;
             width: 100%;
-            max-width: 440px;
-            background: rgba(15,23,42,0.7);
+            max-width: 420px;
+            background: rgba(15,23,42,0.75);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px;
-            padding: 26px 24px 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-            backdrop-filter: blur(18px);
+            padding: 32px 28px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
         }
         .auth-top {
             text-align: center;
-            margin-bottom: 18px;
+            margin-bottom: 24px;
         }
         .auth-top .brand-mini {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 18px;
         }
         .brand-mini .dot {
-            width: 30px; height: 30px;
-            border-radius: 10px;
+            width: 34px;
+            height: 34px;
+            border-radius: 12px;
             background: linear-gradient(135deg, var(--primary), var(--primary-2));
-            display: grid; place-items: center;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.3);
         }
         .brand-mini .dot span {
-            width: 14px; height: 14px;
+            width: 16px;
+            height: 16px;
             border-radius: 6px;
-            border: 2px solid rgba(255,255,255,0.85);
+            border: 2px solid rgba(255,255,255,0.9);
             transform: rotate(15deg);
         }
         .auth-top h1 {
-            font-size: 22px;
-            margin: 0 0 6px;
+            font-size: 24px;
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
         }
         .auth-top p {
             margin: 0;
@@ -57,17 +62,19 @@
             color: var(--muted);
         }
         .form-group {
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
         .form-group label {
             display: block;
             font-size: 13px;
             color: var(--muted);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
-        .form-group input {
+        .form-group input,
+        .form-group select {
             width: 100%;
-            padding: 12px 14px;
+            padding: 14px 16px;
             border-radius: 12px;
             border: 1px solid rgba(255,255,255,0.12);
             background: rgba(5,6,10,0.7);
@@ -76,51 +83,27 @@
             outline: none;
             transition: border-color .2s, box-shadow .2s;
         }
-        .form-group input:focus {
+        .form-group input:focus,
+        .form-group select:focus {
             border-color: rgba(59,130,246,0.6);
             box-shadow: 0 0 0 4px rgba(59,130,246,0.15);
         }
-        .role-pill-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 16px;
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.3);
         }
-        .role-pill {
-            flex: 1;
-            display: flex; align-items: center; justify-content: center;
-            gap: 8px;
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(255,255,255,0.04);
-            cursor: pointer;
-            user-select: none;
-            transition: border-color .2s, background .2s, transform .1s;
-        }
-        .role-pill input {
-            display: none;
-        }
-        .role-pill.active {
-            border-color: rgba(59,130,246,0.6);
-            background: rgba(59,130,246,0.12);
-        }
-        .role-pill small {
-            display: block;
-            font-size: 11px;
-            color: var(--muted);
-        }
-        .role-pill span {
-            font-weight: 700;
-            font-size: 14px;
+        .form-group select option {
+            background: #0f172a;
+            color: #fff;
         }
         .btn-row {
-            margin-top: 10px;
+            margin-top: 12px;
         }
         .sub-note {
             text-align: center;
-            margin-top: 16px;
+            margin-top: 20px;
             font-size: 13px;
             color: var(--muted);
+            line-height: 1.8;
         }
         .sub-note a {
             color: var(--primary);
@@ -132,9 +115,12 @@
             gap: 6px;
             color: var(--muted);
             font-size: 13px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            transition: color .2s;
         }
         .back-link:hover { color: var(--text); }
+        #usbGroup { display: none; }
+        .btn-block { width: 100%; }
     </style>
 </head>
 <body>
@@ -151,81 +137,121 @@
                 <strong>SuperDriver</strong>
             </div>
             <h1>欢迎回来</h1>
-            <p>登录您的账号继续使用</p>
+            <p>登录账号继续使用平台服务</p>
         </div>
 
+        <!-- ===== 登录表单 ===== -->
         <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
-            <div class="role-pill-row">
-                <label class="role-pill active">
-                    <input type="radio" name="loginType" value="student" checked>
-                    <div><span>学员</span><small>学员账号</small></div>
-                </label>
-                <label class="role-pill">
-                    <input type="radio" name="loginType" value="staff">
-                    <div><span>员工</span><small>管理员/教练</small></div>
-                </label>
+
+            <!-- 角色选择 -->
+            <div class="form-group">
+                <label>👤 登录角色</label>
+                <select id="roleSelect">
+                    <option value="student">学员</option>
+                    <option value="coach" selected>教练</option>
+                    <option value="admin">管理员</option>
+                </select>
             </div>
 
+            <!-- 手机号 -->
             <div class="form-group">
-                <label>手机号</label>
-                <input type="tel" id="phone" placeholder="请输入手机号" autocomplete="tel">
+                <label>📱 手机号</label>
+                <input type="text" id="phone" placeholder="请输入手机号" autocomplete="username" value="13912345678">
             </div>
+
+            <!-- 密码 -->
             <div class="form-group">
-                <label>密码</label>
-                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+                <label>🔒 密码</label>
+                <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" value="123456">
+            </div>
+
+            <!-- USB 令牌（管理员专用） -->
+            <div class="form-group" id="usbGroup">
+                <label>💾 USB 安全令牌</label>
+                <input type="password" id="usbToken" placeholder="输入管理员 USB 令牌 (DRIVE2026)">
             </div>
 
             <div class="btn-row">
-                <button type="submit" class="btn btn-primary btn-large btn-block light-sweep">登录</button>
+                <button type="submit" class="btn btn-primary btn-large btn-block light-sweep">登 录</button>
             </div>
         </form>
 
         <div class="sub-note">
-            <span>还没有账号？</span>
-            <a href="register.html">立即注册</a>
+            <span>默认测试账号：教练 13912345678 / 123456</span><br>
+            <span style="font-size:12px;color:rgba(255,255,255,0.3);">学员注册 / 员工注册 请咨询管理员</span>
         </div>
     </div>
 </main>
 
-<script src="../js/home.js"></script>
+<!-- ================== JavaScript（正确顺序） ================== -->
+<!-- 1. 先加载 axios 库 -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<!-- 2. 再加载 common.js（依赖 axios） -->
+<script src="../js/common.js"></script>
+
+<!-- 3. 登录逻辑（适配组长 LoginServlet） -->
 <script>
-    document.querySelectorAll('#loginForm .role-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-            document.querySelectorAll('#loginForm .role-pill').forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            const input = pill.querySelector('input');
-            if (input) input.checked = true;
-        });
+    // 角色切换：显示/隐藏 USB 令牌
+    document.getElementById('roleSelect').addEventListener('change', function() {
+        var usbGroup = document.getElementById('usbGroup');
+        usbGroup.style.display = (this.value === 'admin') ? 'block' : 'none';
     });
 
     function handleLogin() {
-        const phone = document.getElementById('phone').value.trim();
-        const pwd = document.getElementById('password').value;
-        const type = document.querySelector('#loginForm input[name="loginType"]:checked').value;
+        var role = document.getElementById('roleSelect').value;
+        var phone = document.getElementById('phone').value.trim();
+        var password = document.getElementById('password').value.trim();
+        var usbToken = document.getElementById('usbToken').value.trim();
 
-        if (!phone || !pwd) {
+        // 前端校验
+        if (!phone || !password) {
             alert('请填写完整信息');
             return;
         }
+        if (role === 'admin' && usbToken !== 'DRIVE2026') {
+            alert('❌ USB 令牌验证失败，请插入有效令牌');
+            return;
+        }
 
-        fetch('../login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(pwd) + '&type=' + type
-        }).then(res => res.json()).then(data => {
-            if (data.code === 1) {
-                alert(data.msg);
-                window.location.href = data.url;
+        // 使用 application/x-www-form-urlencoded 格式（适配组长后端 request.getParameter）
+        var params = new URLSearchParams();
+        params.append('phone', phone);
+        params.append('password', password);
+
+        axios.post(window.BASE_URL + '/login', params.toString(), {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        })
+        .then(function(res) {
+            // 组长后端返回 code === 1 表示成功
+            if (res.data.code === 1) {
+                // 保存用户信息到 localStorage（供 coach.html 使用）
+                var userInfo = {
+                    phone: phone,
+                    role: role,
+                    name: role === 'coach' ? '教练' : (role === 'admin' ? '管理员' : '学员')
+                };
+                localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                // 使用组长返回的 url 跳转（已包含 context path）
+                window.location.href = res.data.url;
             } else {
-                alert(data.msg);
+                alert('登录失败：' + (res.data.msg || '未知错误'));
             }
-        }).catch(err => {
-            alert('网络请求失败，请稍后重试');
+        })
+        .catch(function(err) {
+            alert('请求异常，请检查网络');
+            console.error('登录错误:', err);
         });
     }
 
-    setTimeout(() => {
-        document.getElementById('authCard').classList.add('visible');
+    // 回车键触发登录
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') handleLogin();
+    });
+
+    // 页面加载动画
+    setTimeout(function() {
+        var card = document.getElementById('authCard');
+        if (card) card.classList.add('visible');
     }, 100);
 </script>
 </body>

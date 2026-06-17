@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SuperDriver 智慧驾培平台 - 员工注册">
+    <title>员工注册 - SuperDriver 智慧驾培</title>
+    <link rel="stylesheet" href="../css/auth-common.css">
+    <style>
+        .page-shell {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+        .auth-card {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            background: rgba(15,23,42,0.75);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            padding: 32px 28px 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            backdrop-filter: blur(20px);
+        }
+        .auth-top {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .auth-top .brand-mini {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            margin-bottom: 18px;
+        }
+        .brand-mini .dot {
+            width: 34px; height: 34px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary-2), #7c3aed);
+            display: grid; place-items: center;
+            box-shadow: 0 8px 24px rgba(139,92,246,0.3);
+        }
+        .brand-mini .dot span {
+            width: 16px; height: 16px;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.9);
+            transform: rotate(15deg);
+        }
+        .auth-top h1 {
+            font-size: 24px;
+            margin: 0 0 8px;
+            letter-spacing: -0.02em;
+        }
+        .auth-top p {
+            margin: 0;
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(139,92,246,0.12);
+            border: 1px solid rgba(139,92,246,0.3);
+            color: #c4b5fd;
+            margin-top: 8px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(5,6,10,0.7);
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: rgba(139,92,246,0.6);
+            box-shadow: 0 0 0 4px rgba(139,92,246,0.15);
+        }
+        .form-group input::placeholder, .form-group select::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+        .form-group select option {
+            background: #1e293b;
+            color: var(--text);
+        }
+        .staff-role-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .staff-role-option {
+            padding: 14px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(5,6,10,0.7);
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, background .2s;
+            user-select: none;
+        }
+        .staff-role-option input {
+            display: none;
+        }
+        .staff-role-option.active {
+            border-color: rgba(139,92,246,0.6);
+            background: rgba(139,92,246,0.12);
+        }
+        .staff-role-option span {
+            display: block;
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 2px;
+        }
+        .staff-role-option small {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .btn-row {
+            margin-top: 12px;
+        }
+        .sub-note {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .sub-note a {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
+            transition: color .2s;
+        }
+        .back-link:hover { color: var(--text); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+<div class="aurora aurora-one" aria-hidden="true"></div>
+<div class="aurora aurora-two" aria-hidden="true"></div>
+
+<main class="page-shell" style="position:relative;z-index:1;">
+    <div class="auth-card reveal" id="authCard">
+        <a class="back-link" href="home.html">← 返回首页</a>
+        <div class="auth-top">
+            <div class="brand-mini">
+                <div class="dot"><span></span></div>
+                <strong>SuperDriver</strong>
+            </div>
+            <h1>员工注册</h1>
+            <p>创建员工账号，加入驾培管理团队</p>
+            <div class="role-badge">👔 教练 / 管理员</div>
+        </div>
+
+        <form id="registerForm" onsubmit="event.preventDefault(); handleRegister();">
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="regName" placeholder="请输入真实姓名" autocomplete="name">
+            </div>
+
+            <div class="form-group">
+                <label>手机号</label>
+                <input type="tel" id="regPhone" placeholder="请输入手机号" autocomplete="tel">
+            </div>
+
+            <div class="form-group">
+                <label>员工角色</label>
+                <div class="staff-role-options">
+                    <label class="staff-role-option active" onclick="setStaffRole('coach')">
+                        <input type="radio" name="regStaffRole" value="coach" checked id="roleCoach">
+                        <span>🏗️ 教练</span>
+                        <small>指导学员练车</small>
+                    </label>
+                    <label class="staff-role-option" onclick="setStaffRole('admin')">
+                        <input type="radio" name="regStaffRole" value="admin" id="roleAdmin">
+                        <span>🔧 管理员</span>
+                        <small>管理系统数据</small>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group" id="regSubjectGroup">
+                <label>负责科目（教练填写）</label>
+                <select id="regSubject">
+                    <option value="C1">C1（小型手动挡）</option>
+                    <option value="C2">C2（小型自动挡）</option>
+                    <option value="C3">C3（低速载货）</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>设置密码</label>
+                <input type="password" id="regPassword" placeholder="至少 6 位" autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label>确认密码</label>
+                <input type="password" id="regConfirmPassword" placeholder="再次输入密码" autocomplete="new-password">
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary btn-large btn-block light-sweep">立即注册</button>
+            </div>
+        </form>
+
+        <div class="sub-note">
+            <span>已有账号？</span>
+            <a href="login.html">去登录</a>
+        </div>
+    </div>
+</main>
+
+<script src="../js/home.js"></script>
+<script>
+    function setStaffRole(role) {
+        document.querySelectorAll('.staff-role-option').forEach(o => o.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        const input = event.currentTarget.querySelector('input');
+        if (input) input.checked = true;
+        
+        document.getElementById('regSubjectGroup').classList.toggle('hidden', role !== 'coach');
+    }
+
+    document.querySelectorAll('.staff-role-option').forEach(option => {
+        option.addEventListener('click', () => {
+            const role = option.querySelector('input').value;
+            setStaffRole(role);
+        });
+    });
+
+    function handleRegister() {
+        const name = document.getElementById('regName').value.trim();
+        const phone = document.getElementById('regPhone').value.trim();
+        const role = document.querySelector('input[name="regStaffRole"]:checked').value;
+        const subject = role === 'coach' ? document.getElementById('regSubject').value : '';
+        const password = document.getElementById('regPassword').value;
+        const confirmPassword = document.getElementById('regConfirmPassword').value;
+
+        if (!name || !phone || !password || !confirmPassword) {
+            alert('请填写完整信息');
+            return;
+        }
+
+        if (password.length < 6) {
+            alert('密码至少需要 6 位');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert('两次密码输入不一致');
+            return;
+        }
+
+        fetch('../register-staff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'name=' + encodeURIComponent(name) +
+                  '&phone=' + encodeURIComponent(phone) +
+                  '&password=' + encodeURIComponent(password) +
+                  '&role=' + encodeURIComponent(role) +
+                  '&subject=' + encodeURIComponent(subject)
+        }).then(res => res.json()).then(data => {
+            if (data.code === 1) {
+                alert(data.msg);
+                window.location.href = 'login.html';
+            } else {
+                alert(data.msg);
+            }
+        }).catch(err => {
+            alert('网络请求失败，请稍后重试');
+        });
+    }
+
+    setTimeout(() => {
+        document.getElementById('authCard').classList.add('visible');
+    }, 100);
+</script>
+</body>
+</html>
