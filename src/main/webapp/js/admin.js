@@ -2,6 +2,100 @@
 
 var BASE_URL = window.BASE_URL || '';
 
+// 页面加载完成后初始化动画
+document.addEventListener('DOMContentLoaded', function() {
+    initParticleCanvas();
+    initRevealAnimations();
+});
+
+// 粒子背景动画
+function initParticleCanvas() {
+    var canvas = document.getElementById('particleCanvas');
+    if (!canvas) return;
+    
+    var ctx = canvas.getContext('2d');
+    var particles = [];
+    var w = canvas.width = window.innerWidth;
+    var h = canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', function() {
+        w = canvas.width = window.innerWidth;
+        h = canvas.height = window.innerHeight;
+    });
+    
+    for (var i = 0; i < 50; i++) {
+        particles.push({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            vx: (Math.random() - 0.5) * 0.3,
+            vy: (Math.random() - 0.5) * 0.3,
+            size: Math.random() * 2 + 1,
+            opacity: Math.random() * 0.5 + 0.1
+        });
+    }
+    
+    function animate() {
+        ctx.clearRect(0, 0, w, h);
+        particles.forEach(function(p) {
+            p.x += p.vx;
+            p.y += p.vy;
+            if (p.x < 0 || p.x > w) p.vx *= -1;
+            if (p.y < 0 || p.y > h) p.vy *= -1;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(59, 130, 246, ' + p.opacity + ')';
+            ctx.fill();
+        });
+        requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+// 滚动 reveal 动画
+function initRevealAnimations() {
+    var elements = document.querySelectorAll('.stat-card, .chart-box, .section');
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry, index) {
+            if (entry.isIntersecting) {
+                setTimeout(function() {
+                    entry.target.classList.add('reveal');
+                }, index * 80);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    
+    elements.forEach(function(el) {
+        observer.observe(el);
+    });
+    
+    // 表格行动画
+    setTimeout(function() {
+        var rows = document.querySelectorAll('tbody tr');
+        rows.forEach(function(row, index) {
+            setTimeout(function() {
+                row.classList.add('reveal');
+            }, index * 60);
+        });
+    }, 300);
+}
+
+// 数字滚动动画
+function animateValue(element, start, end, duration) {
+    var startTime = null;
+    function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        var progress = Math.min((timestamp - startTime) / duration, 1);
+        var easeOut = 1 - Math.pow(1 - progress, 3);
+        var current = Math.floor(easeOut * (end - start) + start);
+        element.textContent = current;
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        }
+    }
+    requestAnimationFrame(step);
+}
+
 function apiGet(url, callback) {
     axios.get(BASE_URL + url, { responseType: 'json' })
         .then(function(res) {
@@ -55,6 +149,24 @@ window.showTab = function(tabName) {
         }
     });
 
+    // 切换Tab后重新触发动画
+    setTimeout(function() {
+        var elements = targetTab.querySelectorAll('.stat-card, .chart-box, .section');
+        elements.forEach(function(el, index) {
+            el.classList.remove('reveal');
+            setTimeout(function() {
+                el.classList.add('reveal');
+            }, index * 80);
+        });
+        var rows = targetTab.querySelectorAll('tbody tr');
+        rows.forEach(function(row, index) {
+            row.classList.remove('reveal');
+            setTimeout(function() {
+                row.classList.add('reveal');
+            }, index * 60);
+        });
+    }, 100);
+
     // 加载对应数据
     if (tabName === 'staff') loadStaffList();
     if (tabName === 'students') loadStudents();
@@ -66,7 +178,7 @@ window.showTab = function(tabName) {
 // ==================== 员工管理 ====================
 window.loadStaffList = function() {
     var container = document.getElementById('staffList');
-    container.innerHTML = '<div class="empty-tip">加载中...</div>';
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     var fullUrl = window.BASE_URL + '/admin/staff?action=list';
     console.log('请求URL:', fullUrl);
@@ -208,7 +320,7 @@ window.deleteStaff = function(id) {
 // ==================== 学员管理 ====================
 window.loadStudents = function() {
     var container = document.getElementById('studentList');
-    container.innerHTML = '<div class="empty-tip">加载中...</div>';
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/query?action=students', function(data) {
         if (!data || data.length === 0) {
@@ -235,7 +347,7 @@ window.loadStudents = function() {
 window.loadEnrollments = function() {
     var container = document.getElementById('enrollmentList');
     if (!container) return;
-    container.innerHTML = '<div class="empty-tip">加载中...</div>';
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/query?action=enrollments', function(data) {
         if (!data || data.length === 0) {
@@ -278,7 +390,7 @@ window.auditEnrollment = function(id, status) {
 window.loadBookings = function() {
     var container = document.getElementById('bookingList');
     if (!container) return;
-    container.innerHTML = '<div class="empty-tip">加载中...</div>';
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/query?action=bookings', function(data) {
         if (!data || data.length === 0) {
@@ -403,12 +515,13 @@ window.loadDashboard = function() {
     // 1. 加载基础统计卡片
     apiGet('/admin/query?action=stats', function(data) {
         if (!data) return;
-        document.getElementById('statStudents').innerText = data.totalStudents || 0;
-        document.getElementById('statCoaches').innerText = data.totalCoaches || 0;
-        document.getElementById('statPendingEnroll').innerText = data.pendingEnrollments || 0;
-        document.getElementById('statApprovedEnroll').innerText = data.approvedEnrollments || 0;
-        document.getElementById('statBookings').innerText = data.totalBookings || 0;
-        document.getElementById('statApprovedBook').innerText = data.approvedBookings || 0;
+        // 使用数字滚动动画
+        animateValue(document.getElementById('statStudents'), 0, data.totalStudents || 0, 1000);
+        animateValue(document.getElementById('statCoaches'), 0, data.totalCoaches || 0, 1000);
+        animateValue(document.getElementById('statPendingEnroll'), 0, data.pendingEnrollments || 0, 1000);
+        animateValue(document.getElementById('statApprovedEnroll'), 0, data.approvedEnrollments || 0, 1000);
+        animateValue(document.getElementById('statBookings'), 0, data.totalBookings || 0, 1000);
+        animateValue(document.getElementById('statApprovedBook'), 0, data.approvedBookings || 0, 1000);
     });
 
     // 2. 加载图表详细数据
