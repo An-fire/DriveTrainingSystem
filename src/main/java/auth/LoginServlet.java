@@ -45,7 +45,8 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("role", user.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
-                result.put("userId", user.getId());  // ✅ 返回学员真实 ID
+                result.put("userId", user.getId());
+                result.put("name", user.getName());  // ✅ 返回真实姓名
                 result.put("url", request.getContextPath() + "/pages/student.html");
                 response.getWriter().write(result.toString());
                 return;
@@ -58,7 +59,8 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("role", staff.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
-                result.put("userId", staff.getId());  // ✅ 返回工作人员真实 ID
+                result.put("userId", staff.getId());
+                result.put("name", staff.getName());  // ✅ 返回真实姓名
 
                 if ("admin".equals(staff.getRole())) {
                     result.put("url", request.getContextPath() + "/pages/admin.html");

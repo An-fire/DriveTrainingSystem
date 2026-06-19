@@ -30,7 +30,7 @@ public class RegisterServlet extends HttpServlet {
 
         // 基本验证
         if (name == null || name.isEmpty() || idCard == null || idCard.isEmpty() ||
-            phone == null || phone.isEmpty() || password == null || password.isEmpty()) {
+                phone == null || phone.isEmpty() || password == null || password.isEmpty()) {
             result.put("code", 0);
             result.put("msg", "请填写完整信息");
             response.getWriter().write(result.toString());
@@ -45,25 +45,49 @@ public class RegisterServlet extends HttpServlet {
         }
 
         try {
-            // 检查手机号是否已注册
-            User phoneUser = userDAO.findByPhone(phone);
-            if (phoneUser != null) {
-                result.put("code", 0);
-                result.put("msg", "该手机号已注册");
-                response.getWriter().write(result.toString());
-                return;
-            }
-            
-            // 检查身份证是否已注册
+            // ✅ 1. 先检查身份证是否已注册
             User existUser = userDAO.findByIdCard(idCard);
             if (existUser != null) {
+                JSONObject data = new JSONObject();
+                data.put("registered", true);
+                data.put("name", existUser.getName());
+                data.put("phone", existUser.getPhone());
+                data.put("subject", existUser.getSubject());
+                data.put("enrollStatus", existUser.getEnrollStatus());
+
+                // 报名状态说明
+                String statusMsg;
+                String status = existUser.getEnrollStatus();
+                if (status == null) {
+                    statusMsg = "该身份证号已注册，但尚未报名，请前往登录后报名";
+                } else if ("pending".equals(status)) {
+                    statusMsg = "该身份证号已注册，报名待审核中，请耐心等待";
+                } else if ("approved".equals(status)) {
+                    statusMsg = "该身份证号已注册，报名已通过，请登录查看";
+                } else if ("rejected".equals(status)) {
+                    statusMsg = "该身份证号已注册，报名被驳回，请重新提交报名";
+                } else {
+                    statusMsg = "该身份证号已注册，请直接登录";
+                }
+                data.put("message", statusMsg);
+
                 result.put("code", 0);
-                result.put("msg", "该身份证号已注册");
+                result.put("msg", statusMsg);
+                result.put("data", data);
                 response.getWriter().write(result.toString());
                 return;
             }
 
-            // 创建用户
+            // ✅ 2. 检查手机号是否已注册
+            User phoneUser = userDAO.findByPhone(phone);
+            if (phoneUser != null) {
+                result.put("code", 0);
+                result.put("msg", "该手机号已注册，请直接登录");
+                response.getWriter().write(result.toString());
+                return;
+            }
+
+            // ✅ 3. 创建用户
             User user = new User();
             user.setId(UUIDUtil.getUUID());
             user.setName(name);
@@ -73,6 +97,7 @@ public class RegisterServlet extends HttpServlet {
             user.setRole("student");
             user.setSubject(subject != null ? subject : "C2");
             user.setCreateTime(new Date());
+            user.setEnrollStatus(null); // 新注册用户尚未报名
 
             int rows = userDAO.insert(user);
             if (rows > 0) {
