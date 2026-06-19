@@ -62,7 +62,15 @@ public class QueryServlet extends HttpServlet {
                 result.put("data", array);
             } else if ("enrollments".equals(action)) {
                 List<Enrollment> list = enrollmentDAO.findAll();
-                JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
+                JSONArray array = new JSONArray();
+                for (Enrollment e : list) {
+                    JSONObject obj = (JSONObject) JSONObject.toJSON(e);
+                    User student = userDAO.findById(e.getStudentId());
+                    Staff coach = staffDAO.findById(e.getCoachId());
+                    obj.put("studentName", student != null ? student.getName() : "");
+                    obj.put("coachName", coach != null ? coach.getName() : "");
+                    array.add(obj);
+                }
                 result.put("code", 1);
                 result.put("data", array);
             } else if ("enrollmentDetail".equals(action)) {
@@ -89,7 +97,15 @@ public class QueryServlet extends HttpServlet {
                 } else {
                     list = bookingDAO.findAll();
                 }
-                JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
+                JSONArray array = new JSONArray();
+                for (Booking b : list) {
+                    JSONObject obj = (JSONObject) JSONObject.toJSON(b);
+                    User student = userDAO.findById(b.getStudentId());
+                    Staff coach = staffDAO.findById(b.getCoachId());
+                    obj.put("studentName", student != null ? student.getName() : "");
+                    obj.put("coachName", coach != null ? coach.getName() : "");
+                    array.add(obj);
+                }
                 result.put("code", 1);
                 result.put("data", array);
             } else if ("bookingDetail".equals(action)) {

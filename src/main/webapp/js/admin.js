@@ -180,53 +180,31 @@ window.loadStaffList = function() {
     var container = document.getElementById('staffList');
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
-    var fullUrl = window.BASE_URL + '/admin/staff?action=list';
-    console.log('请求URL:', fullUrl);
-    
-    axios.get(fullUrl)
-        .then(function(response) {
-            console.log('响应状态:', response.status);
-            console.log('响应数据类型:', typeof response.data);
-            console.log('响应数据:', response.data);
-            
-            var data = response.data;
-            if (data && data.code === 1) {
-                var list = data.data || data;
-                if (!list || list.length === 0) {
-                    container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
-                    return;
-                }
-                var html = '<table class="data-table"><thead><tr>' +
-                    '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
-                    '</tr></thead><tbody>';
-                list.forEach(function(item) {
-                    var roleText = item.role === 'admin' ? '管理员' : '教练';
-                    var subjectText = item.subject || '-';
-                    html += '<tr>' +
-                        '<td>' + (item.name || '') + '</td>' +
-                        '<td>' + (item.phone || '') + '</td>' +
-                        '<td>' + roleText + '</td>' +
-                        '<td>' + subjectText + '</td>' +
-                        '<td>' +
-                            '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
-                            '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
-                        '</td>' +
-                        '</tr>';
-                });
-                html += '</tbody></table>';
-                container.innerHTML = html;
-            } else {
-                var msg = data ? (data.msg || '请求失败') : '请求失败';
-                console.log('业务失败:', msg);
-                alert(msg);
-                container.innerHTML = '<div class="empty-tip">加载失败</div>';
-            }
-        })
-        .catch(function(error) {
-            console.error('请求异常:', error);
-            alert('请求失败，请检查网络');
-            container.innerHTML = '<div class="empty-tip">加载失败</div>';
+    apiGet('/admin/staff?action=list', function(list) {
+        if (!list || list.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
+            return;
+        }
+        var html = '<table class="data-table"><thead><tr>' +
+            '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
+            '</tr></thead><tbody>';
+        list.forEach(function(item) {
+            var roleText = item.role === 'admin' ? '管理员' : '教练';
+            var subjectText = item.subject || '-';
+            html += '<tr>' +
+                '<td>' + (item.name || '') + '</td>' +
+                '<td>' + (item.phone || '') + '</td>' +
+                '<td>' + roleText + '</td>' +
+                '<td>' + subjectText + '</td>' +
+                '<td>' +
+                    '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
+                    '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
+                '</td>' +
+                '</tr>';
         });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
 };
 
 window.openStaffModal = function() {
@@ -386,6 +364,14 @@ window.auditEnrollment = function(id, status) {
     });
 };
 
+function formatDateTime(timestamp) {
+    if (!timestamp) return '-';
+    var date = new Date(timestamp);
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' +
+           pad(date.getHours()) + ':' + pad(date.getMinutes());
+}
+
 // ==================== 练车记录 ====================
 window.loadBookings = function() {
     var container = document.getElementById('bookingList');
@@ -398,7 +384,7 @@ window.loadBookings = function() {
             return;
         }
         var html = '<table class="data-table"><thead><tr>' +
-            '<th>学员</th><th>教练</th><th>科目</th><th>时间</th><th>状态</th><th>学员评分</th><th>教练评分</th>' +
+            '<th>学员</th><th>教练</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>学员评分</th><th>教练评分</th>' +
             '</tr></thead><tbody>';
         data.forEach(function(item) {
             var statusText = { approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
@@ -406,7 +392,8 @@ window.loadBookings = function() {
                 '<td>' + (item.studentName || '') + '</td>' +
                 '<td>' + (item.coachName || '') + '</td>' +
                 '<td>' + (item.subjectType || '') + '</td>' +
-                '<td>' + (item.startTime || '') + '</td>' +
+                '<td>' + formatDateTime(item.startTime) + '</td>' +
+                '<td>' + formatDateTime(item.endTime) + '</td>' +
                 '<td>' + statusText + '</td>' +
                 '<td>' + (item.studentScore || '-') + '</td>' +
                 '<td>' + (item.coachScore || '-') + '</td>' +
