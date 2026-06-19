@@ -39,6 +39,7 @@ CREATE TABLE staff (
     password VARCHAR(64) NOT NULL COMMENT '密码（MD5加密）',
     role VARCHAR(20) NOT NULL COMMENT '角色：admin管理员/coach教练',
     subject VARCHAR(10) COMMENT '教练负责科目，管理员为空',
+    usbToken VARCHAR(64) COMMENT 'USB安全令牌（管理员专用，MD5加密）',
     createTime DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -79,11 +80,11 @@ CREATE TABLE booking (
 -- ============================================
 -- 5. 插入初始管理员和教练账号（密码统一为 123456）
 -- ============================================
-INSERT INTO staff (id, name, phone, password, role, subject)
+INSERT INTO staff (id, name, phone, password, role, subject, usbToken)
 VALUES
-(UUID(), '系统管理员', '13800000000', 'e10adc3949ba59abbe56e057f20f883e', 'admin', NULL),
-(UUID(), '张教练', '13912345678', 'e10adc3949ba59abbe56e057f20f883e', 'coach', 'C2'),
-(UUID(), '李教练', '13987654321', 'e10adc3949ba59abbe56e057f20f883e', 'coach', 'C3');
+(UUID(), '系统管理员', '13800000000', 'e10adc3949ba59abbe56e057f20f883e', 'admin', NULL, 'e10adc3949ba59abbe56e057f20f883e'),
+(UUID(), '张教练', '13912345678', 'e10adc3949ba59abbe56e057f20f883e', 'coach', 'C2', NULL),
+(UUID(), '李教练', '13987654321', 'e10adc3949ba59abbe56e057f20f883e', 'coach', 'C3', NULL);
 
 -- 查看插入结果
 SELECT * FROM staff;

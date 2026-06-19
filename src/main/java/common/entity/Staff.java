@@ -11,5 +11,6 @@ public class Staff {
     private String password;
     private String role;
     private String subject;
+    private String usbToken;
     private Date createTime;
 }

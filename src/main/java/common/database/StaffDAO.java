@@ -31,6 +31,7 @@ public class StaffDAO {
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
                 staff.setSubject(rs.getString("subject"));
+                staff.setUsbToken(rs.getString("usbToken"));
                 staff.setCreateTime(rs.getTimestamp("createTime"));
             }
         } catch (SQLException e) {
@@ -59,6 +60,7 @@ public class StaffDAO {
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
                 staff.setSubject(rs.getString("subject"));
+                staff.setUsbToken(rs.getString("usbToken"));
                 staff.setCreateTime(rs.getTimestamp("createTime"));
                 return staff;
             }
@@ -88,6 +90,7 @@ public class StaffDAO {
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
                 staff.setSubject(rs.getString("subject"));
+                staff.setUsbToken(rs.getString("usbToken"));
                 staff.setCreateTime(rs.getTimestamp("createTime"));
                 list.add(staff);
             }
@@ -100,7 +103,7 @@ public class StaffDAO {
     }
 
     public int insert(Staff staff) {
-        String sql = "INSERT INTO staff(id, name, phone, password, role, subject, createTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO staff(id, name, phone, password, role, subject, usbToken, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -112,7 +115,8 @@ public class StaffDAO {
             pstmt.setString(4, staff.getPassword());
             pstmt.setString(5, staff.getRole());
             pstmt.setString(6, staff.getSubject());
-            pstmt.setTimestamp(7, staff.getCreateTime() != null ? new java.sql.Timestamp(staff.getCreateTime().getTime()) : new java.sql.Timestamp(System.currentTimeMillis()));
+            pstmt.setString(7, staff.getUsbToken());
+            pstmt.setTimestamp(8, staff.getCreateTime() != null ? new java.sql.Timestamp(staff.getCreateTime().getTime()) : new java.sql.Timestamp(System.currentTimeMillis()));
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -140,7 +144,7 @@ public class StaffDAO {
     }
 
     public int update(Staff staff) {
-        String sql = "UPDATE staff SET name=?, phone=?, password=?, role=?, subject=? WHERE id=?";
+        String sql = "UPDATE staff SET name=?, phone=?, password=?, role=?, subject=?, usbToken=? WHERE id=?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -151,7 +155,8 @@ public class StaffDAO {
             pstmt.setString(3, staff.getPassword());
             pstmt.setString(4, staff.getRole());
             pstmt.setString(5, staff.getSubject());
-            pstmt.setString(6, staff.getId());
+            pstmt.setString(6, staff.getUsbToken());
+            pstmt.setString(7, staff.getId());
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -199,6 +204,7 @@ public class StaffDAO {
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
                 staff.setSubject(rs.getString("subject"));
+                staff.setUsbToken(rs.getString("usbToken"));
                 staff.setCreateTime(rs.getTimestamp("createTime"));
                 return staff;
             }
@@ -228,6 +234,7 @@ public class StaffDAO {
                 staff.setPassword(rs.getString("password"));
                 staff.setRole(rs.getString("role"));
                 staff.setSubject(rs.getString("subject"));
+                staff.setUsbToken(rs.getString("usbToken"));
                 staff.setCreateTime(rs.getTimestamp("createTime"));
                 list.add(staff);
             }

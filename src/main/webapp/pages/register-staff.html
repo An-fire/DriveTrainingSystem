@@ -224,6 +224,11 @@
                 <input type="password" id="regConfirmPassword" placeholder="再次输入密码" autocomplete="new-password">
             </div>
 
+            <div class="form-group hidden" id="regUsbTokenGroup">
+                <label>USB安全令牌（管理员必填）</label>
+                <input type="password" id="regUsbToken" placeholder="请输入USB安全令牌">
+            </div>
+
             <div class="btn-row">
                 <button type="submit" class="btn btn-primary btn-large btn-block light-sweep">立即注册</button>
             </div>
@@ -245,6 +250,7 @@
         if (input) input.checked = true;
         
         document.getElementById('regSubjectGroup').classList.toggle('hidden', role !== 'coach');
+        document.getElementById('regUsbTokenGroup').classList.toggle('hidden', role !== 'admin');
     }
 
     document.querySelectorAll('.staff-role-option').forEach(option => {
@@ -261,9 +267,15 @@
         const subject = role === 'coach' ? document.getElementById('regSubject').value : '';
         const password = document.getElementById('regPassword').value;
         const confirmPassword = document.getElementById('regConfirmPassword').value;
+        const usbToken = document.getElementById('regUsbToken').value.trim();
 
         if (!name || !phone || !password || !confirmPassword) {
             alert('请填写完整信息');
+            return;
+        }
+
+        if (role === 'admin' && !usbToken) {
+            alert('管理员必须设置USB安全令牌');
             return;
         }
 
@@ -284,7 +296,8 @@
                   '&phone=' + encodeURIComponent(phone) +
                   '&password=' + encodeURIComponent(password) +
                   '&role=' + encodeURIComponent(role) +
-                  '&subject=' + encodeURIComponent(subject)
+                  '&subject=' + encodeURIComponent(subject) +
+                  '&usbToken=' + encodeURIComponent(usbToken)
         }).then(res => res.json()).then(data => {
             if (data.code === 1) {
                 alert(data.msg);

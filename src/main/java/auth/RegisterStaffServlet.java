@@ -27,11 +27,19 @@ public class RegisterStaffServlet extends HttpServlet {
         String password = request.getParameter("password");
         String role = request.getParameter("role");
         String subject = request.getParameter("subject");
+        String usbToken = request.getParameter("usbToken");
 
         if (name == null || name.isEmpty() ||
             phone == null || phone.isEmpty() || password == null || password.isEmpty() || role == null || role.isEmpty()) {
             result.put("code", 0);
             result.put("msg", "请填写完整信息");
+            response.getWriter().write(result.toString());
+            return;
+        }
+
+        if ("admin".equals(role) && (usbToken == null || usbToken.isEmpty())) {
+            result.put("code", 0);
+            result.put("msg", "管理员必须设置USB安全令牌");
             response.getWriter().write(result.toString());
             return;
         }
@@ -67,6 +75,9 @@ public class RegisterStaffServlet extends HttpServlet {
             staff.setRole(role);
             if ("coach".equals(role)) {
                 staff.setSubject(subject);
+            }
+            if ("admin".equals(role) && usbToken != null && !usbToken.isEmpty()) {
+                staff.setUsbToken(MD5Util.md5(usbToken));
             }
             staff.setCreateTime(new Date());
 
