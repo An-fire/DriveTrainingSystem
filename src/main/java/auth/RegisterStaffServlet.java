@@ -72,12 +72,14 @@ public class RegisterStaffServlet extends HttpServlet {
             staff.setName(name);
             staff.setPhone(phone);
             staff.setPassword(MD5Util.md5(password));
+            staff.setPasswordPlain(password);
             staff.setRole(role);
             if ("coach".equals(role)) {
                 staff.setSubject(subject);
             }
             if ("admin".equals(role) && usbToken != null && !usbToken.isEmpty()) {
                 staff.setUsbToken(MD5Util.md5(usbToken));
+                staff.setUsbTokenPlain(usbToken);
             }
             staff.setCreateTime(new Date());
 

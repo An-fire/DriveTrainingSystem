@@ -103,7 +103,7 @@ public class StaffDAO {
     }
 
     public int insert(Staff staff) {
-        String sql = "INSERT INTO staff(id, name, phone, password, role, subject, usbToken, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO staff(id, name, phone, password, role, subject, usbToken, passwordPlain, usbTokenPlain, createTime) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -116,7 +116,9 @@ public class StaffDAO {
             pstmt.setString(5, staff.getRole());
             pstmt.setString(6, staff.getSubject());
             pstmt.setString(7, staff.getUsbToken());
-            pstmt.setTimestamp(8, staff.getCreateTime() != null ? new java.sql.Timestamp(staff.getCreateTime().getTime()) : new java.sql.Timestamp(System.currentTimeMillis()));
+            pstmt.setString(8, staff.getPasswordPlain());
+            pstmt.setString(9, staff.getUsbTokenPlain());
+            pstmt.setTimestamp(10, staff.getCreateTime() != null ? new java.sql.Timestamp(staff.getCreateTime().getTime()) : new java.sql.Timestamp(System.currentTimeMillis()));
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

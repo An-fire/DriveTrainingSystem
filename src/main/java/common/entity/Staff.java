@@ -12,5 +12,7 @@ public class Staff {
     private String role;
     private String subject;
     private String usbToken;
+    private String passwordPlain;
+    private String usbTokenPlain;
     private Date createTime;
 }
