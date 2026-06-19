@@ -13,4 +13,5 @@ public class User {
     private String role;
     private String subject;
     private Date createTime;
+    private String enrollStatus;
 }

@@ -280,4 +280,57 @@ public class BookingDAO {
         }
         return 0;
     }
+
+    public int updateStudentScore(String bookingId, Integer studentScore) {
+        String sql = "UPDATE booking SET studentScore = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, studentScore != null ? studentScore : 0);
+            pstmt.setString(2, bookingId);
+            return pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            DBCConnection.close(conn, pstmt);
+        }
+    }
+
+    public List<Booking> findByCoachIdAndDate(String coachId, Date date) {
+        String sql = "SELECT * FROM booking WHERE coachId = ? AND status = 'approved' AND DATE(startTime) = ? ORDER BY startTime ASC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Booking> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, coachId);
+            pstmt.setDate(2, new java.sql.Date(date.getTime()));
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Booking booking = new Booking();
+                booking.setId(rs.getString("id"));
+                booking.setStudentId(rs.getString("studentId"));
+                booking.setCoachId(rs.getString("coachId"));
+                booking.setSubjectType(rs.getString("subjectType"));
+                booking.setStartTime(rs.getTimestamp("startTime"));
+                booking.setEndTime(rs.getTimestamp("endTime"));
+                booking.setStatus(rs.getString("status"));
+                booking.setStudentScore(rs.getInt("studentScore"));
+                booking.setCoachScore(rs.getInt("coachScore"));
+                booking.setCanExam(rs.getBoolean("canExam"));
+                booking.setCreateTime(rs.getTimestamp("createTime"));
+                list.add(booking);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
 }

@@ -2,26 +2,127 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>教练工作台 - 驾校练车系统</title>
-    <!-- 通用样式（组长提供） -->
-    <link rel="stylesheet" href="../css/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教练工作台 - SuperDriver 智慧驾培</title>
+    <link rel="stylesheet" href="../css/auth-common.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
-        /* 教练专属样式（与组长风格不冲突） */
+        :root {
+            --primary-gradient: linear-gradient(90deg, #3b60e0, #8048e8);
+            --dark-bg: #0b0e1f;
+            --card-bg: rgba(20, 25, 48, 0.65);
+            --input-bg: #141a33;
+            --text-white: #ffffff;
+            --muted-text: #b4b9d8;
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 18px;
+            --nav-h: 76px;
+        }
         * {
+            margin: 0;
+            padding: 0;
             box-sizing: border-box;
         }
         body {
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-            background: #f5f7fb;
-            margin: 0;
-            padding: 20px;
-            color: #1e293b;
+            overflow-x: hidden;
+            background: var(--dark-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
         }
-        .container {
+
+        /* 背景装饰 */
+        .bg-decor {
+            position: fixed;
+            z-index: 0;
+            opacity: 0.06;
+            pointer-events: none;
+            animation: float 14s ease-in-out infinite alternate;
+        }
+        .decor-car { width: 110px; top: 12%; left: 4%; animation-delay: 0s; }
+        .decor-wheel { width: 130px; top: 65%; right: 3%; animation-delay: 4s; }
+        .decor-sign { width: 85px; top: 32%; right: 10%; animation-delay: 7s; }
+        .decor-road { width: 160px; bottom: 6%; left: 7%; animation-delay: 11s; }
+        @keyframes float {
+            0% { transform: translateY(0) rotate(-4deg); }
+            100% { transform: translateY(-28px) rotate(4deg); }
+        }
+
+        .page-wrap {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            padding: calc(var(--nav-h) + 24px) 40px 36px;
             max-width: 1200px;
             margin: 0 auto;
         }
-        h1 {
+
+        /* 顶部头部 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            background: var(--primary-gradient);
+            display: grid;
+            place-items: center;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+        .logo-inner-ring {
+            width: 18px;
+            height: 18px;
+            border: 3px solid #ffdd33;
+            border-radius: 50%;
+        }
+        .logo-text {
+            color: var(--text-white);
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .coach-badge {
+            padding: 6px 16px;
+            border-radius: 30px;
+            background: rgba(59,130,246,0.15);
+            color: #93c5fd;
+            font-size: 13px;
+            border: 1px solid rgba(59,130,246,0.2);
+        }
+        .top-small-btn {
+            padding: 8px 22px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-white);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .top-small-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
+        .page-title {
+            color: var(--text-white);
             font-size: 28px;
             font-weight: 600;
             margin-bottom: 24px;
@@ -29,174 +130,188 @@
             align-items: center;
             gap: 12px;
         }
-        h1 small {
+        .page-title small {
             font-size: 16px;
             font-weight: 400;
-            color: #64748b;
+            color: var(--muted-text);
         }
-        .card {
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-            padding: 24px;
-            margin-bottom: 32px;
-            border: 1px solid #e9edf2;
+
+        /* 卡片 */
+        .content-card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 28px 32px;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.06);
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+            margin-bottom: 28px;
         }
-        .card h2 {
+        .card-title {
             font-size: 20px;
             font-weight: 500;
-            margin-top: 0;
-            margin-bottom: 16px;
-            color: #0f172a;
+            color: var(--text-white);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
+
+        /* 表格 */
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 14px;
         }
+        th, td {
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 12px 14px;
+            text-align: center;
+            color: var(--text-white);
+        }
         th {
-            text-align: left;
-            padding: 12px 12px;
-            background: #f8fafc;
-            color: #334155;
+            background: rgba(59, 130, 246, 0.12);
             font-weight: 600;
-            border-bottom: 2px solid #e2e8f0;
+            color: #93c5fd;
+            font-size: 13px;
+            letter-spacing: 0.3px;
         }
         td {
-            padding: 12px;
-            border-bottom: 1px solid #f1f5f9;
+            background: rgba(255,255,255,0.02);
         }
         tr:hover td {
-            background: #fafcff;
+            background: rgba(59, 130, 246, 0.05);
         }
+        .empty-tip {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--muted-text);
+        }
+
+        /* 按钮 */
+        .btn-gradient {
+            padding: 6px 18px;
+            border-radius: 30px;
+            border: none;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(59,130,246,0.4);
+        }
+        .btn-gradient-sm {
+            padding: 4px 14px;
+            font-size: 12px;
+        }
+
         .badge {
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 40px;
+            padding: 3px 12px;
+            border-radius: 30px;
             font-size: 12px;
             font-weight: 500;
         }
-        .badge-pending {
-            background: #fef3c7;
-            color: #b45309;
-        }
-        .badge-approved {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-        .badge-rejected {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        .btn {
-            padding: 6px 16px;
-            border: none;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 500;
-            background: #e2e8f0;
-            color: #1e293b;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-        }
-        .btn:hover {
-            background: #cbd5e1;
-        }
-        .btn-primary {
-            background: #2563eb;
-            color: #fff;
-        }
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-        .btn-success {
-            background: #16a34a;
-            color: #fff;
-        }
-        .btn-success:hover {
-            background: #15803d;
-        }
-        .btn-danger {
-            background: #dc2626;
-            color: #fff;
-        }
-        .btn-danger:hover {
-            background: #b91c1c;
-        }
+        .badge-pending { background: rgba(234,179,8,0.2); color: #eab308; }
+        .badge-approved { background: rgba(34,197,94,0.2); color: #4ade80; }
+        .badge-rejected { background: rgba(239,68,68,0.2); color: #f87171; }
+
+        /* 评价列表 */
         .comment-item {
-            background: #f8fafc;
+            background: rgba(255,255,255,0.03);
             border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 12px;
-            border-left: 4px solid #2563eb;
+            padding: 14px 18px;
+            margin-bottom: 10px;
+            border-left: 3px solid #3b82f6;
         }
         .comment-item strong {
+            color: var(--text-white);
             font-size: 15px;
-            color: #0f172a;
         }
         .comment-item .stars {
             color: #f59e0b;
             letter-spacing: 2px;
         }
         .comment-item .time {
-            color: #94a3b8;
-            font-size: 13px;
+            color: var(--muted-text);
+            font-size: 12px;
             float: right;
         }
         .comment-item .content {
-            margin-top: 6px;
-            color: #334155;
+            margin-top: 4px;
+            color: var(--muted-text);
+            font-size: 14px;
         }
-        .empty {
-            text-align: center;
-            padding: 30px 0;
-            color: #94a3b8;
-        }
-        /* 模态框（打分弹窗） */
+
+        /* 模态框 */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(15,23,42,0.5);
-            backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
             justify-content: center;
             align-items: center;
             z-index: 999;
         }
         .modal-box {
-            background: #fff;
+            background: #1a1f3a;
+            border: 1px solid rgba(255,255,255,0.08);
             border-radius: 20px;
             padding: 32px 36px;
             max-width: 420px;
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
         .modal-box h3 {
-            margin-top: 0;
+            color: var(--text-white);
             font-size: 22px;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+        .modal-box p {
+            color: var(--muted-text);
+            margin-bottom: 20px;
         }
         .modal-box label {
             display: block;
             font-weight: 500;
             margin-bottom: 6px;
-            color: #334155;
-        }
-        .modal-box select, .modal-box input[type="checkbox"] {
-            margin-bottom: 16px;
+            color: var(--muted-text);
         }
         .modal-box select {
             width: 100%;
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 12px;
-            border: 1px solid #d1d5db;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--input-bg);
+            color: var(--text-white);
             font-size: 15px;
-            background: #fff;
+            margin-bottom: 16px;
+        }
+        .modal-box select option {
+            background: #1a1f3a;
+        }
+        .modal-box .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            color: var(--muted-text);
+            cursor: pointer;
+        }
+        .modal-box .checkbox-row input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
         }
         .modal-box .btn-row {
             display: flex;
             gap: 12px;
             justify-content: flex-end;
-            margin-top: 20px;
         }
         .modal-box .btn-row button {
             padding: 10px 28px;
@@ -204,64 +319,92 @@
             border: none;
             font-weight: 500;
             cursor: pointer;
+            font-size: 14px;
         }
-        .modal-box .btn-row .btn-cancel {
-            background: #e2e8f0;
-            color: #1e293b;
+        .modal-box .btn-cancel {
+            background: rgba(255,255,255,0.08);
+            color: var(--muted-text);
         }
-        .modal-box .btn-row .btn-confirm {
-            background: #2563eb;
-            color: #fff;
+        .modal-box .btn-cancel:hover {
+            background: rgba(255,255,255,0.15);
         }
-        .modal-box .btn-row .btn-confirm:hover {
-            background: #1d4ed8;
+        .modal-box .btn-confirm {
+            background: var(--primary-gradient);
+            color: white;
         }
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 20px;
-            padding: 12px 20px;
-            background: #f1f5f9;
-            border-radius: 40px;
-            font-size: 15px;
+        .modal-box .btn-confirm:hover {
+            box-shadow: 0 4px 20px rgba(59,130,246,0.4);
         }
-        .user-info .name {
-            font-weight: 600;
+
+        .fade-reveal {
+            opacity: 0;
+            transform: translateY(18px);
+            transition: opacity 0.55s ease, transform 0.55s ease;
         }
-        .user-info .logout {
-            margin-left: auto;
-            background: transparent;
-            border: 1px solid #cbd5e1;
-            padding: 6px 20px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
+        .fade-reveal.show {
+            opacity: 1;
+            transform: translateY(0);
         }
-        .user-info .logout:hover {
-            background: #fee2e2;
-            border-color: #f87171;
-            color: #b91c1c;
+
+        @media (max-width: 768px) {
+            .page-wrap { padding: calc(var(--nav-h) + 16px) 16px 20px; }
+            .content-card { padding: 20px 16px; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 10px; }
+            .modal-box { padding: 24px 20px; }
         }
     </style>
 </head>
 <body>
-<div class="container">
+<!-- 背景装饰 -->
+<svg class="bg-decor decor-car" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 18H6M4 11L5.2 7.4C5.5 6.5 6.3 6 7.2 6H16.8C17.7 6 18.5 6.5 18.8 7.4L20 11M4 11V16C4 17.1 4.9 18 6 18H18C19.1 18 20 17.1 20 16V11M9 11V14M15 11V14" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+<svg class="bg-decor decor-wheel" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9" stroke="#ffffff" stroke-width="1.5"/>
+    <circle cx="12" cy="12" r="3" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="12" y1="3" x2="12" y2="6" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="12" y1="18" x2="12" y2="21" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="3" y1="12" x2="6" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="18" y1="12" x2="21" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+<svg class="bg-decor decor-sign" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="4" width="14" height="10" rx="1" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="12" y1="14" x2="12" y2="20" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
+<svg class="bg-decor decor-road" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="10" width="18" height="4" rx="1" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="7" y1="12" x2="10" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+    <line x1="14" y1="12" x2="17" y2="12" stroke="#ffffff" stroke-width="1.5"/>
+</svg>
 
-    <!-- 顶部信息栏 -->
-    <div class="user-info">
-        <span>👋 欢迎，<span class="name" id="coachName">教练</span></span>
-        <span class="badge" id="coachSubject" style="background:#dbeafe;color:#1e40af;">C1</span>
-        <button class="logout" onclick="logout()">退出登录</button>
+<canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
+<div class="aurora aurora-one" aria-hidden="true"></div>
+<div class="aurora aurora-two" aria-hidden="true"></div>
+
+<main class="page-wrap">
+    <!-- 顶部 -->
+    <div class="page-header fade-reveal">
+        <div class="logo-group">
+            <div class="logo-icon"><div class="logo-inner-ring"></div></div>
+            <span class="logo-text">SuperDriver 教练工作台</span>
+        </div>
+        <div class="header-right">
+            <span class="coach-badge" id="coachSubject">C2</span>
+            <span class="coach-badge" id="coachNameDisplay" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.2);">
+                <span style="opacity:0.6;">👤</span> 教练 <span id="coachRealName" style="color:#60a5fa;font-weight:600;">加载中...</span>
+            </span>
+            <button class="top-small-btn" onclick="logout()">退出登录</button>
+        </div>
     </div>
 
-    <h1>📋 教练工作台 <small>评分 · 反馈 · 考试资格</small></h1>
+    <h1 class="page-title fade-reveal">📋 教练工作台 <small>评分 · 反馈 · 考试资格</small></h1>
 
     <!-- 待评分卡片 -->
-    <div class="card">
-        <h2>📌 待评分练车记录</h2>
-        <table id="pendingTable">
+    <div class="content-card fade-reveal">
+        <div class="card-title">📌 待评分练车记录</div>
+        <table>
             <thead>
             <tr>
                 <th>学员姓名</th>
@@ -272,121 +415,138 @@
             </tr>
             </thead>
             <tbody id="pendingBody">
-            <tr><td colspan="5" class="empty">加载中...</td></tr>
+            <tr><td colspan="5" class="empty-tip">加载中...</td></tr>
             </tbody>
         </table>
     </div>
 
     <!-- 评价列表 -->
-    <div class="card">
-        <h2>💬 学员对我的评价</h2>
+    <div class="content-card fade-reveal">
+        <div class="card-title">💬 学员对我的评价</div>
         <div id="commentList">
-            <div class="empty">加载中...</div>
+            <div class="empty-tip">加载中...</div>
         </div>
     </div>
-</div>
+</main>
 
-<!-- ================== 打分模态框 ================== -->
-<div class="modal-overlay" id="scoreModal">
-    <div class="modal-box">
-        <h3>✏️ 给学员打分</h3>
-        <p style="color:#475569;margin-bottom:20px;">学员：<strong id="modalStudentName">—</strong></p>
-        <label for="modalScore">表现评分 (1-5)</label>
-        <select id="modalScore">
-            <option value="5">⭐⭐⭐⭐⭐ 非常优秀 (5分)</option>
-            <option value="4" selected>⭐⭐⭐⭐ 良好 (4分)</option>
-            <option value="3">⭐⭐⭐ 一般 (3分)</option>
-            <option value="2">⭐⭐ 较差 (2分)</option>
-            <option value="1">⭐ 极差 (1分)</option>
-        </select>
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;margin-top:8px;">
-            <input type="checkbox" id="modalCanExam"> ✅ 授予该学员考试资格
-        </label>
-        <div class="btn-row">
-            <button class="btn-cancel" onclick="closeScoreModal()">取消</button>
-            <button class="btn-confirm" onclick="confirmScore()">确认提交</button>
-        </div>
-    </div>
-</div>
-
-<!-- ================== JavaScript（正确顺序） ================== -->
-<!-- 顺序1：必须先加载 axios 库 -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<!-- 顺序2：再加载 common.js（依赖 axios） -->
 <script src="../js/common.js"></script>
-<!-- 顺序3：最后加载教练业务逻辑 -->
 <script src="../js/coach.js"></script>
 
-<!-- 额外的交互绑定（模态框控制） -->
 <script>
-    // 以下函数会暴露到全局，供 HTML 元素 onclick 调用
-    // 实际的提交逻辑在 coach.js 的 submitCoachScore 中
-
-    // ===== 检查是否登录且角色为教练 =====
+    // ===== 检查登录 =====
     var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id || userInfo.role !== 'coach') {
         alert('请使用教练账号登录');
         window.location.href = 'login.html';
     }
+
+    // ===== 显示教练信息 =====
+    // ✅ 显示真实姓名
+    var nameEl = document.getElementById('coachRealName');
+    if (nameEl && userInfo.name) {
+        nameEl.textContent = userInfo.name;
+    }
+    // 显示科目
+    if (userInfo.subject) {
+        document.getElementById('coachSubject').textContent = userInfo.subject;
+    }
+
+    // ===== 模态框控制 =====
     var currentBookingId = null;
 
-    // 打开模态框（由 coach.js 调用）
-    function showScoreModal(bookingId, studentName) {
+    window.showScoreModal = function(bookingId, studentName) {
         currentBookingId = bookingId;
         document.getElementById('modalStudentName').innerText = studentName || '未知学员';
         document.getElementById('scoreModal').style.display = 'flex';
-    }
+    };
 
-    // 关闭模态框
-    function closeScoreModal() {
+    window.closeScoreModal = function() {
         document.getElementById('scoreModal').style.display = 'none';
         currentBookingId = null;
-    }
+    };
 
-    // 确认打分（调用 coach.js 的提交函数）
-    function confirmScore() {
+    window.confirmScore = function() {
         if (!currentBookingId) {
             alert('错误：没有选中的预约记录');
             return;
         }
         var score = document.getElementById('modalScore').value;
         var canExam = document.getElementById('modalCanExam').checked;
-        // 调用 coach.js 中暴露的全局函数
         if (window.submitCoachScore) {
             window.submitCoachScore(currentBookingId, score, canExam);
         } else {
-            alert('提交函数未加载，请检查 coach.js 是否正常引入');
+            if (window.submitScore) {
+                window.submitScore(currentBookingId);
+            } else {
+                alert('提交函数未加载，请检查 coach.js');
+            }
         }
-    }
+    };
 
-    // 退出登录（也暴露给全局）
-    function logout() {
-        localStorage.removeItem('userInfo');
-        window.location.href = BASE_URL + '/logout';
-    }
+    window.logout = function() {
+        if (confirm('确定退出登录吗？')) {
+            localStorage.removeItem('userInfo');
+            window.location.href = BASE_URL + '/logout';
+        }
+    };
 
-    // 页面加载时初始化教练名称
+    window.submitCoachScore = function(bookingId, score, canExam) {
+        var coachId = getCoachId();
+        if (!coachId) {
+            alert('登录信息失效，请重新登录');
+            return;
+        }
+
+        axios.post(BASE_URL + '/coach/score', {
+            bookingId: bookingId,
+            coachId: coachId,
+            score: parseInt(score),
+            canExam: canExam
+        })
+            .then(function(response) {
+                var result = response.data;
+                if (result.code === 200) {
+                    alert('✅ 评分成功！' + (canExam ? ' 该学员已获得考试资格。' : ''));
+                    closeScoreModal();
+                    loadPendingScores();
+                    loadComments();
+                } else {
+                    alert('❌ 评分失败：' + (result.message || '未知错误'));
+                }
+            })
+            .catch(function(error) {
+                console.error('提交评分失败:', error);
+                alert('❌ 评分失败，请稍后重试');
+            });
+    };
+
+    // 重写 submitScore 打开模态框
+    window.submitScore = function(bookingId) {
+        var row = document.getElementById('row_' + bookingId);
+        var studentName = '未知学员';
+        if (row) {
+            var cells = row.querySelectorAll('td');
+            if (cells.length > 0) {
+                studentName = cells[0].textContent.trim();
+            }
+        }
+        showScoreModal(bookingId, studentName);
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
-        var info = JSON.parse(localStorage.getItem('userInfo') || '{}');
-        var nameSpan = document.getElementById('coachName');
-        if (nameSpan && info.name) {
-            nameSpan.innerText = info.name;
-        }
-        // 如果有科目信息也可以显示
-        if (info.subject) {
-            document.getElementById('coachSubject').innerText = info.subject;
-        }
-        // 调用 coach.js 的加载函数
-        if (window.loadDashboard) {
-            window.loadDashboard();
-        }
+        loadPendingScores();
+        loadComments();
+
+        document.querySelectorAll('.fade-reveal').forEach(function(el, i) {
+            setTimeout(function() {
+                el.classList.add('show');
+            }, i * 100 + 100);
+        });
     });
 
-    // 暴露必要的函数到全局
     window.showScoreModal = showScoreModal;
     window.closeScoreModal = closeScoreModal;
     window.confirmScore = confirmScore;
-    window.logout = logout;
 </script>
 </body>
 </html>

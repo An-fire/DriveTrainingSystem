@@ -100,7 +100,14 @@
 })();
 
 (() => {
-  // 导航栏保持始终可见
+  const header = document.getElementById('siteHeader');
+  let last = 0;
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY || document.documentElement.scrollTop;
+    if (y > last && y > 60) header.style.transform = 'translateY(-110%)';
+    else header.style.transform = 'translateY(0)';
+    last = y;
+  });
 })();
 
 (() => {

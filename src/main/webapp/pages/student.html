@@ -6,17 +6,22 @@
     <meta name="description" content="SuperDriver 智慧驾培平台 - 学员中心">
     <title>学员中心 - SuperDriver 智慧驾培</title>
     <link rel="stylesheet" href="../css/auth-common.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/student.js"></script>
     <style>
         :root {
             --primary-gradient: linear-gradient(90deg, #3b60e0, #8048e8);
             --dark-bg: #0b0e1f;
             --card-bg: rgba(20, 25, 48, 0.65);
-            --input-bg: #101428;
+            --input-bg: #141a33;
             --text-white: #ffffff;
             --muted-text: #b4b9d8;
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
+            --radius-sm: 10px;
+            --radius-md: 14px;
+            --radius-lg: 18px;
+            --nav-h: 76px;
+            --border-glow: rgba(59, 130, 246, 0.15);
         }
         * {
             margin: 0;
@@ -26,8 +31,9 @@
         body {
             overflow-x: hidden;
             background: var(--dark-bg);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-        /* ========== 底层驾驶主题漂浮SVG图标（解决图标不显示问题） ========== */
+
         .bg-decor {
             position: fixed;
             z-index: 0;
@@ -35,62 +41,83 @@
             pointer-events: none;
             animation: float 14s ease-in-out infinite alternate;
         }
-        .decor-car {
-            width: 110px;
-            top: 12%;
-            left: 4%;
-            animation-delay: 0s;
-        }
-        .decor-wheel {
-            width: 130px;
-            top: 65%;
-            right: 3%;
-            animation-delay: 4s;
-        }
-        .decor-sign {
-            width: 85px;
-            top: 32%;
-            right: 10%;
-            animation-delay: 7s;
-        }
-        .decor-road {
-            width: 160px;
-            bottom: 6%;
-            left: 7%;
-            animation-delay: 11s;
-        }
+        .decor-car { width: 110px; top: 12%; left: 4%; animation-delay: 0s; }
+        .decor-wheel { width: 130px; top: 65%; right: 3%; animation-delay: 4s; }
+        .decor-sign { width: 85px; top: 32%; right: 10%; animation-delay: 7s; }
+        .decor-road { width: 160px; bottom: 6%; left: 7%; animation-delay: 11s; }
         @keyframes float {
             0% { transform: translateY(0) rotate(-4deg); }
             100% { transform: translateY(-28px) rotate(4deg); }
         }
-        /* 页面主容器 */
+
         .page-wrap {
             position: relative;
             z-index: 1;
             min-height: 100vh;
-            padding: 36px 40px;
-            max-width: 1600px;
+            padding: calc(var(--nav-h) + 24px) 40px 36px;
+            max-width: 1200px;
             margin: 0 auto;
         }
-        /* 顶部头部栏 */
+
         .page-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 48px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
         }
+        .page-title-section {
+            text-align: center;
+            margin: 12px 0 28px;
+            padding: 0 20px;
+        }
+        .page-main-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-white);
+            letter-spacing: -0.5px;
+            margin: 0 0 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+        }
+        .page-main-title .title-icon {
+            font-size: 32px;
+        }
+        .page-main-title::after {
+            content: '';
+            display: inline-block;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-gradient));
+            border-radius: 4px;
+            margin-left: 6px;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .page-sub-title {
+            font-size: 15px;
+            color: var(--muted-text);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin: 0;
+            opacity: 0.8;
+        }
+
         .logo-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: var(--radius-md);
             background: var(--primary-gradient);
             display: grid;
             place-items: center;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
         }
         .logo-inner-ring {
             width: 18px;
@@ -100,123 +127,365 @@
         }
         .logo-text {
             color: var(--text-white);
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 600;
+            letter-spacing: 0.5px;
         }
         .header-btn-group {
             display: flex;
-            gap: 12px;
+            align-items: center;
+            gap: 14px;
         }
+
+        /* ===== 用户信息徽章样式 ===== */
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 18px 6px 14px;
+            border-radius: 40px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .user-badge:hover {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.12);
+        }
+        .user-role-badge {
+            font-size: 12px;
+            font-weight: 600;
+            color: #93c5fd;
+            background: rgba(59, 130, 246, 0.15);
+            padding: 3px 14px;
+            border-radius: 30px;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            letter-spacing: 0.5px;
+        }
+        .user-name-display {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: 0.3px;
+            padding-left: 2px;
+        }
+        .user-name-display::before {
+            content: '|';
+            color: rgba(255,255,255,0.15);
+            margin-right: 10px;
+            font-weight: 300;
+        }
+
         .top-small-btn {
-            padding: 8px 18px;
-            border-radius: var(--radius-sm);
-            border: none;
-            background: var(--primary-gradient);
+            padding: 8px 22px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
             color: var(--text-white);
             font-size: 14px;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
-        /* 标签按钮容器 居中布局 */
+        .top-small-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #f87171;
+        }
+
         .tab-wrapper {
             display: flex;
             justify-content: center;
-            gap: 16px;
-            margin-bottom: 36px;
+            gap: 20px;
+            margin-bottom: 40px;
         }
         .tab-btn {
-            width: 180px;
-            height: 68px;
+            width: 200px;
+            height: 64px;
             display: grid;
             place-items: center;
-            border-radius: var(--radius-md);
-            background: rgba(255,255,255,0.08);
-            color: var(--text-white);
-            font-size: 18px;
-            border: none;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.06);
+            color: var(--muted-text);
+            font-size: 16px;
+            font-weight: 500;
+            border: 1px solid rgba(255,255,255,0.06);
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 0.5px;
+        }
+        .tab-btn:hover {
+            transform: translateY(-3px);
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: var(--text-white);
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
         }
         .tab-btn.active {
             background: var(--primary-gradient);
-            box-shadow: 0 0 20px rgba(70, 110, 255, 0.32);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 35px rgba(70, 110, 255, 0.35);
+            transform: translateY(-2px);
         }
-        /* 内容卡片 匹配截图深色毛玻璃 */
+        .tab-btn.active:hover {
+            box-shadow: 0 12px 45px rgba(70, 110, 255, 0.5);
+            transform: translateY(-4px);
+        }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        .tab-btn:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
         .content-card {
             background: var(--card-bg);
             border-radius: var(--radius-lg);
-            padding: 32px;
+            padding: 36px 40px;
             backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.06);
             display: none;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.2);
         }
         .content-card.active {
             display: block;
+            animation: fadeIn 0.4s ease;
         }
-        /* 表单输入项 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .form-item {
-            margin-bottom: 24px;
+            margin-bottom: 28px;
+        }
+        .form-item:last-of-type {
+            margin-bottom: 32px;
         }
         .form-label {
             display: block;
             font-size: 14px;
             color: var(--muted-text);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.3s ease;
         }
+        .form-item:hover .form-label {
+            color: #93c5fd;
+        }
+
         .form-select {
             width: 100%;
-            height: 48px;
-            padding: 0 14px;
-            border-radius: var(--radius-sm);
+            height: 52px;
+            padding: 0 20px;
+            border-radius: 16px;
             background: var(--input-bg);
             border: 1px solid rgba(255,255,255,0.08);
             color: var(--text-white);
             font-size: 15px;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='10' viewBox='0 0 14 10'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2394a3b8' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 400;
+        }
+        .form-select:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            background-color: rgba(255,255,255,0.05);
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.06);
+        }
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+            background-color: rgba(59, 130, 246, 0.05);
         }
         .form-select option {
-            background: #101428;
-            color: #fff;
+            background: #1a1f3a;
+            color: #e2e8f0;
+            padding: 12px 16px;
+            font-size: 14px;
+            border-radius: 10px;
         }
-        /* 底部长条按钮 */
+        .form-select[type="datetime-local"] {
+            color-scheme: dark;
+            padding-right: 14px;
+            background-image: none;
+        }
+        .form-select[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+            cursor: pointer;
+            padding: 4px;
+        }
+        .form-select[type="datetime-local"]:hover::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+        }
+
         .long-gradient-btn {
             width: 100%;
-            height: 52px;
-            border-radius: var(--radius-sm);
+            height: 54px;
+            border-radius: 16px;
             border: none;
             background: var(--primary-gradient);
             color: var(--text-white);
-            font-size: 16px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.25);
+        }
+        .long-gradient-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 45px rgba(59, 130, 246, 0.4);
+        }
+        .long-gradient-btn:active {
+            transform: translateY(0);
+        }
+        .long-gradient-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-sm-gradient {
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: none;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+            font-size: 12px;
             font-weight: 500;
             cursor: pointer;
-            margin-bottom: 24px;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
         }
+        .btn-sm-gradient:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+        }
+        .btn-sm-danger {
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(239,68,68,0.2);
+            color: #f87171;
+            font-size: 12px;
+            cursor: default;
+        }
+        .btn-sm-success {
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: none;
+            background: rgba(34,197,94,0.2);
+            color: #4ade80;
+            font-size: 12px;
+            cursor: default;
+        }
+
         .divider-line {
             width: 100%;
             height: 1px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.06);
             margin: 30px 0;
         }
-        /* 报名信息文字容器 */
+
         #enrollInfoBox {
             text-align: center;
             color: var(--text-white);
             line-height: 2.3;
             font-size: 16px;
+            padding: 16px 0;
+            background: rgba(255,255,255,0.03);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(255,255,255,0.04);
         }
-        /* 预约记录表格 */
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 16px;
+            margin-top: 8px;
+            font-size: 14px;
         }
         th, td {
-            border: 1px solid rgba(255,255,255,0.08);
-            padding: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 14px 16px;
             text-align: center;
             color: var(--text-white);
         }
         th {
-            background: rgba(70,110,255,0.12);
+            background: rgba(59, 130, 246, 0.12);
+            font-weight: 600;
+            color: #93c5fd;
+            font-size: 13px;
+            letter-spacing: 0.5px;
         }
-        /* 页面渐入动画 */
+        td {
+            background: rgba(255,255,255,0.02);
+        }
+        tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .availability-container {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .availability-container .title {
+            font-size: 13px;
+            color: var(--muted-text);
+            margin-bottom: 12px;
+        }
+        .time-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .time-slot {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .time-slot.free {
+            background: rgba(34,197,94,0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34,197,94,0.2);
+        }
+        .time-slot.occupied {
+            background: rgba(239,68,68,0.15);
+            color: #f87171;
+            border: 1px solid rgba(239,68,68,0.2);
+        }
+        .time-slot.unknown {
+            background: rgba(148,163,184,0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148,163,184,0.15);
+        }
+
         .fade-reveal {
             opacity: 0;
             transform: translateY(18px);
@@ -226,10 +495,24 @@
             opacity: 1;
             transform: translateY(0);
         }
+
+        @media (max-width: 768px) {
+            .page-wrap { padding: calc(var(--nav-h) + 16px) 16px 20px; }
+            .tab-wrapper { gap: 10px; flex-wrap: wrap; }
+            .tab-btn { width: 100%; max-width: 180px; height: 54px; font-size: 14px; }
+            .content-card { padding: 24px 18px; }
+            .form-select { height: 46px; font-size: 14px; }
+            .page-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+            table { font-size: 12px; }
+            th, td { padding: 8px 10px; }
+        }
+        @media (max-width: 480px) {
+            .tab-btn { max-width: 100%; }
+        }
     </style>
 </head>
 <body>
-<!-- 底层SVG驾驶装饰图标（不会字体缺失，稳定显示） -->
+<!-- 背景装饰 SVG -->
 <svg class="bg-decor decor-car" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M18 18H6M4 11L5.2 7.4C5.5 6.5 6.3 6 7.2 6H16.8C17.7 6 18.5 6.5 18.8 7.4L20 11M4 11V16C4 17.1 4.9 18 6 18H18C19.1 18 20 17.1 20 16V11M9 11V14M15 11V14" stroke="#ffffff" stroke-width="1.5"/>
 </svg>
@@ -251,33 +534,40 @@
     <line x1="14" y1="12" x2="17" y2="12" stroke="#ffffff" stroke-width="1.5"/>
 </svg>
 
-<!-- 全局星空极光背景 -->
 <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
 <div class="aurora aurora-one" aria-hidden="true"></div>
 <div class="aurora aurora-two" aria-hidden="true"></div>
 
 <main class="page-wrap">
-    <!-- 顶部头部 -->
     <div class="page-header fade-reveal">
         <div class="logo-group">
-            <div class="logo-icon">
-                <div class="logo-inner-ring"></div>
-            </div>
+            <div class="logo-icon"><div class="logo-inner-ring"></div></div>
             <span class="logo-text">SuperDriver智慧驾培平台</span>
         </div>
         <div class="header-btn-group">
-            <button class="top-small-btn" onclick="safeLogout()">退出登录</button>
+                <span class="user-badge" id="userBadge">
+                    <span class="user-role-badge">学员</span>
+                    <span class="user-name-display" id="studentNameDisplay">加载中...</span>
+                </span>
+            <button class="top-small-btn" onclick="window.safeLogout()">退出登录</button>
         </div>
     </div>
 
-    <!-- 居中标签按钮 -->
-    <div class="tab-wrapper fade-reveal">
-        <button class="tab-btn active" data-target="enroll" onclick="switchTab('enroll')">驾校报名</button>
-        <button class="tab-btn" data-target="book" onclick="switchTab('book')">练车预约</button>
-        <button class="tab-btn" data-target="record" onclick="switchTab('record')">我的预约记录</button>
+    <div class="page-title-section fade-reveal">
+        <h1 class="page-main-title">
+            <span class="title-icon">🎯</span>
+            学员中心
+        </h1>
+        <p class="page-sub-title">管理我的学车进度 · 预约练车 · 查看评价</p>
     </div>
 
-    <!-- 驾校报名面板 -->
+    <div class="tab-wrapper fade-reveal">
+        <button class="tab-btn active" data-target="enroll" onclick="window.switchTab('enroll')">驾校报名</button>
+        <button class="tab-btn" data-target="book" onclick="window.switchTab('book')">练车预约</button>
+        <button class="tab-btn" data-target="record" onclick="window.switchTab('record')">我的预约记录</button>
+    </div>
+
+    <!-- ===== 驾校报名面板 ===== -->
     <div class="content-card active fade-reveal" id="content-enroll">
         <div class="form-item">
             <label class="form-label">选择授课教练</label>
@@ -291,18 +581,18 @@
                 <option value="C3">C3 低速载货汽车</option>
             </select>
         </div>
-        <button class="long-gradient-btn" onclick="submitEnroll()">提交报名</button>
+        <button class="long-gradient-btn" onclick="window.submitEnroll()">提交报名</button>
 
         <div class="divider-line"></div>
-        <button class="long-gradient-btn" disabled>我的报名信息</button>
-        <div id="enrollInfoBox"></div>
+        <button class="long-gradient-btn" disabled style="opacity:0.6;">我的报名信息</button>
+        <div id="enrollInfoBox">暂无报名记录</div>
     </div>
 
-    <!-- 练车预约面板 -->
+    <!-- ===== 练车预约面板 ===== -->
     <div class="content-card fade-reveal" id="content-book">
         <div class="form-item">
             <label class="form-label">选择练车教练</label>
-            <select id="bookCoach" class="form-select"></select>
+            <select id="bookCoach" class="form-select" onchange="window.loadCoachAvailability()"></select>
         </div>
         <div class="form-item">
             <label class="form-label">练习科目</label>
@@ -313,6 +603,10 @@
             </select>
         </div>
         <div class="form-item">
+            <label class="form-label">预约日期</label>
+            <input type="date" class="form-select" id="bookDate" onchange="window.loadCoachAvailability()">
+        </div>
+        <div class="form-item">
             <label class="form-label">预约开始时间</label>
             <input type="datetime-local" class="form-select" id="startTime">
         </div>
@@ -320,21 +614,30 @@
             <label class="form-label">预约结束时间</label>
             <input type="datetime-local" class="form-select" id="endTime">
         </div>
-        <button class="long-gradient-btn" onclick="submitBook()">提交预约</button>
+
+        <div class="availability-container" id="availabilityContainer" style="display:none;">
+            <div class="title">📅 教练空闲时段（绿色可约，红色已占用）</div>
+            <div class="time-slots" id="timeSlots"></div>
+        </div>
+
+        <button class="long-gradient-btn" onclick="window.submitBook()">提交预约</button>
     </div>
 
-    <!-- 预约记录面板 -->
+    <!-- ===== 预约记录面板 ===== -->
     <div class="content-card fade-reveal" id="content-record">
         <h3 style="text-align:center;color:#fff;margin-bottom:20px;font-size:18px;">我的预约记录</h3>
         <table>
             <thead>
             <tr>
                 <th>预约ID</th>
-                <th>教练ID</th>
-                <th>练习科目</th>
+                <th>教练</th>
+                <th>科目</th>
                 <th>开始时间</th>
                 <th>结束时间</th>
                 <th>状态</th>
+                <th>教练评分</th>
+                <th>我的评分</th>
+                <th>操作</th>
             </tr>
             </thead>
             <tbody id="bookTbody"></tbody>
@@ -342,60 +645,55 @@
     </div>
 </main>
 
-<script src="../js/common.js"></script>
-<script src="../js/student.js"></script>
 <script>
-    // ===== 检查是否登录且角色为学员 =====
+    // ============================================================
+    // 页面初始化（仅负责登录检查 + 调用 student.js 中的函数）
+    // ============================================================
+
+    // 1. 检查登录
     var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id || userInfo.role !== 'student') {
         alert('请使用学员账号登录');
         window.location.href = 'login.html';
     }
 
-    // Tab切换核心函数，点击三个标签正常切换面板
-    function switchTab(tabName) {
-        // 清除所有激活标签
-        document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
-        // 清除所有内容卡片
-        document.querySelectorAll('.content-card').forEach(c => c.classList.remove('active'));
-        // 激活当前点击标签
-        document.querySelector(`.tab-btn[data-target="${tabName}"]`).classList.add('active');
-        // 显示对应内容面板
-        document.getElementById(`content-${tabName}`).classList.add('active');
+    // 2. 显示学员姓名
+    var nameDisplay = document.getElementById('studentNameDisplay');
+    if (nameDisplay && userInfo.name) {
+        nameDisplay.textContent = userInfo.name;
     }
 
-    // 安全退出，防止误触直接跳转登录
-    function safeLogout() {
-        if (confirm("确定退出学员账号吗？")) {
-            localStorage.removeItem("userInfo");
-            window.location.href = BASE_URL + '/logout';
+    // 3. 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 设置默认日期
+        var today = new Date();
+        var dateStr = today.getFullYear() + '-' +
+            String(today.getMonth() + 1).padStart(2, '0') + '-' +
+            String(today.getDate()).padStart(2, '0');
+        var bookDate = document.getElementById('bookDate');
+        if (bookDate) bookDate.value = dateStr;
+
+        // 调用 student.js 中的函数
+        if (typeof window.loadCoach === 'function') {
+            window.loadCoach();
         }
-    }
-
-    // 页面加载完成执行动画+加载数据
-    window.addEventListener('DOMContentLoaded', function () {
-        setTimeout(() => {
-            document.querySelectorAll('.fade-reveal').forEach((item, idx) => {
-                setTimeout(() => item.classList.add('show'), idx * 110);
-            })
-            // 加载教练、报名、预约数据（调用student.js内置函数）
-            loadCoach();
-            loadMyEnrollInfo();
-            loadMyBooking();
-        }, 80);
-    })
-
-    // 接口401拦截，仅登录过期跳转，不会乱跳登录页
-    window.originFetch = window.fetch;
-    window.fetch = async function (url, opts) {
-        const res = await originFetch(url, opts);
-        if (!res.ok && res.status === 401) {
-            alert("登录已过期，请重新登录");
-            localStorage.removeItem("userInfo");
-            location.href = "login.html";
+        if (typeof window.loadMyEnrollInfo === 'function') {
+            window.loadMyEnrollInfo();
         }
-        return res;
-    }
+        if (typeof window.loadMyBooking === 'function') {
+            window.loadMyBooking();
+        }
+        if (typeof window.loadCoachAvailability === 'function') {
+            setTimeout(window.loadCoachAvailability, 600);
+        }
+
+        // 淡入动画
+        document.querySelectorAll('.fade-reveal').forEach(function(el, idx) {
+            setTimeout(function() {
+                el.classList.add('show');
+            }, idx * 110);
+        });
+    });
 </script>
 </body>
 </html>

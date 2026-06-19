@@ -1,5 +1,6 @@
 package student.servlet;
 
+import com.alibaba.fastjson.JSON;
 import common.entity.User;
 import common.util.Result;
 import jakarta.servlet.http.HttpServlet;
@@ -13,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BaseStudentServlet extends HttpServlet {
-    // 修复原JSON分割BUG：兼容value包含逗号场景
+
     protected Map<String, String> parseJsonParam(BufferedReader br) throws IOException {
         Map<String, String> res = new HashMap<>();
         String content = br.readLine();
@@ -33,10 +34,8 @@ public class BaseStudentServlet extends HttpServlet {
         return res;
     }
 
-    // 统一校验学员登录，未登录直接返回JSON
     protected User getLoginUser(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpSession session = request.getSession(false);
-        // 增加空指针防护：session可能为null
         if (session == null) {
             response.setContentType("application/json;charset=utf-8");
             String json = "{\"success\":false,\"msg\":\"请先登录学员账号\",\"data\":null}";
@@ -54,35 +53,11 @@ public class BaseStudentServlet extends HttpServlet {
         return user;
     }
 
-    // 统一输出Result JSON（修复data变量名错误 + 增强特殊字符转义）
+    // ✅ 修复：使用 fastjson 正确序列化
     protected void writeJson(HttpServletResponse response, Result result) throws IOException {
         response.setContentType("application/json;charset=utf-8");
-
-        // 处理data字段：null/字符串/复杂对象的JSON兼容
-        String dataStr;
-        if (result.getData() == null) {
-            dataStr = "null";
-        } else {
-            // 转义双引号、换行、回车、制表符等特殊字符，避免JSON格式错误
-            String rawData = result.getData().toString()
-                    .replace("\\", "\\\\")
-                    .replace("\"", "\\\"")
-                    .replace("\n", "\\n")
-                    .replace("\r", "\\r")
-                    .replace("\t", "\\t");
-            dataStr = "\"" + rawData + "\"";
-        }
-
-        // 转义msg中的特殊字符
-        String msg = result.getMsg() == null ? "" : result.getMsg()
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t");
-
-        // 关键修复：将错误的data改为正确的dataStr
-        String json = "{\"success\":" + result.isSuccess() + ",\"msg\":\"" + msg + "\",\"data\":" + dataStr + "}";
+        // 使用 fastjson 将整个 Result 对象转换为 JSON
+        String json = JSON.toJSONString(result);
         response.getWriter().write(json);
     }
 }
