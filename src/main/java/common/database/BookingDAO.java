@@ -333,4 +333,50 @@ public class BookingDAO {
         }
         return list;
     }
+
+    // 按月统计预约数量（近6个月）
+    public java.util.Map<String, Integer> countByMonth() {
+        String sql = "SELECT DATE_FORMAT(startTime, '%Y-%m') AS month, COUNT(*) AS cnt FROM booking WHERE startTime >= DATE_SUB(NOW(), INTERVAL 6 MONTH) GROUP BY month ORDER BY month";
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("month"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return map;
+    }
+
+    // 评分分布统计（1-5分各有多少条）
+    public java.util.Map<String, Integer> scoreDistribution(boolean isStudentScore) {
+        String sql = isStudentScore
+            ? "SELECT studentScore AS score, COUNT(*) AS cnt FROM booking WHERE studentScore IS NOT NULL AND studentScore > 0 GROUP BY studentScore ORDER BY studentScore"
+            : "SELECT coachScore AS score, COUNT(*) AS cnt FROM booking WHERE coachScore IS NOT NULL AND coachScore > 0 GROUP BY coachScore ORDER BY coachScore";
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(String.valueOf(rs.getInt("score")), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return map;
+    }
 }

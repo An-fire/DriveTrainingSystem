@@ -247,4 +247,26 @@ public class StaffDAO {
         }
         return list;
     }
+
+    // 按科目统计教练数量
+    public java.util.Map<String, Integer> countBySubject() {
+        String sql = "SELECT subject, COUNT(*) AS cnt FROM staff WHERE role = 'coach' AND subject IS NOT NULL AND subject != '' GROUP BY subject";
+        java.util.Map<String, Integer> map = new java.util.HashMap<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("subject"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return map;
+    }
 }

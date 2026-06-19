@@ -124,16 +124,21 @@ public class StaffManageServlet extends HttpServlet {
                     return;
                 }
 
+                String usbToken = request.getParameter("usbToken");
+                String password = request.getParameter("password");
+
                 Staff staff = new Staff();
                 staff.setId(id);
                 staff.setName(name);
                 staff.setPhone(phone);
-                staff.setPassword(exist.getPassword());
+                staff.setPassword(password != null && !password.isEmpty() ? MD5Util.md5(password) : exist.getPassword());
                 staff.setRole(role);
                 if ("coach".equals(role)) {
                     staff.setSubject(subject != null ? subject : "C2");
+                    staff.setUsbToken(exist.getUsbToken());
                 } else {
                     staff.setSubject(null);
+                    staff.setUsbToken(usbToken != null && !usbToken.isEmpty() ? MD5Util.md5(usbToken) : exist.getUsbToken());
                 }
 
                 int rows = staffDAO.update(staff);

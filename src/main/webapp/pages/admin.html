@@ -6,6 +6,7 @@
     <title>管理员后台 - SuperDriver</title>
     <link rel="stylesheet" href="../css/auth-common.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="../js/common.js"></script>
     <script src="../js/admin.js?v=20260619"></script>
     <style>
@@ -284,6 +285,26 @@
                 <div class="stat-card"><div class="stat-label">练车预约总数</div><div class="stat-value" id="statBookings">-</div></div>
                 <div class="stat-card"><div class="stat-label">已同意预约</div><div class="stat-value" id="statApprovedBook">-</div></div>
             </div>
+            <div class="chart-row" style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
+                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">学员报考科目分布</h4>
+                    <div id="chartStudentSubject" style="width:100%;height:260px;"></div>
+                </div>
+                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">教练负责科目分布</h4>
+                    <div id="chartCoachSubject" style="width:100%;height:260px;"></div>
+                </div>
+            </div>
+            <div class="chart-row" style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
+                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">近6个月练车预约趋势</h4>
+                    <div id="chartBookingMonth" style="width:100%;height:260px;"></div>
+                </div>
+                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">评分分布</h4>
+                    <div id="chartScore" style="width:100%;height:260px;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- 报名审核 -->
@@ -380,6 +401,10 @@
         <div class="form-group" id="modalPasswordGroup">
             <label>密码</label>
             <input type="password" id="modalStaffPassword" placeholder="至少6位">
+        </div>
+        <div class="form-group" id="modalUsbGroup">
+            <label>USB安全令牌</label>
+            <input type="password" id="modalStaffUsb" placeholder="管理员必填，教练可不填">
         </div>
         <div class="modal-actions">
             <button class="btn" onclick="window.closeModal()" style="background:rgba(255,255,255,0.1);color:#e2e8f0;">取消</button>

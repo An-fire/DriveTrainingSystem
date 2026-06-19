@@ -54,15 +54,23 @@ public class LoginServlet extends HttpServlet {
 
             Staff staff = staffDAO.login(phone, md5Pwd);
             if (staff != null) {
+                System.out.println("[LoginServlet] 管理员登录 - 数据库中usbToken: " + (staff.getUsbToken() == null ? "null" : staff.getUsbToken()));
+                System.out.println("[LoginServlet] 管理员登录 - 用户输入usbToken: " + (usbToken == null ? "null" : usbToken));
                 if ("admin".equals(staff.getRole())) {
                     String dbUsbToken = staff.getUsbToken();
                     if (dbUsbToken == null || dbUsbToken.isEmpty()) {
+                        result.put("code", 0);
+                        result.put("msg", "管理员未设置USB令牌，请联系系统管理员");
+                        response.getWriter().write(result.toString());
+                        return;
+                    }
+                    if (md5UsbToken == null || md5UsbToken.isEmpty()) {
                         result.put("code", 0);
                         result.put("msg", "请输入USB安全令牌");
                         response.getWriter().write(result.toString());
                         return;
                     }
-                    if (md5UsbToken == null || !dbUsbToken.equals(md5UsbToken)) {
+                    if (!dbUsbToken.equals(md5UsbToken)) {
                         result.put("code", 0);
                         result.put("msg", "USB安全令牌错误");
                         response.getWriter().write(result.toString());

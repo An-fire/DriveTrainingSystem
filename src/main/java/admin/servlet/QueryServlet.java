@@ -113,6 +113,15 @@ public class QueryServlet extends HttpServlet {
                 stats.put("approvedBookings", bookingDAO.countByStatus("approved"));
                 result.put("code", 1);
                 result.put("data", stats);
+            } else if ("statsDetail".equals(action)) {
+                JSONObject detail = new JSONObject();
+                detail.put("studentSubject", userDAO.countBySubject());
+                detail.put("coachSubject", staffDAO.countBySubject());
+                detail.put("bookingMonth", bookingDAO.countByMonth());
+                detail.put("studentScore", bookingDAO.scoreDistribution(true));
+                detail.put("coachScore", bookingDAO.scoreDistribution(false));
+                result.put("code", 1);
+                result.put("data", detail);
             } else {
                 result.put("code", 0);
                 result.put("msg", "无效的操作");

@@ -124,6 +124,7 @@ window.openStaffModal = function() {
     document.getElementById('modalStaffRole').value = 'coach';
     document.getElementById('modalStaffSubject').value = 'C1';
     document.getElementById('modalStaffPassword').value = '';
+    document.getElementById('modalStaffUsb').value = '';
     document.getElementById('staffModalTitle').innerText = '新增员工';
     document.getElementById('modalPasswordGroup').style.display = 'block';
     window.toggleSubjectField();
@@ -138,9 +139,13 @@ window.closeModal = function() {
 
 window.toggleSubjectField = function() {
     var role = document.getElementById('modalStaffRole').value;
-    var group = document.getElementById('modalSubjectGroup');
-    if (group) {
-        group.style.display = (role === 'coach') ? 'block' : 'none';
+    var subjectGroup = document.getElementById('modalSubjectGroup');
+    var usbGroup = document.getElementById('modalUsbGroup');
+    if (subjectGroup) {
+        subjectGroup.style.display = (role === 'coach') ? 'block' : 'none';
+    }
+    if (usbGroup) {
+        usbGroup.style.display = (role === 'admin') ? 'block' : 'none';
     }
 };
 
@@ -151,9 +156,15 @@ window.saveStaff = function() {
     var role = document.getElementById('modalStaffRole').value;
     var subject = document.getElementById('modalStaffSubject').value;
     var password = document.getElementById('modalStaffPassword').value;
+    var usbToken = document.getElementById('modalStaffUsb').value;
 
     if (!name || !phone) {
         alert('请填写姓名和手机号');
+        return;
+    }
+
+    if (role === 'admin' && !usbToken) {
+        alert('管理员必须设置USB安全令牌');
         return;
     }
 
@@ -163,6 +174,7 @@ window.saveStaff = function() {
     params.append('role', role);
     params.append('subject', role === 'coach' ? subject : '');
     if (password) params.append('password', password);
+    if (usbToken) params.append('usbToken', usbToken);
 
     var url = id ? '/admin/staff?action=update&id=' + id : '/admin/staff?action=add';
     apiPost(url, params.toString(), function() {
@@ -293,20 +305,206 @@ window.loadBookings = function() {
     });
 };
 
-// ==================== 数据概览 ====================
+// ==================== 数据概览 & ECharts 可视化 ====================
+var chartInstances = {};
+
+function getChartOption(title, type, labels, values, colorList) {
+    var common = {
+        backgroundColor: 'transparent',
+        textStyle: { color: '#94a3b8', fontSize: 11 },
+        tooltip: {
+            trigger: type === 'pie' ? 'item' : 'axis',
+            backgroundColor: '#1e293b',
+            borderColor: 'rgba(255,255,255,0.1)',
+            textStyle: { color: '#e2e8f0' }
+        }
+    };
+    if (type === 'pie') {
+        var pieData = [];
+        for (var i = 0; i < labels.length; i++) {
+            pieData.push({ name: labels[i], value: values[i] });
+        }
+        return Object.assign(common, {
+            series: [{
+                type: 'pie',
+                radius: ['40%', '70%'],
+                center: ['50%', '55%'],
+                itemStyle: { borderRadius: 6, borderColor: '#1e293b', borderWidth: 2 },
+                label: { color: '#94a3b8', fontSize: 11, formatter: '{b}: {c} ({d}%)' },
+                data: pieData,
+                color: colorList || ['#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa']
+            }]
+        });
+    }
+    if (type === 'line') {
+        return Object.assign(common, {
+            grid: { top: 30, right: 20, bottom: 30, left: 40 },
+            xAxis: {
+                type: 'category',
+                data: labels,
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            series: [{
+                type: 'line',
+                data: values,
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 6,
+                lineStyle: { width: 3, color: '#60a5fa' },
+                itemStyle: { color: '#60a5fa' },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(96,165,250,0.3)' },
+                        { offset: 1, color: 'rgba(96,165,250,0.01)' }
+                    ])
+                }
+            }]
+        });
+    }
+    if (type === 'bar') {
+        return Object.assign(common, {
+            grid: { top: 30, right: 20, bottom: 30, left: 40 },
+            xAxis: {
+                type: 'category',
+                data: labels,
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            series: [{
+                type: 'bar',
+                data: values,
+                barWidth: '50%',
+                itemStyle: {
+                    borderRadius: [4, 4, 0, 0],
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: '#34d399' },
+                        { offset: 1, color: '#059669' }
+                    ])
+                }
+            }]
+        });
+    }
+}
+
 window.loadDashboard = function() {
+    // 1. 加载基础统计卡片
     apiGet('/admin/query?action=stats', function(data) {
         if (!data) return;
-        var elTotal = document.getElementById('statTotalStudents');
-        var elCoaches = document.getElementById('statTotalCoaches');
-        var elBookings = document.getElementById('statTotalBookings');
-        var elPending = document.getElementById('statPendingEnrollments');
-        if (elTotal) elTotal.innerText = data.totalStudents || 0;
-        if (elCoaches) elCoaches.innerText = data.totalCoaches || 0;
-        if (elBookings) elBookings.innerText = data.totalBookings || 0;
-        if (elPending) elPending.innerText = data.pendingEnrollments || 0;
+        document.getElementById('statStudents').innerText = data.totalStudents || 0;
+        document.getElementById('statCoaches').innerText = data.totalCoaches || 0;
+        document.getElementById('statPendingEnroll').innerText = data.pendingEnrollments || 0;
+        document.getElementById('statApprovedEnroll').innerText = data.approvedEnrollments || 0;
+        document.getElementById('statBookings').innerText = data.totalBookings || 0;
+        document.getElementById('statApprovedBook').innerText = data.approvedBookings || 0;
+    });
+
+    // 2. 加载图表详细数据
+    apiGet('/admin/query?action=statsDetail', function(detail) {
+        if (!detail) return;
+
+        // 学员科目分布饼图
+        var ss = detail.studentSubject || {};
+        var ssLabels = Object.keys(ss);
+        var ssValues = Object.values(ss);
+        if (ssLabels.length === 0) { ssLabels = ['暂无数据']; ssValues = [0]; }
+        var chartSS = echarts.init(document.getElementById('chartStudentSubject'));
+        chartSS.setOption(getChartOption(null, 'pie', ssLabels, ssValues, ['#60a5fa', '#34d399', '#fbbf24']));
+        chartInstances.studentSubject = chartSS;
+
+        // 教练科目分布饼图
+        var cs = detail.coachSubject || {};
+        var csLabels = Object.keys(cs);
+        var csValues = Object.values(cs);
+        if (csLabels.length === 0) { csLabels = ['暂无数据']; csValues = [0]; }
+        var chartCS = echarts.init(document.getElementById('chartCoachSubject'));
+        chartCS.setOption(getChartOption(null, 'pie', csLabels, csValues, ['#f87171', '#a78bfa', '#fbbf24']));
+        chartInstances.coachSubject = chartCS;
+
+        // 预约趋势折线图
+        var bm = detail.bookingMonth || {};
+        var bmLabels = Object.keys(bm);
+        var bmValues = Object.values(bm);
+        if (bmLabels.length === 0) { bmLabels = ['近6个月']; bmValues = [0]; }
+        var chartBM = echarts.init(document.getElementById('chartBookingMonth'));
+        chartBM.setOption(getChartOption(null, 'line', bmLabels, bmValues));
+        chartInstances.bookingMonth = chartBM;
+
+        // 评分分布柱状图（合并学员评分和教练评分）
+        var stuScore = detail.studentScore || {};
+        var coaScore = detail.coachScore || {};
+        var scoreLabels = ['1分', '2分', '3分', '4分', '5分'];
+        var stuValues = [];
+        var coaValues = [];
+        for (var s = 1; s <= 5; s++) {
+            stuValues.push(stuScore[String(s)] || 0);
+            coaValues.push(coaScore[String(s)] || 0);
+        }
+        var chartScore = echarts.init(document.getElementById('chartScore'));
+        chartScore.setOption({
+            backgroundColor: 'transparent',
+            textStyle: { color: '#94a3b8', fontSize: 11 },
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: '#1e293b',
+                borderColor: 'rgba(255,255,255,0.1)',
+                textStyle: { color: '#e2e8f0' }
+            },
+            legend: {
+                data: ['学员评分', '教练评分'],
+                textStyle: { color: '#94a3b8', fontSize: 11 },
+                top: 0
+            },
+            grid: { top: 30, right: 20, bottom: 30, left: 40 },
+            xAxis: {
+                type: 'category',
+                data: scoreLabels,
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            series: [
+                {
+                    name: '学员评分',
+                    type: 'bar',
+                    data: stuValues,
+                    barWidth: '30%',
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#60a5fa' }
+                },
+                {
+                    name: '教练评分',
+                    type: 'bar',
+                    data: coaValues,
+                    barWidth: '30%',
+                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#34d399' }
+                }
+            ]
+        });
+        chartInstances.score = chartScore;
     });
 };
+
+// 窗口大小变化时重绘图表
+window.addEventListener('resize', function() {
+    Object.values(chartInstances).forEach(function(c) { c && c.resize(); });
+});
 
 // ==================== 初始化 ====================
 document.addEventListener('DOMContentLoaded', function() {
