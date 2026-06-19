@@ -69,16 +69,19 @@
 })();
 
 (() => {
+  const els = document.querySelectorAll('.reveal');
+  if (els.length === 0) return;
   const io = new IntersectionObserver(entries => {
     entries.forEach(e => {
       if (e.isIntersecting) e.target.classList.add('visible');
     });
   }, { threshold: 0.12 });
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  els.forEach(el => io.observe(el));
 })();
 
 (() => {
   const counters = document.querySelectorAll('[data-count]');
+  if (counters.length === 0) return;
   const io = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
@@ -101,6 +104,7 @@
 
 (() => {
   const header = document.getElementById('siteHeader');
+  if (!header) return;
   let last = 0;
   window.addEventListener('scroll', () => {
     const y = window.scrollY || document.documentElement.scrollTop;
