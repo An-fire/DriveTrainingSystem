@@ -1,5 +1,7 @@
 package student.servlet;
 
+import com.alibaba.fastjson.JSONObject;
+import common.database.StaffDAO;
 import common.entity.Enrollment;
 import common.entity.Staff;
 import common.entity.User;
@@ -31,7 +33,21 @@ public class EnrollmentServlet extends BaseStudentServlet {
             } else if ("myEnroll".equals(type)) {
                 Enrollment enroll = studentService.getMyEnroll(loginUser.getId());
                 result = Result.success(enroll);
-            } else {
+            }else if ("myEnroll".equals(type)) {
+                Enrollment enroll = studentService.getMyEnroll(loginUser.getId());
+                JSONObject data = new JSONObject();
+                if (enroll != null) {
+                    // 查询教练姓名
+                    Staff coach = new StaffDAO().findById(enroll.getCoachId());
+                    String coachName = (coach != null) ? coach.getName() : enroll.getCoachId();
+                    // 将 Enrollment 转为 JSONObject，并额外添加 coachName
+                    String jsonStr = JSONObject.toJSONString(enroll);
+                    data = JSONObject.parseObject(jsonStr);
+                    data.put("coachName", coachName);
+                }
+                result = Result.success(data);
+            }
+            else {
                 result = Result.error("type参数非法");
             }
         } catch (StudentException e) {
