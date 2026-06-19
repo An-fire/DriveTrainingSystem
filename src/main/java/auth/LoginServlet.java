@@ -26,6 +26,7 @@ public class LoginServlet extends HttpServlet {
 
         String phone = request.getParameter("phone");
         String pwd = request.getParameter("password");
+        String usbToken = request.getParameter("usbToken");
 
         if (phone == null || "".equals(phone) || pwd == null || "".equals(pwd)) {
             result.put("code", 0);
@@ -35,30 +36,45 @@ public class LoginServlet extends HttpServlet {
         }
 
         String md5Pwd = MD5Util.md5(pwd);
+        String md5UsbToken = (usbToken != null && !"".equals(usbToken)) ? MD5Util.md5(usbToken) : null;
         HttpSession session = request.getSession();
 
         try {
-            // 1. 尝试学员登录
             User user = userDAO.login(phone, md5Pwd);
             if (user != null) {
                 session.setAttribute("user", user);
                 session.setAttribute("role", user.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
-                result.put("userId", user.getId());  // ✅ 返回学员真实 ID
+                result.put("userId", user.getId());
                 result.put("url", request.getContextPath() + "/pages/student.html");
                 response.getWriter().write(result.toString());
                 return;
             }
 
-            // 2. 尝试工作人员登录（教练/管理员）
             Staff staff = staffDAO.login(phone, md5Pwd);
             if (staff != null) {
+                if ("admin".equals(staff.getRole())) {
+                    String dbUsbToken = staff.getUsbToken();
+                    if (dbUsbToken == null || dbUsbToken.isEmpty()) {
+                        result.put("code", 0);
+                        result.put("msg", "请输入USB安全令牌");
+                        response.getWriter().write(result.toString());
+                        return;
+                    }
+                    if (md5UsbToken == null || !dbUsbToken.equals(md5UsbToken)) {
+                        result.put("code", 0);
+                        result.put("msg", "USB安全令牌错误");
+                        response.getWriter().write(result.toString());
+                        return;
+                    }
+                }
+
                 session.setAttribute("staff", staff);
                 session.setAttribute("role", staff.getRole());
                 result.put("code", 1);
                 result.put("msg", "登录成功");
-                result.put("userId", staff.getId());  // ✅ 返回工作人员真实 ID
+                result.put("userId", staff.getId());
 
                 if ("admin".equals(staff.getRole())) {
                     result.put("url", request.getContextPath() + "/pages/admin.html");
@@ -69,7 +85,6 @@ public class LoginServlet extends HttpServlet {
                 return;
             }
 
-            // 3. 账号或密码错误
             result.put("code", 0);
             result.put("msg", "账号或密码错误");
 

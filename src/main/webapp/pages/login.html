@@ -208,15 +208,14 @@
             alert('请填写完整信息');
             return;
         }
-        if (role === 'admin' && usbToken !== 'DRIVE2026') {
-            alert('❌ USB 令牌验证失败，请插入有效令牌');
-            return;
-        }
 
         // 使用 application/x-www-form-urlencoded 格式（适配组长后端 request.getParameter）
         var params = new URLSearchParams();
         params.append('phone', phone);
         params.append('password', password);
+        if (role === 'admin') {
+            params.append('usbToken', usbToken);
+        }
 
         axios.post(window.BASE_URL + '/login', params.toString(), {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
