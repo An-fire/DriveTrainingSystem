@@ -3,12 +3,14 @@
 var BASE_URL = window.BASE_URL || '';
 
 function apiGet(url, callback) {
-    axios.get(BASE_URL + url)
+    axios.get(BASE_URL + url, { responseType: 'json' })
         .then(function(res) {
-            if (res.data.code === 1) {
-                callback(res.data.data || res.data);
+            var data = res.data;
+            console.log('API响应:', data);
+            if (data && data.code === 1) {
+                callback(data.data || data);
             } else {
-                alert(res.data.msg || '请求失败');
+                alert(data ? (data.msg || '请求失败') : '请求失败');
             }
         })
         .catch(function(err) {
@@ -66,31 +68,53 @@ window.loadStaffList = function() {
     var container = document.getElementById('staffList');
     container.innerHTML = '<div class="empty-tip">加载中...</div>';
 
-    apiGet('/admin/staff?action=list', function(data) {
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
-            return;
-        }
-        var html = '<table class="data-table"><thead><tr>' +
-            '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
-            '</tr></thead><tbody>';
-        data.forEach(function(item) {
-            var roleText = item.role === 'admin' ? '管理员' : '教练';
-            var subjectText = item.subject || '-';
-            html += '<tr>' +
-                '<td>' + (item.name || '') + '</td>' +
-                '<td>' + (item.phone || '') + '</td>' +
-                '<td>' + roleText + '</td>' +
-                '<td>' + subjectText + '</td>' +
-                '<td>' +
-                    '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
-                    '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
-                '</td>' +
-                '</tr>';
+    var fullUrl = window.BASE_URL + '/admin/staff?action=list';
+    console.log('请求URL:', fullUrl);
+    
+    axios.get(fullUrl)
+        .then(function(response) {
+            console.log('响应状态:', response.status);
+            console.log('响应数据类型:', typeof response.data);
+            console.log('响应数据:', response.data);
+            
+            var data = response.data;
+            if (data && data.code === 1) {
+                var list = data.data || data;
+                if (!list || list.length === 0) {
+                    container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
+                    return;
+                }
+                var html = '<table class="data-table"><thead><tr>' +
+                    '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
+                    '</tr></thead><tbody>';
+                list.forEach(function(item) {
+                    var roleText = item.role === 'admin' ? '管理员' : '教练';
+                    var subjectText = item.subject || '-';
+                    html += '<tr>' +
+                        '<td>' + (item.name || '') + '</td>' +
+                        '<td>' + (item.phone || '') + '</td>' +
+                        '<td>' + roleText + '</td>' +
+                        '<td>' + subjectText + '</td>' +
+                        '<td>' +
+                            '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
+                            '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
+                        '</td>' +
+                        '</tr>';
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } else {
+                var msg = data ? (data.msg || '请求失败') : '请求失败';
+                console.log('业务失败:', msg);
+                alert(msg);
+                container.innerHTML = '<div class="empty-tip">加载失败</div>';
+            }
+        })
+        .catch(function(error) {
+            console.error('请求异常:', error);
+            alert('请求失败，请检查网络');
+            container.innerHTML = '<div class="empty-tip">加载失败</div>';
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    });
 };
 
 window.openStaffModal = function() {

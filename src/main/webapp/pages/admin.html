@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="../css/auth-common.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="../js/common.js"></script>
-    <script src="../js/admin.js"></script>
+    <script src="../js/admin.js?v=20260619"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -387,5 +387,60 @@
         </div>
     </div>
 </div>
+
+<script>
+window.loadStaffList = function() {
+    var container = document.getElementById('staffList');
+    container.innerHTML = '<div class="empty-tip">加载中...</div>';
+    
+    var baseUrl = window.BASE_URL || '/DriveTrainingSystem';
+    var fullUrl = baseUrl + '/admin/staff?action=list';
+    
+    console.log('加载员工列表:', fullUrl);
+    
+    fetch(fullUrl, { credentials: 'include' })
+        .then(function(res) {
+            console.log('响应状态:', res.status);
+            return res.json();
+        })
+        .then(function(data) {
+            console.log('响应数据:', data);
+            if (data && data.code === 1) {
+                var list = data.data || [];
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
+                    return;
+                }
+                var html = '<table class="data-table"><thead><tr>' +
+                    '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
+                    '</tr></thead><tbody>';
+                list.forEach(function(item) {
+                    var roleText = item.role === 'admin' ? '管理员' : '教练';
+                    var subjectText = item.subject || '-';
+                    html += '<tr>' +
+                        '<td>' + (item.name || '') + '</td>' +
+                        '<td>' + (item.phone || '') + '</td>' +
+                        '<td>' + roleText + '</td>' +
+                        '<td>' + subjectText + '</td>' +
+                        '<td>' +
+                            '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
+                            '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
+                        '</td>' +
+                        '</tr>';
+                });
+                html += '</tbody></table>';
+                container.innerHTML = html;
+            } else {
+                alert(data ? (data.msg || '请求失败') : '请求失败');
+                container.innerHTML = '<div class="empty-tip">加载失败</div>';
+            }
+        })
+        .catch(function(err) {
+            console.error('请求失败:', err);
+            alert('请求失败，请检查网络');
+            container.innerHTML = '<div class="empty-tip">加载失败</div>';
+        });
+};
+</script>
 </body>
 </html>
