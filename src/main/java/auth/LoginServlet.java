@@ -47,6 +47,7 @@ public class LoginServlet extends HttpServlet {
                 result.put("code", 1);
                 result.put("msg", "登录成功");
                 result.put("userId", user.getId());
+                result.put("name", user.getName());
                 result.put("url", request.getContextPath() + "/pages/student.html");
                 response.getWriter().write(result.toString());
                 return;
@@ -83,6 +84,7 @@ public class LoginServlet extends HttpServlet {
                 result.put("code", 1);
                 result.put("msg", "登录成功");
                 result.put("userId", staff.getId());
+                result.put("name", staff.getName());
 
                 if ("admin".equals(staff.getRole())) {
                     result.put("url", request.getContextPath() + "/pages/admin.html");
