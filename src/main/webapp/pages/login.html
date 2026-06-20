@@ -23,6 +23,13 @@
             padding: 32px 28px 28px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.4);
             backdrop-filter: blur(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            opacity: 0;
+            transform: translateY(16px);
+        }
+        .auth-card.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         .auth-top {
             text-align: center;
@@ -121,15 +128,65 @@
         .back-link:hover { color: var(--text); }
         #usbGroup { display: none; }
         .btn-block { width: 100%; }
+
+        /* 注册入口样式 */
+        .register-prompt {
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            text-align: center;
+        }
+        .register-prompt p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        .register-prompt .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .register-prompt .btn-group a {
+            padding: 10px 28px;
+            border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .register-prompt .btn-group a:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .register-prompt .btn-group a.student {
+            border-color: rgba(16,185,129,0.3);
+        }
+        .register-prompt .btn-group a.student:hover {
+            background: rgba(16,185,129,0.1);
+            border-color: rgba(16,185,129,0.5);
+        }
+        .register-prompt .btn-group a.staff {
+            border-color: rgba(139,92,246,0.3);
+        }
+        .register-prompt .btn-group a.staff:hover {
+            background: rgba(139,92,246,0.1);
+            border-color: rgba(139,92,246,0.5);
+        }
     </style>
 </head>
 <body>
+<!-- ===== 背景粒子 + 极光（与 home 页面一致） ===== -->
 <canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
 <div class="aurora aurora-one" aria-hidden="true"></div>
 <div class="aurora aurora-two" aria-hidden="true"></div>
 
 <main class="page-shell" style="position:relative;z-index:1;">
-    <div class="auth-card reveal" id="authCard">
+    <div class="auth-card" id="authCard">
         <a class="back-link" href="home.html">← 返回首页</a>
         <div class="auth-top">
             <div class="brand-mini">
@@ -142,8 +199,6 @@
 
         <!-- ===== 登录表单 ===== -->
         <form id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
-
-            <!-- 角色选择 -->
             <div class="form-group">
                 <label>👤 登录角色</label>
                 <select id="roleSelect">
@@ -152,44 +207,40 @@
                     <option value="admin">管理员</option>
                 </select>
             </div>
-
-            <!-- 手机号 -->
             <div class="form-group">
                 <label>📱 手机号</label>
                 <input type="text" id="phone" placeholder="请输入手机号" autocomplete="username" value="13912345678">
             </div>
-
-            <!-- 密码 -->
             <div class="form-group">
                 <label>🔒 密码</label>
                 <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" value="123456">
             </div>
-
-            <!-- USB 令牌（管理员专用） -->
             <div class="form-group" id="usbGroup">
                 <label>💾 USB 安全令牌</label>
                 <input type="password" id="usbToken" placeholder="输入管理员 USB 令牌 (DRIVE2026)">
             </div>
-
             <div class="btn-row">
                 <button type="submit" class="btn btn-primary btn-large btn-block light-sweep">登 录</button>
             </div>
         </form>
 
-        <div class="sub-note">
-            <span>默认测试账号：教练 13912345678 / 123456</span><br>
-            <span style="font-size:12px;color:rgba(255,255,255,0.3);">学员注册 / 员工注册 请咨询管理员</span>
+        <!-- ===== 新增注册入口 ===== -->
+        <div class="register-prompt">
+            <p>还没有账号？立即注册</p>
+            <div class="btn-group">
+                <a href="register-student.html" class="student">👤 学员注册</a>
+                <a href="register-staff.html" class="staff">👔 员工注册</a>
+            </div>
         </div>
     </div>
 </main>
 
-<!-- ================== JavaScript（正确顺序） ================== -->
-<!-- 1. 先加载 axios 库 -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<!-- 2. 再加载 common.js（依赖 axios） -->
-<script src="../js/common.js"></script>
+<!-- ===== 引入 home.js 实现粒子动画（与首页一致） ===== -->
+<script src="../js/home.js"></script>
 
-<!-- 3. 登录逻辑（适配组长 LoginServlet） -->
+<!-- ===== 登录业务逻辑（与之前保持一致） ===== -->
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="../js/common.js"></script>
 <script>
     // 角色切换：显示/隐藏 USB 令牌
     document.getElementById('roleSelect').addEventListener('change', function() {
@@ -203,13 +254,11 @@
         var password = document.getElementById('password').value.trim();
         var usbToken = document.getElementById('usbToken').value.trim();
 
-        // 前端校验
         if (!phone || !password) {
             alert('请填写完整信息');
             return;
         }
 
-        // 使用 application/x-www-form-urlencoded 格式（适配组长后端 request.getParameter）
         var params = new URLSearchParams();
         params.append('phone', phone);
         params.append('password', password);
@@ -220,27 +269,24 @@
         axios.post(window.BASE_URL + '/login', params.toString(), {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         })
-        .then(function(res) {
-            // 组长后端返回 code === 1 表示成功
-            if (res.data.code === 1) {
-                // 保存用户信息到 localStorage（供 coach.html 使用）
-               var userInfo = {
-                    id: res.data.userId,
-                    phone: phone,
-                    role: role,
-                    name: role === 'coach' ? '教练' : (role === 'admin' ? '管理员' : '学员')
-                };
-                localStorage.setItem('userInfo', JSON.stringify(userInfo));
-                // 使用组长返回的 url 跳转（已包含 context path）
-                window.location.href = res.data.url;
-            } else {
-                alert('登录失败：' + (res.data.msg || '未知错误'));
-            }
-        })
-        .catch(function(err) {
-            alert('请求异常，请检查网络');
-            console.error('登录错误:', err);
-        });
+            .then(function(res) {
+                if (res.data.code === 1) {
+                    var userInfo = {
+                        id: res.data.userId,
+                        phone: phone,
+                        role: role,
+                        name: res.data.name
+                    };
+                    localStorage.setItem('userInfo', JSON.stringify(userInfo));
+                    window.location.href = res.data.url;
+                } else {
+                    alert('登录失败：' + (res.data.msg || '未知错误'));
+                }
+            })
+            .catch(function(err) {
+                alert('请求异常，请检查网络');
+                console.error('登录错误:', err);
+            });
     }
 
     // 回车键触发登录
@@ -248,10 +294,9 @@
         if (e.key === 'Enter') handleLogin();
     });
 
-    // 页面加载动画
+    // 卡片淡入动画
     setTimeout(function() {
-        var card = document.getElementById('authCard');
-        if (card) card.classList.add('visible');
+        document.getElementById('authCard').classList.add('visible');
     }, 100);
 </script>
 </body>
