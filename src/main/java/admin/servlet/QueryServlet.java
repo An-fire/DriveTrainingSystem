@@ -136,6 +136,17 @@ public class QueryServlet extends HttpServlet {
                 detail.put("bookingMonth", bookingDAO.countByMonth());
                 detail.put("studentScore", bookingDAO.scoreDistribution(true));
                 detail.put("coachScore", bookingDAO.scoreDistribution(false));
+                java.util.Map<String, Integer> rankMap = bookingDAO.countByCoach();
+                java.util.Map<String, Integer> nameMap = new java.util.LinkedHashMap<>();
+                StaffDAO staffDAO = new StaffDAO();
+                for (java.util.Map.Entry<String, Integer> entry : rankMap.entrySet()) {
+                    Staff coach = staffDAO.findById(entry.getKey());
+                    String name = (coach != null) ? coach.getName() : entry.getKey().substring(0, 8);
+                    nameMap.put(name, entry.getValue());
+                }
+                detail.put("coachBookingRank", nameMap);
+                detail.put("enrollMonth", enrollmentDAO.countByMonth());
+                detail.put("bookingStatus", bookingDAO.countByStatusGroup());
                 result.put("code", 1);
                 result.put("data", detail);
             } else {

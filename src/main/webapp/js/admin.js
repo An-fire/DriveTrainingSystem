@@ -6,23 +6,27 @@ var BASE_URL = window.BASE_URL || '';
 document.addEventListener('DOMContentLoaded', function() {
     initParticleCanvas();
     initRevealAnimations();
+    // 显示管理员名字
+    var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    if (userInfo.name) {
+        document.getElementById('adminName').innerHTML = '👤 管理员 ' + userInfo.name;
+    }
+    window.loadDashboard();
+    window.showTab('dashboard');
 });
 
 // 粒子背景动画
 function initParticleCanvas() {
     var canvas = document.getElementById('particleCanvas');
     if (!canvas) return;
-    
     var ctx = canvas.getContext('2d');
     var particles = [];
     var w = canvas.width = window.innerWidth;
     var h = canvas.height = window.innerHeight;
-    
     window.addEventListener('resize', function() {
         w = canvas.width = window.innerWidth;
         h = canvas.height = window.innerHeight;
     });
-    
     for (var i = 0; i < 50; i++) {
         particles.push({
             x: Math.random() * w,
@@ -33,7 +37,6 @@ function initParticleCanvas() {
             opacity: Math.random() * 0.5 + 0.1
         });
     }
-    
     function animate() {
         ctx.clearRect(0, 0, w, h);
         particles.forEach(function(p) {
@@ -64,12 +67,9 @@ function initRevealAnimations() {
             }
         });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    
     elements.forEach(function(el) {
         observer.observe(el);
     });
-    
-    // 表格行动画
     setTimeout(function() {
         var rows = document.querySelectorAll('tbody tr');
         rows.forEach(function(row, index) {
@@ -117,17 +117,17 @@ function apiPost(url, data, callback) {
     axios.post(BASE_URL + url, data, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     })
-    .then(function(res) {
-        if (res.data.code === 1) {
-            if (callback) callback(res.data);
-        } else {
-            alert(res.data.msg || '操作失败');
-        }
-    })
-    .catch(function(err) {
-        console.error('请求失败:', err);
-        alert('请求失败，请检查网络');
-    });
+        .then(function(res) {
+            if (res.data.code === 1) {
+                if (callback) callback(res.data);
+            } else {
+                alert(res.data.msg || '操作失败');
+            }
+        })
+        .catch(function(err) {
+            console.error('请求失败:', err);
+            alert('请求失败，请检查网络');
+        });
 }
 
 // 切换 Tab
@@ -142,14 +142,21 @@ window.showTab = function(tabName) {
     var targetTab = document.getElementById('tab-' + tabName);
     if (targetTab) targetTab.classList.add('active');
 
-    // 找到点击的导航项并高亮（通过onclick属性匹配）
+    var titleMap = {
+        'dashboard': '数据概览',
+        'enrollments': '报名审核',
+        'bookings': '练车记录',
+        'staff': '员工管理',
+        'students': '学员管理'
+    };
+    document.getElementById('pageTitle').innerText = titleMap[tabName] || '数据概览';
+
     document.querySelectorAll('.sidebar-nav a').forEach(function(el) {
         if (el.getAttribute('onclick') && el.getAttribute('onclick').includes("'" + tabName + "'")) {
             el.classList.add('active');
         }
     });
 
-    // 切换Tab后重新触发动画
     setTimeout(function() {
         var elements = targetTab.querySelectorAll('.stat-card, .chart-box, .section');
         elements.forEach(function(el, index) {
@@ -170,7 +177,10 @@ window.showTab = function(tabName) {
     // 加载对应数据
     if (tabName === 'staff') loadStaffList();
     if (tabName === 'students') loadStudents();
-    if (tabName === 'enrollments') loadEnrollments();
+    if (tabName === 'enrollments') {
+        loadPendingEnrollments();
+        loadAllEnrollments();
+    }
     if (tabName === 'bookings') loadBookings();
     if (tabName === 'dashboard') loadDashboard();
 };
@@ -197,8 +207,8 @@ window.loadStaffList = function() {
                 '<td>' + roleText + '</td>' +
                 '<td>' + subjectText + '</td>' +
                 '<td>' +
-                    '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
-                    '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
+                '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
+                '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
                 '</td>' +
                 '</tr>';
         });
@@ -207,7 +217,7 @@ window.loadStaffList = function() {
     });
 };
 
-window.openStaffModal = function() {
+window.openAddStaffModal = function() {
     document.getElementById('editStaffId').value = '';
     document.getElementById('modalStaffName').value = '';
     document.getElementById('modalStaffPhone').value = '';
@@ -252,7 +262,6 @@ window.saveStaff = function() {
         alert('请填写姓名和手机号');
         return;
     }
-
     if (role === 'admin' && !usbToken) {
         alert('管理员必须设置USB安全令牌');
         return;
@@ -305,15 +314,17 @@ window.loadStudents = function() {
             container.innerHTML = '<div class="empty-tip">暂无学员数据</div>';
             return;
         }
+        var statusMap = { 'pending': '待审核', 'approved': '已通过', 'rejected': '已拒绝' };
         var html = '<table class="data-table"><thead><tr>' +
-            '<th>姓名</th><th>手机号</th><th>身份证号</th><th>科目</th>' +
+            '<th>姓名</th><th>手机号</th><th>身份证号</th><th>报名状态</th>' +
             '</tr></thead><tbody>';
         data.forEach(function(item) {
+            var statusText = statusMap[item.enrollStatus] || '未报名';
             html += '<tr>' +
                 '<td>' + (item.name || '') + '</td>' +
                 '<td>' + (item.phone || '') + '</td>' +
                 '<td>' + (item.idCard || '') + '</td>' +
-                '<td>' + (item.subject || '-') + '</td>' +
+                '<td>' + statusText + '</td>' +
                 '</tr>';
         });
         html += '</tbody></table>';
@@ -322,18 +333,52 @@ window.loadStudents = function() {
 };
 
 // ==================== 报名审核 ====================
-window.loadEnrollments = function() {
-    var container = document.getElementById('enrollmentList');
+window.loadPendingEnrollments = function() {
+    var container = document.getElementById('pendingList');
     if (!container) return;
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+    apiGet('/admin/query?action=enrollments', function(data) {
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
+            return;
+        }
+        var pending = data.filter(function(item) { return item.status === 'pending'; });
+        if (pending.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
+            return;
+        }
+        var html = '<table class="data-table"><thead><tr>' +
+            '<th>学员</th><th>教练</th><th>科目</th><th>状态</th><th>操作</th>' +
+            '</tr></thead><tbody>';
+        pending.forEach(function(item) {
+            var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
+            html += '<tr>' +
+                '<td>' + (item.studentName || '') + '</td>' +
+                '<td>' + (item.coachName || '') + '</td>' +
+                '<td>' + (item.subjectType || '') + '</td>' +
+                '<td>' + statusText + '</td>' +
+                '<td>' +
+                '<button class="btn btn-sm btn-primary" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')" style="margin-right:5px">通过</button>' +
+                '<button class="btn btn-sm btn-danger" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">拒绝</button>' +
+                '</td>' +
+                '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    });
+};
 
+window.loadAllEnrollments = function() {
+    var container = document.getElementById('allEnrollmentList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
     apiGet('/admin/query?action=enrollments', function(data) {
         if (!data || data.length === 0) {
             container.innerHTML = '<div class="empty-tip">暂无报名记录</div>';
             return;
         }
         var html = '<table class="data-table"><thead><tr>' +
-            '<th>学员</th><th>教练</th><th>科目</th><th>状态</th><th>操作</th>' +
+            '<th>学员</th><th>教练</th><th>科目</th><th>状态</th>' +
             '</tr></thead><tbody>';
         data.forEach(function(item) {
             var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
@@ -342,12 +387,6 @@ window.loadEnrollments = function() {
                 '<td>' + (item.coachName || '') + '</td>' +
                 '<td>' + (item.subjectType || '') + '</td>' +
                 '<td>' + statusText + '</td>' +
-                '<td>' +
-                    (item.status === 'pending' ?
-                        '<button class="btn btn-sm btn-primary" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')" style="margin-right:5px">通过</button>' +
-                        '<button class="btn btn-sm btn-danger" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">拒绝</button>'
-                        : '-') +
-                '</td>' +
                 '</tr>';
         });
         html += '</tbody></table>';
@@ -360,17 +399,10 @@ window.auditEnrollment = function(id, status) {
     params.append('id', id);
     params.append('status', status);
     apiPost('/admin/enrollment', params.toString(), function() {
-        window.loadEnrollments();
+        loadPendingEnrollments();
+        loadAllEnrollments();
     });
 };
-
-function formatDateTime(timestamp) {
-    if (!timestamp) return '-';
-    var date = new Date(timestamp);
-    var pad = function(n) { return n < 10 ? '0' + n : n; };
-    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' +
-           pad(date.getHours()) + ':' + pad(date.getMinutes());
-}
 
 // ==================== 练车记录 ====================
 window.loadBookings = function() {
@@ -403,6 +435,14 @@ window.loadBookings = function() {
         container.innerHTML = html;
     });
 };
+
+function formatDateTime(timestamp) {
+    if (!timestamp) return '-';
+    var date = new Date(timestamp);
+    var pad = function(n) { return n < 10 ? '0' + n : n; };
+    return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' +
+        pad(date.getHours()) + ':' + pad(date.getMinutes());
+}
 
 // ==================== 数据概览 & ECharts 可视化 ====================
 var chartInstances = {};
@@ -499,10 +539,8 @@ function getChartOption(title, type, labels, values, colorList) {
 }
 
 window.loadDashboard = function() {
-    // 1. 加载基础统计卡片
     apiGet('/admin/query?action=stats', function(data) {
         if (!data) return;
-        // 使用数字滚动动画
         animateValue(document.getElementById('statStudents'), 0, data.totalStudents || 0, 1000);
         animateValue(document.getElementById('statCoaches'), 0, data.totalCoaches || 0, 1000);
         animateValue(document.getElementById('statPendingEnroll'), 0, data.pendingEnrollments || 0, 1000);
@@ -511,11 +549,9 @@ window.loadDashboard = function() {
         animateValue(document.getElementById('statApprovedBook'), 0, data.approvedBookings || 0, 1000);
     });
 
-    // 2. 加载图表详细数据
     apiGet('/admin/query?action=statsDetail', function(detail) {
         if (!detail) return;
 
-        // 学员科目分布饼图
         var ss = detail.studentSubject || {};
         var ssLabels = Object.keys(ss);
         var ssValues = Object.values(ss);
@@ -524,7 +560,6 @@ window.loadDashboard = function() {
         chartSS.setOption(getChartOption(null, 'pie', ssLabels, ssValues, ['#60a5fa', '#34d399', '#fbbf24']));
         chartInstances.studentSubject = chartSS;
 
-        // 教练科目分布饼图
         var cs = detail.coachSubject || {};
         var csLabels = Object.keys(cs);
         var csValues = Object.values(cs);
@@ -533,7 +568,6 @@ window.loadDashboard = function() {
         chartCS.setOption(getChartOption(null, 'pie', csLabels, csValues, ['#f87171', '#a78bfa', '#fbbf24']));
         chartInstances.coachSubject = chartCS;
 
-        // 预约趋势折线图
         var bm = detail.bookingMonth || {};
         var bmLabels = Object.keys(bm);
         var bmValues = Object.values(bm);
@@ -542,7 +576,6 @@ window.loadDashboard = function() {
         chartBM.setOption(getChartOption(null, 'line', bmLabels, bmValues));
         chartInstances.bookingMonth = chartBM;
 
-        // 评分分布柱状图（合并学员评分和教练评分）
         var stuScore = detail.studentScore || {};
         var coaScore = detail.coachScore || {};
         var scoreLabels = ['1分', '2分', '3分', '4分', '5分'];
@@ -598,16 +631,142 @@ window.loadDashboard = function() {
             ]
         });
         chartInstances.score = chartScore;
+
+        // 新增图表：教练排行、报名趋势、预约状态
+        var coachRank = detail.coachBookingRank || {};
+        var coachNames = Object.keys(coachRank);
+        var coachCounts = Object.values(coachRank);
+        if (coachNames.length === 0) { coachNames = ['暂无数据']; coachCounts = [0]; }
+        if (coachNames.length > 10) {
+            coachNames = coachNames.slice(0, 10);
+            coachCounts = coachCounts.slice(0, 10);
+        }
+        var chartRank = echarts.init(document.getElementById('chartCoachRank'));
+        chartRank.setOption({
+            backgroundColor: 'transparent',
+            textStyle: { color: '#94a3b8', fontSize: 11 },
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: '#1e293b',
+                borderColor: 'rgba(255,255,255,0.1)',
+                textStyle: { color: '#e2e8f0' }
+            },
+            grid: { top: 30, right: 20, bottom: 50, left: 50 },
+            xAxis: {
+                type: 'category',
+                data: coachNames,
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10, interval: 0, rotate: 25 }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            series: [{
+                type: 'bar',
+                data: coachCounts,
+                barWidth: '45%',
+                itemStyle: {
+                    borderRadius: [4, 4, 0, 0],
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: '#f59e0b' },
+                        { offset: 1, color: '#d97706' }
+                    ])
+                }
+            }]
+        });
+        chartInstances.coachRank = chartRank;
+
+        var enrollMonth = detail.enrollMonth || {};
+        var emLabels = Object.keys(enrollMonth);
+        var emValues = Object.values(enrollMonth);
+        if (emLabels.length === 0) { emLabels = ['近6个月']; emValues = [0]; }
+        var chartEM = echarts.init(document.getElementById('chartEnrollMonth'));
+        chartEM.setOption({
+            backgroundColor: 'transparent',
+            textStyle: { color: '#94a3b8', fontSize: 11 },
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: '#1e293b',
+                borderColor: 'rgba(255,255,255,0.1)',
+                textStyle: { color: '#e2e8f0' }
+            },
+            grid: { top: 30, right: 20, bottom: 30, left: 40 },
+            xAxis: {
+                type: 'category',
+                data: emLabels,
+                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            yAxis: {
+                type: 'value',
+                axisLine: { show: false },
+                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
+                axisLabel: { color: '#94a3b8', fontSize: 10 }
+            },
+            series: [{
+                type: 'line',
+                data: emValues,
+                smooth: true,
+                symbol: 'circle',
+                symbolSize: 6,
+                lineStyle: { width: 3, color: '#a78bfa' },
+                itemStyle: { color: '#a78bfa' },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: 'rgba(167,139,250,0.3)' },
+                        { offset: 1, color: 'rgba(167,139,250,0.01)' }
+                    ])
+                }
+            }]
+        });
+        chartInstances.enrollMonth = chartEM;
+
+        var bookingStatus = detail.bookingStatus || {};
+        var statusMap = { 'approved': '已通过', 'pending': '待审核', 'rejected': '已拒绝' };
+        var statusLabels = [];
+        var statusValues = [];
+        for (var key in bookingStatus) {
+            statusLabels.push(statusMap[key] || key);
+            statusValues.push(bookingStatus[key]);
+        }
+        if (statusLabels.length === 0) { statusLabels = ['暂无数据']; statusValues = [0]; }
+        var chartBS = echarts.init(document.getElementById('chartBookingStatus'));
+        chartBS.setOption({
+            backgroundColor: 'transparent',
+            textStyle: { color: '#94a3b8', fontSize: 11 },
+            tooltip: {
+                trigger: 'item',
+                backgroundColor: '#1e293b',
+                borderColor: 'rgba(255,255,255,0.1)',
+                textStyle: { color: '#e2e8f0' }
+            },
+            series: [{
+                type: 'pie',
+                radius: ['40%', '70%'],
+                center: ['50%', '55%'],
+                itemStyle: { borderRadius: 6, borderColor: '#1e293b', borderWidth: 2 },
+                label: { color: '#94a3b8', fontSize: 11, formatter: '{b}: {c} ({d}%)' },
+                data: statusLabels.map(function(label, index) {
+                    return { name: label, value: statusValues[index] };
+                }),
+                color: ['#34d399', '#fbbf24', '#f87171']
+            }]
+        });
+        chartInstances.bookingStatus = chartBS;
     });
 };
 
-// 窗口大小变化时重绘图表
 window.addEventListener('resize', function() {
     Object.values(chartInstances).forEach(function(c) { c && c.resize(); });
 });
 
-// ==================== 初始化 ====================
-document.addEventListener('DOMContentLoaded', function() {
-    window.loadDashboard();
-    window.showTab('dashboard');
-});
+window.logout = function() {
+    if (confirm('确定退出登录吗？')) {
+        localStorage.removeItem('userInfo');
+        window.location.href = BASE_URL + '/logout';
+    }
+};
+

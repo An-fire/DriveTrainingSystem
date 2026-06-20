@@ -1,9 +1,13 @@
 package admin.servlet;
 
 import common.database.EnrollmentDAO;
+import common.database.NotificationDAO;
+import common.database.UserDAO;
 import common.entity.Enrollment;
+import common.entity.Notification;
 import common.entity.Staff;
 import common.entity.User;
+import common.util.UUIDUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.servlet.ServletException;
@@ -13,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 @WebServlet("/admin/audit")
@@ -54,6 +59,7 @@ public class AuditServlet extends HttpServlet {
                 }
                 int rows = enrollmentDAO.updateStatus(enrollmentId, "approved");
                 if (rows > 0) {
+                    syncEnrollStatusAndNotify(enrollmentId, "approved");
                     result.put("code", 1);
                     result.put("msg", "已通过该报名申请");
                 } else {
@@ -69,6 +75,7 @@ public class AuditServlet extends HttpServlet {
                 }
                 int rows = enrollmentDAO.updateStatus(enrollmentId, "rejected");
                 if (rows > 0) {
+                    syncEnrollStatusAndNotify(enrollmentId, "rejected");
                     result.put("code", 1);
                     result.put("msg", "已拒绝该报名申请");
                 } else {
@@ -86,6 +93,32 @@ public class AuditServlet extends HttpServlet {
         }
 
         response.getWriter().write(result.toString());
+    }
+
+    private void syncEnrollStatusAndNotify(String enrollmentId, String status) {
+        try {
+            Enrollment enrollment = enrollmentDAO.findById(enrollmentId);
+            if (enrollment == null) return;
+
+            UserDAO userDAO = new UserDAO();
+            User user = userDAO.findById(enrollment.getStudentId());
+            if (user != null) {
+                user.setEnrollStatus(status);
+                userDAO.update(user);
+            }
+
+            Notification notif = new Notification();
+            notif.setId(UUIDUtil.getUUID());
+            notif.setUserId(user.getId());
+            notif.setType("enroll_audit");
+            String content = "您的报名已" + ("approved".equals(status) ? "通过审核，可以开始预约练车了" : "被拒绝，请重新提交报名申请");
+            notif.setContent(content);
+            notif.setIsRead(0);
+            notif.setCreateTime(new Date());
+            new NotificationDAO().insert(notif);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

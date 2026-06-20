@@ -690,6 +690,22 @@
                     <div id="chartScore" style="width:100%;height:260px;"></div>
                 </div>
             </div>
+            <div class="chart-row" style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap;">
+                <div class="chart-box" style="flex:1; min-width:300px; background:#1e293b; border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8; font-size:13px; margin-bottom:12px;">🏆 教练预约排行</h4>
+                    <div id="chartCoachRank" style="width:100%; height:260px;"></div>
+                </div>
+                <div class="chart-box" style="flex:1; min-width:300px; background:#1e293b; border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8; font-size:13px; margin-bottom:12px;">📈 报名月度趋势</h4>
+                    <div id="chartEnrollMonth" style="width:100%; height:260px;"></div>
+                </div>
+            </div>
+            <div class="chart-row" style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap;">
+                <div class="chart-box" style="flex:1; min-width:300px; background:#1e293b; border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06);">
+                    <h4 style="color:#94a3b8; font-size:13px; margin-bottom:12px;">📊 预约状态分布</h4>
+                    <div id="chartBookingStatus" style="width:100%; height:260px;"></div>
+                </div>
+            </div>
         </div>
 
         <!-- 报名审核 -->
@@ -719,7 +735,7 @@
             <div class="section">
                 <div class="section-header">
                     <h3>所有练车预约</h3>
-                    <button class="btn btn-primary btn-sm" onclick="window.loadAllBookings()">刷新</button>
+                    <button class="btn btn-primary btn-sm" onclick="window.loadBookings()">刷新</button>
                 </div>
                 <div id="bookingList">
                     <div class="empty-tip">加载中...</div>
