@@ -246,7 +246,7 @@
             font-size: 14px;
         }
 
-        /* 模态框 */
+        /* ===== 打分模态框 ===== */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -429,6 +429,35 @@
     </div>
 </main>
 
+<!-- ============================================================ -->
+<!-- ===== 打分模态框（新增） ===== -->
+<!-- ============================================================ -->
+<div class="modal-overlay" id="scoreModal">
+    <div class="modal-box">
+        <h3>✏️ 给学员打分</h3>
+        <p>学员：<strong id="modalStudentName" style="color:#60a5fa;">—</strong></p>
+        <label for="modalScore">表现评分 (1-5)</label>
+        <select id="modalScore">
+            <option value="5">⭐⭐⭐⭐⭐ 非常优秀 (5分)</option>
+            <option value="4" selected>⭐⭐⭐⭐ 良好 (4分)</option>
+            <option value="3">⭐⭐⭐ 一般 (3分)</option>
+            <option value="2">⭐⭐ 较差 (2分)</option>
+            <option value="1">⭐ 极差 (1分)</option>
+        </select>
+        <label class="checkbox-row">
+            <input type="checkbox" id="modalCanExam">
+            <span>✅ 授予该学员考试资格</span>
+        </label>
+        <div class="btn-row">
+            <button class="btn-cancel" onclick="closeScoreModal()">取消</button>
+            <button class="btn-confirm" onclick="confirmScore()">确认提交</button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- ===== JavaScript ===== -->
+<!-- ============================================================ -->
 <script src="../js/common.js"></script>
 <script src="../js/coach.js"></script>
 
@@ -441,12 +470,10 @@
     }
 
     // ===== 显示教练信息 =====
-    // ✅ 显示真实姓名
     var nameEl = document.getElementById('coachRealName');
     if (nameEl && userInfo.name) {
         nameEl.textContent = userInfo.name;
     }
-    // 显示科目
     if (userInfo.subject) {
         document.getElementById('coachSubject').textContent = userInfo.subject;
     }
@@ -520,7 +547,6 @@
             });
     };
 
-    // 重写 submitScore 打开模态框
     window.submitScore = function(bookingId) {
         var row = document.getElementById('row_' + bookingId);
         var studentName = '未知学员';
