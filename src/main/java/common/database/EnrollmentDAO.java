@@ -186,4 +186,55 @@ public class EnrollmentDAO {
         }
         return 0;
     }
+
+    public Enrollment findById(String id) {
+        String sql = "SELECT * FROM enrollment WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, id);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Enrollment enrollment = new Enrollment();
+                enrollment.setId(rs.getString("id"));
+                enrollment.setStudentId(rs.getString("studentId"));
+                enrollment.setCoachId(rs.getString("coachId"));
+                enrollment.setSubjectType(rs.getString("subjectType"));
+                enrollment.setStatus(rs.getString("status"));
+                enrollment.setApplyTime(rs.getTimestamp("applyTime"));
+                enrollment.setAuditTime(rs.getTimestamp("auditTime"));
+                return enrollment;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return null;
+    }
+
+    //  按统计报名数量（近6个月趋势）
+    public java.util.Map<String, Integer> countByMonth() {
+        String sql = "SELECT DATE_FORMAT(applyTime, '%Y-%m') AS month, COUNT(*) AS cnt FROM enrollment WHERE applyTime >= DATE_SUB(NOW(), INTERVAL 6 MONTH) GROUP BY month ORDER BY month";
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("month"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return map;
+    }
 }

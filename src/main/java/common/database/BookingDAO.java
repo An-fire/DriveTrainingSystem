@@ -299,17 +299,29 @@ public class BookingDAO {
         }
     }
 
-    public List<Booking> findByCoachIdAndDate(String coachId, Date date) {
-        String sql = "SELECT * FROM booking WHERE coachId = ? AND status = 'approved' AND DATE(startTime) = ? ORDER BY startTime ASC";
+    public List<Booking> findByCoachIdAndDate(String coachId, java.util.Date date) {
+        // 计算当天的开始时间（00:00:00）和结束时间（23:59:59）
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+        cal.set(java.util.Calendar.MINUTE, 0);
+        cal.set(java.util.Calendar.SECOND, 0);
+        cal.set(java.util.Calendar.MILLISECOND, 0);
+        java.util.Date startDate = cal.getTime();
+        cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        java.util.Date endDate = cal.getTime();
+
+        String sql = "SELECT * FROM booking WHERE coachId = ? AND status = 'approved' AND startTime >= ? AND startTime < ? ORDER BY startTime ASC";
+        List<Booking> list = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
-        List<Booking> list = new ArrayList<>();
         try {
             conn = DBCConnection.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, coachId);
-            pstmt.setDate(2, new java.sql.Date(date.getTime()));
+            pstmt.setTimestamp(2, new Timestamp(startDate.getTime()));
+            pstmt.setTimestamp(3, new Timestamp(endDate.getTime()));
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 Booking booking = new Booking();
@@ -371,6 +383,50 @@ public class BookingDAO {
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 map.put(String.valueOf(rs.getInt("score")), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return map;
+    }
+
+    //  统计每位教练的预约数量（排行）
+    public java.util.Map<String, Integer> countByCoach() {
+        String sql = "SELECT coachId, COUNT(*) AS cnt FROM booking GROUP BY coachId ORDER BY cnt DESC";
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("coachId"), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return map;
+    }
+
+    // 按状态统计预约数量（分布）
+    public java.util.Map<String, Integer> countByStatusGroup() {
+        String sql = "SELECT status, COUNT(*) AS cnt FROM booking GROUP BY status";
+        java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                map.put(rs.getString("status"), rs.getInt("cnt"));
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -6,6 +6,8 @@ import common.database.DBCConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,21 +24,24 @@ public class CoachService {
 
         try {
             conn = DBCConnection.getConnection();
-            String sql = "SELECT b.id as bookingId, u.name as studentName, b.subjectType, b.startTime, b.status " +
-                    "FROM booking b " +
-                    "JOIN user u ON b.studentId = u.id " +
+            String sql = "SELECT b.id as bookingId, u.name as studentName, b.subjectType, b.startTime, b.endTime, b.status " +
+                    "FROM booking b JOIN user u ON b.studentId = u.id " +
                     "WHERE b.coachId = ? AND b.status = 'approved' AND b.coachScore IS NULL " +
                     "ORDER BY b.startTime DESC";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, coachId);
             rs = pstmt.executeQuery();
 
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm");
             while (rs.next()) {
                 JSONObject item = new JSONObject();
                 item.put("bookingId", rs.getString("bookingId"));
                 item.put("studentName", rs.getString("studentName"));
                 item.put("subject", rs.getString("subjectType"));
-                item.put("startTime", rs.getString("startTime"));
+                Timestamp start = rs.getTimestamp("startTime");
+                Timestamp end = rs.getTimestamp("endTime");
+                String timeSlot = sdf.format(start) + " - " + sdf.format(end);
+                item.put("timeSlot", timeSlot);
                 item.put("status", rs.getString("status"));
                 list.add(item);
             }

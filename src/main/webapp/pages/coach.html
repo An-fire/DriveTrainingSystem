@@ -408,9 +408,9 @@
             <thead>
             <tr>
                 <th>学员姓名</th>
-                <th>科目</th>
                 <th>练车时段</th>
-                <th>状态</th>
+                <th>评分</th>
+                <th>考试资格</th>
                 <th>操作</th>
             </tr>
             </thead>
@@ -418,6 +418,29 @@
             <tr><td colspan="5" class="empty-tip">加载中...</td></tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- 排班管理卡片 -->
+    <div class="content-card fade-reveal">
+        <div class="card-title">📅 我的排班管理</div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px;">
+            <select id="scheduleWeekday" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:var(--input-bg); color:#fff;">
+                <option value="1">周一</option>
+                <option value="2">周二</option>
+                <option value="3">周三</option>
+                <option value="4">周四</option>
+                <option value="5">周五</option>
+                <option value="6">周六</option>
+                <option value="7">周日</option>
+            </select>
+            <input type="time" id="scheduleStart" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:var(--input-bg); color:#fff;">
+            <span style="color:var(--muted-text);">至</span>
+            <input type="time" id="scheduleEnd" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:var(--input-bg); color:#fff;">
+            <button class="btn btn-primary btn-sm" onclick="addSchedule()">添加排班</button>
+        </div>
+        <div id="scheduleList">
+            <div class="empty-tip">暂无排班数据</div>
+        </div>
     </div>
 
     <!-- 评价列表 -->

@@ -63,7 +63,7 @@ function renderPendingTable(records) {
         var rowId = 'row_' + rec.bookingId;
         html += '<tr id="' + rowId + '">' +
             '<td>' + escapeHtml(rec.studentName || '未知学员') + '</td>' +
-            '<td>' + escapeHtml(rec.timeSlot || rec.startTime || '—') + '</td>' +
+            '<td>' + escapeHtml(rec.timeSlot || '—') + '</td>' +
             '<td>' +
                 '<input type="number" id="score_' + rec.bookingId + '" min="1" max="5" step="1" value="3" style="width:60px;padding:4px 8px;border-radius:6px;border:1px solid #d1d5db;">' +
             '</td>' +
@@ -206,8 +206,100 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===== 加载排班列表 =====
+function loadSchedule() {
+    var coachId = getCoachId();
+    if (!coachId) {
+        document.getElementById('scheduleList').innerHTML = '<div class="empty-tip">请先登录</div>';
+        return;
+    }
+
+    axios.get(BASE_URL + '/coach/schedule?coachId=' + coachId)
+        .then(function(res) {
+            if (res.data.code === 1) {
+                var list = res.data.data || [];
+                var container = document.getElementById('scheduleList');
+                if (list.length === 0) {
+                    container.innerHTML = '<div class="empty-tip">暂无排班数据</div>';
+                    return;
+                }
+                var weekMap = {1:'周一', 2:'周二', 3:'周三', 4:'周四', 5:'周五', 6:'周六', 7:'周日'};
+                var html = '<ul style="list-style:none; padding:0; margin:0;">';
+                list.forEach(function(item) {
+                    html += '<li style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.06);">' +
+                        '<span>' + weekMap[item.weekday] + ' ' + item.startTime + ' - ' + item.endTime + '</span>' +
+                        '<button class="btn btn-sm btn-danger" onclick="deleteSchedule(\'' + item.id + '\')">删除</button>' +
+                        '</li>';
+                });
+                html += '</ul>';
+                container.innerHTML = html;
+            }
+        })
+        .catch(function(err) {
+            console.error('加载排班失败:', err);
+        });
+}
+
+// ===== 添加排班 =====
+function addSchedule() {
+    var weekday = document.getElementById('scheduleWeekday').value;
+    var start = document.getElementById('scheduleStart').value;
+    var end = document.getElementById('scheduleEnd').value;
+
+    if (!start || !end) {
+        alert('请填写完整的时间段');
+        return;
+    }
+    if (start >= end) {
+        alert('开始时间不能晚于结束时间');
+        return;
+    }
+
+    var params = new URLSearchParams();
+    params.append('weekday', weekday);
+    params.append('startTime', start);
+    params.append('endTime', end);
+
+    axios.post(BASE_URL + '/coach/schedule', params.toString(), {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+        .then(function(res) {
+            if (res.data.code === 1) {
+                alert('✅ 排班添加成功');
+                loadSchedule();
+                // 清空输入
+                document.getElementById('scheduleStart').value = '';
+                document.getElementById('scheduleEnd').value = '';
+            } else {
+                alert('❌ ' + (res.data.msg || '添加失败'));
+            }
+        })
+        .catch(function(err) {
+            alert('网络请求失败，请稍后重试');
+            console.error(err);
+        });
+}
+
+// ===== 删除排班 =====
+function deleteSchedule(id) {
+    if (!confirm('确定删除该排班吗？')) return;
+    axios.delete(BASE_URL + '/coach/schedule?id=' + id)
+        .then(function(res) {
+            if (res.data.code === 1) {
+                alert('✅ 删除成功');
+                loadSchedule();
+            } else {
+                alert('❌ ' + (res.data.msg || '删除失败'));
+            }
+        })
+        .catch(function(err) {
+            alert('网络请求失败，请稍后重试');
+            console.error(err);
+        });
+}
+
 // ============================================================
-// 8. 页面初始化
+// 页面初始化
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
     // 检查 axios 是否可用
@@ -234,6 +326,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 加载数据
     loadPendingScores();
     loadComments();
+    loadSchedule();
 });
 
 // 暴露必要函数到全局

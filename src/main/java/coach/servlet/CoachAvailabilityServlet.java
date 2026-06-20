@@ -3,22 +3,26 @@ package coach.servlet;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import common.database.BookingDAO;
+import common.database.CoachScheduleDAO;
 import common.entity.Booking;
+import common.entity.CoachSchedule;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.sql.Date;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @WebServlet("/student/availability")
 public class CoachAvailabilityServlet extends HttpServlet {
 
     private final BookingDAO bookingDAO = new BookingDAO();
-    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+    private final CoachScheduleDAO scheduleDAO = new CoachScheduleDAO();
+    private final SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm");
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -26,7 +30,7 @@ public class CoachAvailabilityServlet extends HttpServlet {
         JSONObject result = new JSONObject();
 
         String coachId = req.getParameter("coachId");
-        String dateStr = req.getParameter("date"); // 格式 yyyy-MM-dd
+        String dateStr = req.getParameter("date");
 
         if (coachId == null || coachId.isEmpty()) {
             result.put("code", 0);
@@ -36,35 +40,95 @@ public class CoachAvailabilityServlet extends HttpServlet {
         }
 
         try {
-            // 如果没有传日期，默认今天
-            Date targetDate;
+            // 解析日期
+            java.util.Date targetUtilDate;
             if (dateStr == null || dateStr.isEmpty()) {
-                targetDate = new Date();
+                targetUtilDate = new java.util.Date();
             } else {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                targetDate = dateFormat.parse(dateStr);
+                targetUtilDate = sdfDate.parse(dateStr);
+            }
+            // 转换为 java.sql.Date（用于DAO查询）
+            Date targetSqlDate = new Date(targetUtilDate.getTime());
+            String dateStrFinal = sdfDate.format(targetUtilDate);
+
+            // 获取星期几（1=周一, 7=周日）
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(targetUtilDate);
+            int weekday = cal.get(Calendar.DAY_OF_WEEK);
+            int wd = (weekday == 1) ? 7 : weekday - 1;
+
+            // 查询教练当天的排班
+            List<CoachSchedule> schedules = scheduleDAO.findByCoachIdAndWeekday(coachId, wd);
+
+            JSONArray freeSlots = new JSONArray();
+            JSONArray occupiedSlots = new JSONArray();
+
+            if (schedules == null || schedules.isEmpty()) {
+                JSONObject data = new JSONObject();
+                data.put("free", freeSlots);
+                data.put("occupied", occupiedSlots);
+                data.put("msg", "该教练当天无排班");
+                result.put("code", 1);
+                result.put("data", data);
+                resp.getWriter().write(result.toString());
+                return;
             }
 
-            // 获取该教练当天所有已批准的预约（status = 'approved'）
-            // 我们无法直接从现有方法获取当天，需要查询全部然后过滤，或者写新的DAO方法。
-            // 简单实现：查询该教练的所有 approved 预约，然后按天过滤。
-            // 注意：BookingDAO 没有按教练和日期查询的方法，我们临时用 findAll 然后过滤（数据量不大时可行）
-            // 更优：在 BookingDAO 增加 findByCoachIdAndDate
-
-            // 这里为了演示，我们写一个新的DAO方法（见下方）
-            List<Booking> bookings = bookingDAO.findByCoachIdAndDate(coachId, (java.sql.Date) targetDate);
-
-            // 构建占用时间段列表
-            JSONArray occupied = new JSONArray();
-            for (Booking b : bookings) {
-                JSONObject slot = new JSONObject();
-                slot.put("start", sdf.format(b.getStartTime()));
-                slot.put("end", sdf.format(b.getEndTime()));
-                occupied.add(slot);
+            List<Booking> occupied = bookingDAO.findByCoachIdAndDate(coachId, targetUtilDate);
+            if (occupied == null) {
+                occupied = new ArrayList<>();
             }
 
+            // 对每个排班时段，计算空闲和占用
+            for (CoachSchedule schedule : schedules) {
+                Date scheduleStart = new Date(schedule.getStartTime().getTime());
+                Date scheduleEnd = new Date(schedule.getEndTime().getTime());
+
+                Date currentStart = scheduleStart;
+
+                // 检查是否有占用
+                for (Booking book : occupied) {
+                    java.util.Date bookStartUtil = book.getStartTime();
+                    java.util.Date bookEndUtil = book.getEndTime();
+                    if (bookStartUtil == null || bookEndUtil == null) continue;
+
+                    Date bookStart = new Date(bookStartUtil.getTime());
+                    Date bookEnd = new Date(bookEndUtil.getTime());
+
+                    // 如果预约与排班有重叠
+                    if (bookStart.before(scheduleEnd) && bookEnd.after(scheduleStart)) {
+                        // 如果预约开始时间在当前区间之后，产生一个空闲段
+                        if (bookStart.after(currentStart) && bookStart.before(scheduleEnd)) {
+                            JSONObject slot = new JSONObject();
+                            slot.put("start", dateStrFinal + " " + sdfTime.format(currentStart));
+                            slot.put("end", dateStrFinal + " " + sdfTime.format(bookStart));
+                            freeSlots.add(slot);
+                        }
+                        // 记录占用时段
+                        JSONObject occupiedSlot = new JSONObject();
+                        occupiedSlot.put("start", dateStrFinal + " " + sdfTime.format(bookStart));
+                        occupiedSlot.put("end", dateStrFinal + " " + sdfTime.format(bookEnd));
+                        occupiedSlots.add(occupiedSlot);
+                        // 更新当前区间起点
+                        if (bookEnd.after(currentStart)) {
+                            currentStart = bookEnd;
+                        }
+                    }
+                }
+                // 剩余空闲时段
+                if (currentStart.before(scheduleEnd)) {
+                    JSONObject slot = new JSONObject();
+                    slot.put("start", dateStrFinal + " " + sdfTime.format(currentStart));
+                    slot.put("end", dateStrFinal + " " + sdfTime.format(scheduleEnd));
+                    freeSlots.add(slot);
+                }
+            }
+
+            JSONObject data = new JSONObject();
+            data.put("free", freeSlots);
+            data.put("occupied", occupiedSlots);
             result.put("code", 1);
-            result.put("data", occupied);
+            result.put("data", data);
 
         } catch (Exception e) {
             e.printStackTrace();
