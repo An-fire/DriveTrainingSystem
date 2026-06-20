@@ -2,6 +2,7 @@ package coach.servlet;
 
 import com.alibaba.fastjson.JSONObject;
 import coach.service.CoachService;
+import coach.util.CoachValidator;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,10 +11,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * 获取学员对教练的评价列表
+ * 请求方式：GET
+ * 请求参数：coachId（教练UUID）
+ * 返回格式：JSON
+ */
 @WebServlet("/coach/comments")
 public class CommentServlet extends HttpServlet {
 
-    private CoachService coachService = new CoachService();
+    private final CoachService coachService = new CoachService();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -22,9 +29,11 @@ public class CommentServlet extends HttpServlet {
 
         String coachId = req.getParameter("coachId");
 
-        if (coachId == null || coachId.isEmpty()) {
+        // 使用 CoachValidator 校验教练ID
+        String error = CoachValidator.validateCoachId(coachId);
+        if (error != null) {
             result.put("code", 400);
-            result.put("message", "教练ID不能为空");
+            result.put("message", error);
             resp.getWriter().write(result.toString());
             return;
         }
