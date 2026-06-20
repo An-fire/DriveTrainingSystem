@@ -1,9 +1,6 @@
 package student.service;
 
-import common.database.BookingDAO;
-import common.database.EnrollmentDAO;
-import common.database.StaffDAO;
-import common.database.UserDAO;
+import common.database.*;
 import common.entity.Booking;
 import common.entity.Enrollment;
 import common.entity.Staff;
@@ -21,7 +18,7 @@ public class StudentService {
     private final BookingDAO bookingDAO = new BookingDAO();
     private final StaffDAO staffDAO = new StaffDAO();
     private final EnrollmentDAO enrollmentDAO = new EnrollmentDAO();
-
+    private final CoachScheduleDAO coachScheduleDAO = new CoachScheduleDAO();
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 
     // ====================== 1 学员注册（复用UserDAO.insert/findByPhone/findByIdCard） ======================
@@ -96,6 +93,17 @@ public class StudentService {
             throw new StudentException("时间格式错误，请使用 yyyy-MM-dd HH:mm");
         }
         StudentValidator.checkTime(startTs, endTs);
+        // 跨天校验
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        String startDate = dateFormat.format(startTs);
+        String endDate = dateFormat.format(endTs);
+        if (!startDate.equals(endDate)) {
+            throw new StudentException("预约不能跨天，请选择同一天的起止时间");
+        }
+        // 校验教练是否有排班
+        if (!coachScheduleDAO.hasSchedule(coachId, startTs, endTs)) {
+            throw new StudentException("该教练在此时间段未设置可预约时段，请选择教练排班时间");
+        }
         // 校验教练时段冲突
         boolean hasConflict = bookingDAO.checkTimeConflict(coachId, startTs, endTs, null);
         if (hasConflict) {
@@ -143,4 +151,6 @@ public class StudentService {
             throw new StudentException("时间解析失败");
         }
     }
+
+
 }

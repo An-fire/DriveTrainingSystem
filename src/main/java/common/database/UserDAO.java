@@ -227,4 +227,28 @@ public class UserDAO {
         }
         return map;
     }
+    //保证报名状态同步与预约校验
+    public int update(User user) {
+        String sql = "UPDATE user SET name=?, idCard=?, phone=?, password=?, role=?, subject=?, enrollStatus=? WHERE id=?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, user.getName());
+            pstmt.setString(2, user.getIdCard());
+            pstmt.setString(3, user.getPhone());
+            pstmt.setString(4, user.getPassword());
+            pstmt.setString(5, user.getRole());
+            pstmt.setString(6, user.getSubject());
+            pstmt.setString(7, user.getEnrollStatus());
+            pstmt.setString(8, user.getId());
+            return pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            DBCConnection.close(conn, pstmt);
+        }
+    }
 }

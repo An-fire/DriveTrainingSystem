@@ -147,7 +147,7 @@ async function loadMyEnrollInfo() {
     var res = await request('/student/enrollment?type=myEnroll');
     var infoBox = document.getElementById('enrollInfoBox');
 
-    if (!res.data) {
+    if (!res.data || Object.keys(res.data).length === 0) {
         if (infoBox) infoBox.innerHTML = '暂无报名记录';
         return;
     }
@@ -211,6 +211,8 @@ async function submitBook() {
             document.getElementById('startTime').value = '';
             document.getElementById('endTime').value = '';
             loadMyBooking();
+            // ===== 新增：刷新教练空闲时段（已预约的会变为红色） =====
+            loadCoachAvailability();
         } else {
             showMsg(res.msg || '预约失败', true);
         }
@@ -301,11 +303,13 @@ async function loadCoachAvailability() {
     var container = document.getElementById('availabilityContainer');
     var slotsDiv = document.getElementById('timeSlots');
 
+    // 如果没有选择教练，隐藏容器
     if (!coachId) {
         if (container) container.style.display = 'none';
         return;
     }
 
+    // 如果没有选择日期，默认今天
     var queryDate = date;
     if (!queryDate) {
         var today = new Date();
@@ -317,44 +321,64 @@ async function loadCoachAvailability() {
     }
 
     try {
-        var res = await request('/student/availability?coachId=' + encodeURIComponent(coachId) + '&date=' + encodeURIComponent(queryDate));
+        // 显示容器和加载状态
+        if (container) container.style.display = 'block';
+        if (slotsDiv) slotsDiv.innerHTML = '<span class="time-slot unknown">⏳ 加载中...</span>';
 
+        // 请求后端接口
+        var url = '/student/availability?coachId=' + encodeURIComponent(coachId) + '&date=' + encodeURIComponent(queryDate);
+        var res = await request(url);
+
+        console.log('空闲时段响应:', res);  // 调试日志
+
+        // 检查响应
         if (res.code !== 1) {
-            if (container) container.style.display = 'none';
+            if (slotsDiv) slotsDiv.innerHTML = '<span class="time-slot unknown">加载失败，请稍后重试</span>';
             return;
         }
 
-        if (container) container.style.display = 'block';
-        var occupied = res.data || [];
+        // 解析数据（新接口返回 { free: [...], occupied: [...] }）
+        var data = res.data || {};
+        var freeSlots = data.free || [];
+        var occupiedSlots = data.occupied || [];
 
-        var hours = [];
-        for (var i = 8; i <= 20; i++) {
-            var start = queryDate + ' ' + String(i).padStart(2, '0') + ':00';
-            var end = queryDate + ' ' + String(i + 1).padStart(2, '0') + ':00';
-            hours.push({ start: start, end: end, label: i + ':00 - ' + (i + 1) + ':00' });
+        // 如果都没有，显示提示
+        if (freeSlots.length === 0 && occupiedSlots.length === 0) {
+            slotsDiv.innerHTML = '<span class="time-slot unknown">该教练当天暂无排班</span>';
+            return;
         }
 
         var html = '';
-        hours.forEach(function(h) {
-            var isOccupied = occupied.some(function(o) {
-                var occStart = o.start.substring(11, 16);
-                var occEnd = o.end.substring(11, 16);
-                var hStart = h.start.substring(11, 16);
-                var hEnd = h.end.substring(11, 16);
-                return (hStart < occEnd && hEnd > occStart);
-            });
-            var cls = isOccupied ? 'occupied' : 'free';
-            var label = isOccupied ? '🔴 ' + h.label : '🟢 ' + h.label;
-            html += '<span class="time-slot ' + cls + '">' + label + '</span>';
-        });
 
-        if (slotsDiv) slotsDiv.innerHTML = html || '<span class="time-slot unknown">暂无时段数据</span>';
+        // ===== 显示可预约时段（绿色） =====
+        if (freeSlots.length > 0) {
+            html += '<div style="margin-bottom:8px; font-size:12px; color:#94a3b8;">✅ 可预约时段：</div>';
+            freeSlots.forEach(function(slot) {
+                // 提取时间部分 HH:mm
+                var startTime = slot.start ? slot.start.substring(11, 16) : '';
+                var endTime = slot.end ? slot.end.substring(11, 16) : '';
+                html += '<span class="time-slot free">🟢 ' + startTime + ' - ' + endTime + '</span>';
+            });
+        }
+
+        // ===== 显示已占用时段（红色） =====
+        if (occupiedSlots.length > 0) {
+            html += '<div style="margin:8px 0 4px; font-size:12px; color:#94a3b8;">🔴 已占用时段：</div>';
+            occupiedSlots.forEach(function(slot) {
+                var startTime = slot.start ? slot.start.substring(11, 16) : '';
+                var endTime = slot.end ? slot.end.substring(11, 16) : '';
+                html += '<span class="time-slot occupied">🔴 ' + startTime + ' - ' + endTime + '</span>';
+            });
+        }
+
+        // 渲染到页面
+        slotsDiv.innerHTML = html;
 
     } catch (e) {
         console.error('加载教练空闲时间失败:', e);
+        if (slotsDiv) slotsDiv.innerHTML = '<span class="time-slot unknown">加载失败，请稍后重试</span>';
     }
 }
-
 
 // ============================================================
 // 10. 学员给教练打分（跳转到评价页面）
@@ -391,10 +415,114 @@ async function checkConflict(coach, start, end) {
     var json = await res.json();
     if (json.data) alert('时段冲突');
 }
+// ============================================================
+// 13. 通知相关函数
+// ============================================================
+
+// 切换通知面板显示
+function toggleNotification() {
+    var panel = document.getElementById('notifPanel');
+    if (panel.style.display === 'block') {
+        panel.style.display = 'none';
+    } else {
+        panel.style.display = 'block';
+        loadNotifications();
+    }
+}
+
+// 加载未读通知
+async function loadNotifications() {
+    try {
+        var res = await fetch(window.BASE_URL + '/student/notification?action=unread');
+        var data = await res.json();
+        if (data.code === 1) {
+            var list = data.data || [];
+            var count = data.unreadCount || 0;
+
+            var badge = document.getElementById('notifBadge');
+            if (count > 0) {
+                badge.style.display = 'flex';
+                badge.textContent = count > 99 ? '99+' : count;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            document.getElementById('notifCountText').textContent = count > 0 ? '(' + count + '条未读)' : '';
+
+            var container = document.getElementById('notifList');
+            if (list.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:30px 0; color:#94a3b8; font-size:14px;">🎉 暂无未读通知</div>';
+                return;
+            }
+
+            var html = '';
+            list.forEach(function(item) {
+                var time = item.createTime ? formatTimestamp(item.createTime) : '';
+                html += '<div class="notif-item" onclick="markAsRead(\'' + item.id + '\')">' +
+                    '<div class="content">' + escapeHtml(item.content) + '</div>' +
+                    '<div class="time">' + time + '</div>' +
+                    '</div>';
+            });
+            container.innerHTML = html;
+        }
+    } catch (e) {
+        console.error('加载通知失败:', e);
+    }
+}
+
+// 标记单条通知为已读
+async function markAsRead(id) {
+    try {
+        var res = await fetch(window.BASE_URL + '/student/notification?id=' + id, {
+            method: 'PUT'
+        });
+        var data = await res.json();
+        if (data.code === 1) {
+            loadNotifications(); // 刷新列表
+        }
+    } catch (e) {
+        console.error('标记已读失败:', e);
+    }
+}
+
+// 全部标记已读
+async function markAllRead() {
+    // 先获取所有未读 ID
+    try {
+        var res = await fetch(window.BASE_URL + '/student/notification?action=unread');
+        var data = await res.json();
+        if (data.code === 1 && data.data && data.data.length > 0) {
+            for (var item of data.data) {
+                await fetch(window.BASE_URL + '/student/notification?id=' + item.id, {
+                    method: 'PUT'
+                });
+            }
+            loadNotifications();
+            // 可选显示提示
+            alert('✅ 所有通知已标记为已读');
+        } else {
+            alert('暂无未读通知');
+        }
+    } catch (e) {
+        console.error('全部标记已读失败:', e);
+    }
+}
+
+// 点击页面其他地方关闭通知面板
+document.addEventListener('click', function(e) {
+    var panel = document.getElementById('notifPanel');
+    var btn = document.querySelector('.header-btn-group .top-small-btn');
+    if (panel && panel.style.display === 'block') {
+        // 如果点击的不是面板内部和按钮本身
+        if (!panel.contains(e.target) && !btn.contains(e.target)) {
+            panel.style.display = 'none';
+        }
+    }
+});
 
 
 // ============================================================
-// 13. 暴露全局函数（供 HTML onclick 调用）
+// 14. 暴露全局函数（供 HTML onclick 调用）
 // ============================================================
 
 window.switchTab = switchTab;
