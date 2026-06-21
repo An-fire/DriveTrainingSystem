@@ -97,18 +97,24 @@ function animateValue(element, start, end, duration) {
 }
 
 function apiGet(url, callback) {
+    console.log('[apiGet] 开始请求:', BASE_URL + url);
     axios.get(BASE_URL + url, { responseType: 'json' })
         .then(function(res) {
+            console.log('[apiGet] 响应状态:', res.status);
+            console.log('[apiGet] 响应数据:', res.data);
+            console.log('[apiGet] code:', res.data ? res.data.code : 'undefined');
+            console.log('[apiGet] data字段:', res.data ? res.data.data : 'undefined');
             var data = res.data;
-            console.log('API响应:', data);
             if (data && data.code === 1) {
+                console.log('[apiGet] 业务成功，调用回调');
                 callback(data.data || data);
             } else {
+                console.warn('[apiGet] 业务失败:', data);
                 alert(data ? (data.msg || '请求失败') : '请求失败');
             }
         })
         .catch(function(err) {
-            console.error('请求失败:', err);
+            console.error('[apiGet] 请求失败:', err);
             alert('请求失败，请检查网络');
         });
 }
@@ -165,43 +171,45 @@ window.showTab = function(tabName) {
                 el.classList.add('reveal');
             }, index * 80);
         });
-        var rows = targetTab.querySelectorAll('tbody tr');
-        rows.forEach(function(row, index) {
-            row.classList.remove('reveal');
-            setTimeout(function() {
-                row.classList.add('reveal');
-            }, index * 60);
-        });
+        // 不再处理 tbody tr，因为数据加载函数已经处理了
     }, 100);
 
     // 加载对应数据
-    if (tabName === 'staff') loadStaffList();
-    if (tabName === 'students') loadStudents();
+    if (tabName === 'staff') window.loadStaffList();
+    if (tabName === 'students') window.loadStudents();
     if (tabName === 'enrollments') {
-        loadPendingEnrollments();
-        loadAllEnrollments();
+        window.loadPendingEnrollments();
+        window.loadAllEnrollments();
     }
-    if (tabName === 'bookings') loadBookings();
-    if (tabName === 'dashboard') loadDashboard();
+    if (tabName === 'bookings') window.loadBookings();
+    if (tabName === 'dashboard') window.loadDashboard();
 };
 
 // ==================== 员工管理 ====================
 window.loadStaffList = function() {
+    console.log('[loadStaffList] 开始执行');
     var container = document.getElementById('staffList');
+    console.log('[loadStaffList] container:', container);
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/staff?action=list', function(list) {
+        console.log('[loadStaffList] 收到数据:', list);
+        console.log('[loadStaffList] 数据类型:', typeof list);
+        console.log('[loadStaffList] 数据长度:', list ? list.length : 'null');
         if (!list || list.length === 0) {
+            console.log('[loadStaffList] 数据为空');
             container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
             return;
         }
+        console.log('[loadStaffList] 开始渲染', list.length, '条数据');
         var html = '<table class="data-table"><thead><tr>' +
             '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
             '</tr></thead><tbody>';
-        list.forEach(function(item) {
+        list.forEach(function(item, index) {
+            console.log('[loadStaffList] 渲染item:', item);
             var roleText = item.role === 'admin' ? '管理员' : '教练';
             var subjectText = item.subject || '-';
-            html += '<tr>' +
+            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
                 '<td>' + (item.name || '') + '</td>' +
                 '<td>' + (item.phone || '') + '</td>' +
                 '<td>' + roleText + '</td>' +
@@ -214,6 +222,7 @@ window.loadStaffList = function() {
         });
         html += '</tbody></table>';
         container.innerHTML = html;
+        console.log('[loadStaffList] 渲染完成');
     });
 };
 
@@ -306,21 +315,29 @@ window.deleteStaff = function(id) {
 
 // ==================== 学员管理 ====================
 window.loadStudents = function() {
+    console.log('[loadStudents] 开始执行');
     var container = document.getElementById('studentList');
+    console.log('[loadStudents] container:', container);
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/query?action=students', function(data) {
+        console.log('[loadStudents] 收到数据:', data);
+        console.log('[loadStudents] 数据类型:', typeof data);
+        console.log('[loadStudents] 数据长度:', data ? data.length : 'null');
         if (!data || data.length === 0) {
+            console.log('[loadStudents] 数据为空');
             container.innerHTML = '<div class="empty-tip">暂无学员数据</div>';
             return;
         }
+        console.log('[loadStudents] 开始渲染', data.length, '条数据');
         var statusMap = { 'pending': '待审核', 'approved': '已通过', 'rejected': '已拒绝' };
         var html = '<table class="data-table"><thead><tr>' +
             '<th>姓名</th><th>手机号</th><th>身份证号</th><th>报名状态</th>' +
             '</tr></thead><tbody>';
-        data.forEach(function(item) {
+        data.forEach(function(item, index) {
+            console.log('[loadStudents] 渲染item:', item);
             var statusText = statusMap[item.enrollStatus] || '未报名';
-            html += '<tr>' +
+            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
                 '<td>' + (item.name || '') + '</td>' +
                 '<td>' + (item.phone || '') + '</td>' +
                 '<td>' + (item.idCard || '') + '</td>' +
@@ -329,6 +346,7 @@ window.loadStudents = function() {
         });
         html += '</tbody></table>';
         container.innerHTML = html;
+        console.log('[loadStudents] 渲染完成');
     });
 };
 
