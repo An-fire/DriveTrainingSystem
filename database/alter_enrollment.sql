@@ -1,0 +1,2 @@
+ALTER TABLE enrollment ADD COLUMN auditRemark VARCHAR(500) COMMENT '审核备注';
+ALTER TABLE enrollment ADD COLUMN adminId VARCHAR(36) COMMENT '审核管理员ID';

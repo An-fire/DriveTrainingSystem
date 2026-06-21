@@ -32,6 +32,8 @@ CREATE TABLE enrollment (
     status VARCHAR(20) COMMENT '状态：pending待审核/approved通过/rejected拒绝',
     applyTime DATETIME COMMENT '申请时间',
     auditTime DATETIME COMMENT '审核时间',
+    auditRemark VARCHAR(500) COMMENT '审核备注',
+    adminId VARCHAR(36) COMMENT '审核管理员ID',
     FOREIGN KEY (studentId) REFERENCES user(id),
     FOREIGN KEY (coachId) REFERENCES staff(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

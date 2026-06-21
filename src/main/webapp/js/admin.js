@@ -369,9 +369,9 @@ window.loadPendingEnrollments = function() {
             '<th><input type="checkbox" onclick="window.toggleAllEnrollment(this)"></th>' +
             '<th>学员</th><th>教练</th><th>科目</th><th>状态</th><th>操作</th>' +
             '</tr></thead><tbody>';
-        pending.forEach(function(item) {
+        pending.forEach(function(item, index) {
             var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
-            html += '<tr>' +
+            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
                 '<td><input type="checkbox" class="enroll-checkbox" value="' + item.id + '"></td>' +
                 '<td>' + (item.studentName || '') + '</td>' +
                 '<td>' + (item.coachName || '') + '</td>' +
@@ -410,9 +410,9 @@ window.loadAllEnrollments = function() {
         var html = '<table class="data-table"><thead><tr>' +
             '<th>学员</th><th>教练</th><th>科目</th><th>状态</th>' +
             '</tr></thead><tbody>';
-        data.forEach(function(item) {
+        data.forEach(function(item, index) {
             var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
-            html += '<tr>' +
+            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
                 '<td>' + (item.studentName || '') + '</td>' +
                 '<td>' + (item.coachName || '') + '</td>' +
                 '<td>' + (item.subjectType || '') + '</td>' +
