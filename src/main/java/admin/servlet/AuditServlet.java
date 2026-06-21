@@ -1,13 +1,7 @@
 package admin.servlet;
 
-import common.database.EnrollmentDAO;
-import common.database.NotificationDAO;
-import common.database.UserDAO;
-import common.entity.Enrollment;
-import common.entity.Notification;
+import admin.service.AdminService;
 import common.entity.Staff;
-import common.entity.User;
-import common.util.UUIDUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.servlet.ServletException;
@@ -17,12 +11,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.util.Date;
+import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 报名审核Servlet
+ * API端点: /admin/audit
+ */
 @WebServlet("/admin/audit")
 public class AuditServlet extends HttpServlet {
-    private final EnrollmentDAO enrollmentDAO = new EnrollmentDAO();
+
+    private final AdminService adminService = new AdminService();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -46,79 +45,74 @@ public class AuditServlet extends HttpServlet {
         }
 
         String action = request.getParameter("action");
-        String enrollmentId = request.getParameter("enrollmentId");
-        String status = request.getParameter("status");
 
         try {
-            if ("approve".equals(action)) {
-                if (enrollmentId == null || enrollmentId.isEmpty()) {
-                    result.put("code", 0);
-                    result.put("msg", "请选择要审核的报名");
-                    response.getWriter().write(result.toString());
-                    return;
-                }
-                int rows = enrollmentDAO.updateStatus(enrollmentId, "approved");
-                if (rows > 0) {
-                    syncEnrollStatusAndNotify(enrollmentId, "approved");
-                    result.put("code", 1);
-                    result.put("msg", "已通过该报名申请");
-                } else {
-                    result.put("code", 0);
-                    result.put("msg", "操作失败");
-                }
-            } else if ("reject".equals(action)) {
-                if (enrollmentId == null || enrollmentId.isEmpty()) {
-                    result.put("code", 0);
-                    result.put("msg", "请选择要审核的报名");
-                    response.getWriter().write(result.toString());
-                    return;
-                }
-                int rows = enrollmentDAO.updateStatus(enrollmentId, "rejected");
-                if (rows > 0) {
-                    syncEnrollStatusAndNotify(enrollmentId, "rejected");
-                    result.put("code", 1);
-                    result.put("msg", "已拒绝该报名申请");
-                } else {
-                    result.put("code", 0);
-                    result.put("msg", "操作失败");
-                }
+            if ("single".equals(action)) {
+                handleSingleAudit(request, response, staff);
+            } else if ("batch".equals(action)) {
+                handleBatchAudit(request, response, staff);
             } else {
                 result.put("code", 0);
-                result.put("msg", "无效的操作");
+                result.put("msg", "无效的操作，支持: single/batch");
+                response.getWriter().write(result.toString());
             }
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 0);
-            result.put("msg", "系统异常");
+            result.put("msg", "系统异常: " + e.getMessage());
+            response.getWriter().write(result.toString());
         }
+    }
 
+    /**
+     * 处理单个审核
+     */
+    private void handleSingleAudit(HttpServletRequest request, HttpServletResponse response, Staff staff) throws IOException {
+        JSONObject result = new JSONObject();
+        String enrollmentId = request.getParameter("enrollmentId");
+        String status = request.getParameter("status");
+        String remark = request.getParameter("remark");
+
+        AdminService.AuditResult auditResult = adminService.auditSingle(enrollmentId, status, remark, staff);
+
+        if (auditResult.isSuccess()) {
+            result.put("code", 1);
+            result.put("msg", auditResult.getMessage());
+        } else {
+            result.put("code", 0);
+            result.put("msg", auditResult.getMessage());
+        }
         response.getWriter().write(result.toString());
     }
 
-    private void syncEnrollStatusAndNotify(String enrollmentId, String status) {
-        try {
-            Enrollment enrollment = enrollmentDAO.findById(enrollmentId);
-            if (enrollment == null) return;
+    /**
+     * 处理批量审核
+     */
+    private void handleBatchAudit(HttpServletRequest request, HttpServletResponse response, Staff staff) throws IOException {
+        JSONObject result = new JSONObject();
+        String idsParam = request.getParameter("ids");
+        String status = request.getParameter("status");
+        String remark = request.getParameter("remark");
 
-            UserDAO userDAO = new UserDAO();
-            User user = userDAO.findById(enrollment.getStudentId());
-            if (user != null) {
-                user.setEnrollStatus(status);
-                userDAO.update(user);
-            }
-
-            Notification notif = new Notification();
-            notif.setId(UUIDUtil.getUUID());
-            notif.setUserId(user.getId());
-            notif.setType("enroll_audit");
-            String content = "您的报名已" + ("approved".equals(status) ? "通过审核，可以开始预约练车了" : "被拒绝，请重新提交报名申请");
-            notif.setContent(content);
-            notif.setIsRead(0);
-            notif.setCreateTime(new Date());
-            new NotificationDAO().insert(notif);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (idsParam == null || idsParam.isEmpty()) {
+            result.put("code", 0);
+            result.put("msg", "请选择要审核的报名记录");
+            response.getWriter().write(result.toString());
+            return;
         }
+
+        List<String> idList = Arrays.asList(idsParam.split(","));
+        AdminService.AuditResult auditResult = adminService.auditBatch(idList, status, remark, staff);
+
+        if (auditResult.isSuccess()) {
+            result.put("code", 1);
+            result.put("msg", auditResult.getMessage());
+            result.put("processedCount", auditResult.getProcessedCount());
+        } else {
+            result.put("code", 0);
+            result.put("msg", auditResult.getMessage());
+        }
+        response.getWriter().write(result.toString());
     }
 
     @Override
@@ -145,16 +139,10 @@ public class AuditServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         try {
-            if ("pending".equals(action)) {
-                List<Enrollment> list = enrollmentDAO.findAllPending();
-                JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
+            if ("statistics".equals(action)) {
+                AdminService.AuditStatistics stat = adminService.getAuditStatistics();
                 result.put("code", 1);
-                result.put("data", array);
-            } else if ("all".equals(action)) {
-                List<Enrollment> list = enrollmentDAO.findAll();
-                JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
-                result.put("code", 1);
-                result.put("data", array);
+                result.put("data", stat);
             } else {
                 result.put("code", 0);
                 result.put("msg", "无效的操作");

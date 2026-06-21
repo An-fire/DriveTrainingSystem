@@ -12,4 +12,5 @@ public class Enrollment {
     private String status;
     private Date applyTime;
     private Date auditTime;
+    private String auditRemark;
 }

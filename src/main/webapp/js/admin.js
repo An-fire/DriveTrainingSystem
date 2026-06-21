@@ -348,11 +348,13 @@ window.loadPendingEnrollments = function() {
             return;
         }
         var html = '<table class="data-table"><thead><tr>' +
+            '<th><input type="checkbox" onclick="window.toggleAllEnrollment(this)"></th>' +
             '<th>学员</th><th>教练</th><th>科目</th><th>状态</th><th>操作</th>' +
             '</tr></thead><tbody>';
         pending.forEach(function(item) {
             var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
             html += '<tr>' +
+                '<td><input type="checkbox" class="enroll-checkbox" value="' + item.id + '"></td>' +
                 '<td>' + (item.studentName || '') + '</td>' +
                 '<td>' + (item.coachName || '') + '</td>' +
                 '<td>' + (item.subjectType || '') + '</td>' +
@@ -363,8 +365,18 @@ window.loadPendingEnrollments = function() {
                 '</td>' +
                 '</tr>';
         });
-        html += '</tbody></table>';
+        html += '</tbody></table>' +
+            '<div style="margin-top:10px;">' +
+            '<button class="btn btn-sm btn-primary" onclick="window.batchAudit(\'approved\')">批量通过</button> ' +
+            '<button class="btn btn-sm btn-danger" onclick="window.batchAudit(\'rejected\')">批量拒绝</button>' +
+            '</div>';
         container.innerHTML = html;
+    });
+};
+
+window.toggleAllEnrollment = function(master) {
+    document.querySelectorAll('.enroll-checkbox').forEach(function(cb) {
+        cb.checked = master.checked;
     });
 };
 
@@ -395,10 +407,33 @@ window.loadAllEnrollments = function() {
 };
 
 window.auditEnrollment = function(id, status) {
+    var remark = prompt(status === 'approved' ? '请输入通过意见（可选）：' : '请输入拒绝原因（可选）：');
     var params = new URLSearchParams();
-    params.append('id', id);
+    params.append('action', 'single');
+    params.append('enrollmentId', id);
     params.append('status', status);
-    apiPost('/admin/enrollment', params.toString(), function() {
+    if (remark) params.append('remark', remark);
+    apiPost('/admin/audit', params.toString(), function() {
+        loadPendingEnrollments();
+        loadAllEnrollments();
+    });
+};
+
+window.batchAudit = function(status) {
+    var checkboxes = document.querySelectorAll('.enroll-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert('请选择要审核的报名记录');
+        return;
+    }
+    var ids = Array.from(checkboxes).map(function(cb) { return cb.value; }).join(',');
+    var remark = prompt(status === 'approved' ? '请输入批量通过意见（可选）：' : '请输入批量拒绝原因（可选）：');
+    var params = new URLSearchParams();
+    params.append('action', 'batch');
+    params.append('ids', ids);
+    params.append('status', status);
+    if (remark) params.append('remark', remark);
+    apiPost('/admin/audit', params.toString(), function(data) {
+        alert(data.msg || '操作完成');
         loadPendingEnrollments();
         loadAllEnrollments();
     });

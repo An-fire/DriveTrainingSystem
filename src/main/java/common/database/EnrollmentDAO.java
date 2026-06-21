@@ -49,6 +49,7 @@ public class EnrollmentDAO {
                 enrollment.setStatus(rs.getString("status"));
                 enrollment.setApplyTime(rs.getTimestamp("applyTime"));
                 enrollment.setAuditTime(rs.getTimestamp("auditTime"));
+                enrollment.setAuditRemark(rs.getString("auditRemark"));
                 return enrollment;
             }
         } catch (SQLException e) {
@@ -70,15 +71,7 @@ public class EnrollmentDAO {
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                Enrollment enrollment = new Enrollment();
-                enrollment.setId(rs.getString("id"));
-                enrollment.setStudentId(rs.getString("studentId"));
-                enrollment.setCoachId(rs.getString("coachId"));
-                enrollment.setSubjectType(rs.getString("subjectType"));
-                enrollment.setStatus(rs.getString("status"));
-                enrollment.setApplyTime(rs.getTimestamp("applyTime"));
-                enrollment.setAuditTime(rs.getTimestamp("auditTime"));
-                list.add(enrollment);
+                list.add(mapResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -89,7 +82,11 @@ public class EnrollmentDAO {
     }
 
     public int updateStatus(String id, String status) {
-        String sql = "UPDATE enrollment SET status = ?, auditTime = ? WHERE id = ?";
+        return updateStatusWithRemark(id, status, null);
+    }
+
+    public int updateStatusWithRemark(String id, String status, String remark) {
+        String sql = "UPDATE enrollment SET status = ?, auditTime = ?, auditRemark = ? WHERE id = ?";
         Connection conn = null;
         PreparedStatement pstmt = null;
         try {
@@ -97,7 +94,8 @@ public class EnrollmentDAO {
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, status);
             pstmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            pstmt.setString(3, id);
+            pstmt.setString(3, remark);
+            pstmt.setString(4, id);
             return pstmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -105,6 +103,34 @@ public class EnrollmentDAO {
         } finally {
             DBCConnection.close(conn, pstmt);
         }
+    }
+
+    public int batchUpdateStatus(List<String> ids, String status, String remark) {
+        String sql = "UPDATE enrollment SET status = ?, auditTime = ?, auditRemark = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        int total = 0;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            Timestamp now = new Timestamp(System.currentTimeMillis());
+            for (String id : ids) {
+                pstmt.setString(1, status);
+                pstmt.setTimestamp(2, now);
+                pstmt.setString(3, remark);
+                pstmt.setString(4, id);
+                pstmt.addBatch();
+            }
+            int[] results = pstmt.executeBatch();
+            for (int r : results) {
+                total += (r > 0 ? r : 0);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt);
+        }
+        return total;
     }
 
     public List<Enrollment> findByCoachId(String coachId) {
@@ -119,15 +145,7 @@ public class EnrollmentDAO {
             pstmt.setString(1, coachId);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                Enrollment enrollment = new Enrollment();
-                enrollment.setId(rs.getString("id"));
-                enrollment.setStudentId(rs.getString("studentId"));
-                enrollment.setCoachId(rs.getString("coachId"));
-                enrollment.setSubjectType(rs.getString("subjectType"));
-                enrollment.setStatus(rs.getString("status"));
-                enrollment.setApplyTime(rs.getTimestamp("applyTime"));
-                enrollment.setAuditTime(rs.getTimestamp("auditTime"));
-                list.add(enrollment);
+                list.add(mapResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -148,15 +166,7 @@ public class EnrollmentDAO {
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
             while (rs.next()) {
-                Enrollment enrollment = new Enrollment();
-                enrollment.setId(rs.getString("id"));
-                enrollment.setStudentId(rs.getString("studentId"));
-                enrollment.setCoachId(rs.getString("coachId"));
-                enrollment.setSubjectType(rs.getString("subjectType"));
-                enrollment.setStatus(rs.getString("status"));
-                enrollment.setApplyTime(rs.getTimestamp("applyTime"));
-                enrollment.setAuditTime(rs.getTimestamp("auditTime"));
-                list.add(enrollment);
+                list.add(mapResultSet(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -198,15 +208,7 @@ public class EnrollmentDAO {
             pstmt.setString(1, id);
             rs = pstmt.executeQuery();
             if (rs.next()) {
-                Enrollment enrollment = new Enrollment();
-                enrollment.setId(rs.getString("id"));
-                enrollment.setStudentId(rs.getString("studentId"));
-                enrollment.setCoachId(rs.getString("coachId"));
-                enrollment.setSubjectType(rs.getString("subjectType"));
-                enrollment.setStatus(rs.getString("status"));
-                enrollment.setApplyTime(rs.getTimestamp("applyTime"));
-                enrollment.setAuditTime(rs.getTimestamp("auditTime"));
-                return enrollment;
+                return mapResultSet(rs);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -214,6 +216,19 @@ public class EnrollmentDAO {
             DBCConnection.close(conn, pstmt, rs);
         }
         return null;
+    }
+
+    private Enrollment mapResultSet(ResultSet rs) throws SQLException {
+        Enrollment enrollment = new Enrollment();
+        enrollment.setId(rs.getString("id"));
+        enrollment.setStudentId(rs.getString("studentId"));
+        enrollment.setCoachId(rs.getString("coachId"));
+        enrollment.setSubjectType(rs.getString("subjectType"));
+        enrollment.setStatus(rs.getString("status"));
+        enrollment.setApplyTime(rs.getTimestamp("applyTime"));
+        enrollment.setAuditTime(rs.getTimestamp("auditTime"));
+        enrollment.setAuditRemark(rs.getString("auditRemark"));
+        return enrollment;
     }
 
     //  按统计报名数量（近6个月趋势）
