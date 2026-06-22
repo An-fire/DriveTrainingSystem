@@ -443,6 +443,19 @@
         </div>
     </div>
 
+    <!-- 已预约时间段卡片 -->
+    <div class="content-card fade-reveal">
+        <div class="card-title">📆 已预约时间段</div>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:16px;">
+            <input type="date" id="bookingDate" style="padding:8px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:var(--input-bg); color:#fff;" onchange="loadCoachBookings()">
+            <button class="btn btn-secondary btn-sm" onclick="window.loadCoachBookings()">查询</button>
+            <button class="btn btn-outline btn-sm" onclick="document.getElementById('bookingDate').value=''; window.loadCoachBookings();">查看全部</button>
+        </div>
+        <div id="coachBookingsList">
+            <div class="empty-tip">加载中...</div>
+        </div>
+    </div>
+
     <!-- 评价列表 -->
     <div class="content-card fade-reveal">
         <div class="card-title">💬 学员对我的评价</div>

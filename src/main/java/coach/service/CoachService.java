@@ -64,10 +64,10 @@ public class CoachService {
 
         try {
             conn = DBCConnection.getConnection();
-            String sql = "SELECT u.name as studentName, b.studentScore, b.createTime " +
+            String sql = "SELECT u.name as studentName, b.studentScore, b.comment, b.createTime " +
                     "FROM booking b " +
                     "JOIN user u ON b.studentId = u.id " +
-                    "WHERE b.coachId = ? AND b.studentScore IS NOT NULL " +
+                    "WHERE b.coachId = ? AND (b.studentScore IS NOT NULL OR b.comment IS NOT NULL) " +
                     "ORDER BY b.createTime DESC";
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, coachId);
@@ -77,6 +77,8 @@ public class CoachService {
                 JSONObject item = new JSONObject();
                 item.put("studentName", rs.getString("studentName"));
                 item.put("studentScore", rs.getInt("studentScore"));
+                String comment = rs.getString("comment");
+                item.put("comment", comment != null ? comment : "");
                 item.put("createTime", rs.getString("createTime"));
                 list.add(item);
             }

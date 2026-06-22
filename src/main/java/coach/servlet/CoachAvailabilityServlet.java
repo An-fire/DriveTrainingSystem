@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -47,8 +46,6 @@ public class CoachAvailabilityServlet extends HttpServlet {
             } else {
                 targetUtilDate = sdfDate.parse(dateStr);
             }
-            // 转换为 java.sql.Date（用于DAO查询）
-            Date targetSqlDate = new Date(targetUtilDate.getTime());
             String dateStrFinal = sdfDate.format(targetUtilDate);
 
             // 获取星期几（1=周一, 7=周日）
@@ -74,55 +71,97 @@ public class CoachAvailabilityServlet extends HttpServlet {
                 return;
             }
 
+            // 查询已占用的时段
             List<Booking> occupied = bookingDAO.findByCoachIdAndDate(coachId, targetUtilDate);
-            if (occupied == null) {
-                occupied = new ArrayList<>();
-            }
+            System.out.println("[CoachAvailabilityServlet] 占用时段数量: " + (occupied != null ? occupied.size() : 0));
 
-            // 对每个排班时段，计算空闲和占用
+            // ===== 遍历每个排班时段，计算空闲和占用 =====
             for (CoachSchedule schedule : schedules) {
-                Date scheduleStart = new Date(schedule.getStartTime().getTime());
-                Date scheduleEnd = new Date(schedule.getEndTime().getTime());
+                // ===== 关键修复：跳过无效排班（开始时间 >= 结束时间） =====
+                if (schedule.getStartTime().getTime() >= schedule.getEndTime().getTime()) {
+                    System.out.println("[CoachAvailabilityServlet] 跳过无效排班: " + schedule.getStartTime() + " - " + schedule.getEndTime());
+                    continue;
+                }
+
+                java.sql.Time sqlStartTime = schedule.getStartTime();
+                java.sql.Time sqlEndTime = schedule.getEndTime();
+
+                Calendar scheduleCal = Calendar.getInstance();
+                scheduleCal.setTime(targetUtilDate);
+
+                // 设置排班开始时间
+                scheduleCal.set(Calendar.HOUR_OF_DAY, sqlStartTime.getHours());
+                scheduleCal.set(Calendar.MINUTE, sqlStartTime.getMinutes());
+                scheduleCal.set(Calendar.SECOND, 0);
+                scheduleCal.set(Calendar.MILLISECOND, 0);
+                Date scheduleStart = scheduleCal.getTime();
+
+                // 设置排班结束时间
+                scheduleCal.set(Calendar.HOUR_OF_DAY, sqlEndTime.getHours());
+                scheduleCal.set(Calendar.MINUTE, sqlEndTime.getMinutes());
+                scheduleCal.set(Calendar.SECOND, 0);
+                scheduleCal.set(Calendar.MILLISECOND, 0);
+                Date scheduleEnd = scheduleCal.getTime();
+
+                // 再次检查（防止时区问题）
+                if (scheduleStart.getTime() >= scheduleEnd.getTime()) {
+                    continue;
+                }
 
                 Date currentStart = scheduleStart;
 
-                // 检查是否有占用
+                // 检查该排班时段内的占用
                 for (Booking book : occupied) {
-                    java.util.Date bookStartUtil = book.getStartTime();
-                    java.util.Date bookEndUtil = book.getEndTime();
-                    if (bookStartUtil == null || bookEndUtil == null) continue;
+                    Date bookStart = book.getStartTime();
+                    Date bookEnd = book.getEndTime();
+                    if (bookStart == null || bookEnd == null) continue;
 
-                    Date bookStart = new Date(bookStartUtil.getTime());
-                    Date bookEnd = new Date(bookEndUtil.getTime());
-
-                    // 如果预约与排班有重叠
+                    // 预约与排班有重叠
                     if (bookStart.before(scheduleEnd) && bookEnd.after(scheduleStart)) {
-                        // 如果预约开始时间在当前区间之后，产生一个空闲段
+                        // ===== 空闲段 [currentStart, bookStart] =====
+                        // 只有当前时间 < 预约开始时间 且 时间差 >= 1分钟 才添加
                         if (bookStart.after(currentStart) && bookStart.before(scheduleEnd)) {
-                            JSONObject slot = new JSONObject();
-                            slot.put("start", dateStrFinal + " " + sdfTime.format(currentStart));
-                            slot.put("end", dateStrFinal + " " + sdfTime.format(bookStart));
-                            freeSlots.add(slot);
+                            long diff = bookStart.getTime() - currentStart.getTime();
+                            if (diff >= 60000) {
+                                JSONObject slot = new JSONObject();
+                                slot.put("start", dateStrFinal + " " + sdfTime.format(currentStart));
+                                slot.put("end", dateStrFinal + " " + sdfTime.format(bookStart));
+                                freeSlots.add(slot);
+                            }
                         }
-                        // 记录占用时段
-                        JSONObject occupiedSlot = new JSONObject();
-                        occupiedSlot.put("start", dateStrFinal + " " + sdfTime.format(bookStart));
-                        occupiedSlot.put("end", dateStrFinal + " " + sdfTime.format(bookEnd));
-                        occupiedSlots.add(occupiedSlot);
+
+                        // ===== 占用段 =====
+                        Date occupyStart = bookStart.after(scheduleStart) ? bookStart : scheduleStart;
+                        Date occupyEnd = bookEnd.before(scheduleEnd) ? bookEnd : scheduleEnd;
+                        if (occupyStart.getTime() < occupyEnd.getTime()) {
+                            JSONObject occupiedSlot = new JSONObject();
+                            occupiedSlot.put("start", dateStrFinal + " " + sdfTime.format(occupyStart));
+                            occupiedSlot.put("end", dateStrFinal + " " + sdfTime.format(occupyEnd));
+                            occupiedSlots.add(occupiedSlot);
+                        }
+
                         // 更新当前区间起点
                         if (bookEnd.after(currentStart)) {
                             currentStart = bookEnd;
                         }
                     }
                 }
-                // 剩余空闲时段
+
+                // ===== 剩余空闲段 [currentStart, scheduleEnd] =====
                 if (currentStart.before(scheduleEnd)) {
-                    JSONObject slot = new JSONObject();
-                    slot.put("start", dateStrFinal + " " + sdfTime.format(currentStart));
-                    slot.put("end", dateStrFinal + " " + sdfTime.format(scheduleEnd));
-                    freeSlots.add(slot);
+                    long diff = scheduleEnd.getTime() - currentStart.getTime();
+                    if (diff >= 60000) {
+                        JSONObject slot = new JSONObject();
+                        slot.put("start", dateStrFinal + " " + sdfTime.format(currentStart));
+                        slot.put("end", dateStrFinal + " " + sdfTime.format(scheduleEnd));
+                        freeSlots.add(slot);
+                    }
                 }
             }
+
+            System.out.println("[CoachAvailabilityServlet] 空闲时段: " + freeSlots.size() + ", 占用时段: " + occupiedSlots.size());
+            System.out.println("[CoachAvailabilityServlet] 空闲: " + freeSlots.toJSONString());
+            System.out.println("[CoachAvailabilityServlet] 占用: " + occupiedSlots.toJSONString());
 
             JSONObject data = new JSONObject();
             data.put("free", freeSlots);

@@ -176,20 +176,22 @@ function renderCommentList(comments) {
     if (!listEl) return;
 
     if (!comments || comments.length === 0) {
-        listEl.innerHTML = '<li style="color:#95a5a6;">暂无学员评价</li>';
+        listEl.innerHTML = '<div style="text-align:center; padding:20px 0; color:#94a3b8;">暂无学员评价</div>';
         return;
     }
 
     var html = '';
     comments.forEach(function(c) {
         var stars = '⭐'.repeat(c.studentScore || 0) + '☆'.repeat(5 - (c.studentScore || 0));
-        html += '<li style="padding:8px 0;border-bottom:1px solid #f0f0f0;">' +
-            '<strong>' + escapeHtml(c.studentName || '未知学员') + '</strong> ' +
-            '<span style="color:#f39c12;">' + stars + '</span> ' +
-            (c.studentScore || 0) + '星 &nbsp;·&nbsp; ' +
-            '<span style="color:#7f8c8d;">' + escapeHtml(c.comment || '无文字评价') + '</span>' +
-            (c.createTime ? ' <span style="color:#bdc3c7;font-size:12px;">' + escapeHtml(c.createTime) + '</span>' : '') +
-        '</li>';
+        var commentText = c.comment && c.comment.trim() !== '' ? c.comment : '（无文字评价）';
+        html += '<div style="padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.06);">' +
+            '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+            '<strong style="color:#e2e8f0;">' + escapeHtml(c.studentName || '匿名学员') + '</strong>' +
+            '<span style="color:#f59e0b;">' + stars + ' ' + (c.studentScore || 0) + '分</span>' +
+            '</div>' +
+            '<div style="color:#94a3b8; font-size:14px; margin-top:6px;">' + escapeHtml(commentText) + '</div>' +
+            '<div style="color:#64748b; font-size:11px; margin-top:4px;">' + (c.createTime || '') + '</div>' +
+            '</div>';
     });
     listEl.innerHTML = html;
 }
@@ -204,6 +206,18 @@ function escapeHtml(text) {
     var div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// 格式化日期时间
+function formatDateTime(timestamp) {
+    if (!timestamp) return '-';
+    var date = new Date(timestamp);
+    var year = date.getFullYear();
+    var month = String(date.getMonth() + 1).padStart(2, '0');
+    var day = String(date.getDate()).padStart(2, '0');
+    var hours = String(date.getHours()).padStart(2, '0');
+    var minutes = String(date.getMinutes()).padStart(2, '0');
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
 }
 
 // ===== 加载排班列表 =====
@@ -299,6 +313,74 @@ function deleteSchedule(id) {
 }
 
 // ============================================================
+// 加载教练的已预约时间段
+// ============================================================
+window.loadCoachBookings = function() {
+    console.log('[loadCoachBookings] 开始执行');
+    var coachId = getCoachId();
+    if (!coachId) {
+        document.getElementById('coachBookingsList').innerHTML = '<div class="empty-tip">请先登录</div>';
+        return;
+    }
+
+    var date = document.getElementById('bookingDate') ? document.getElementById('bookingDate').value : '';
+    var url = BASE_URL + '/coach/bookings?coachId=' + encodeURIComponent(coachId);
+    if (date) {
+        url += '&date=' + encodeURIComponent(date);
+    }
+    console.log('[loadCoachBookings] 请求URL:', url);
+
+    var container = document.getElementById('coachBookingsList');
+    if (!container) return;
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+
+    axios.get(url)
+        .then(function(response) {
+            var result = response.data;
+            if (result.code === 1) {
+                var list = result.data || [];
+                renderCoachBookings(list);
+            } else {
+                container.innerHTML = '<div class="empty-tip">加载失败：' + (result.msg || '未知错误') + '</div>';
+            }
+        })
+        .catch(function(error) {
+            console.error('[loadCoachBookings] 请求失败:', error);
+            container.innerHTML = '<div class="empty-tip">加载失败，请稍后重试</div>';
+        });
+};
+
+function renderCoachBookings(list) {
+    var container = document.getElementById('coachBookingsList');
+    if (!container) return;
+
+    if (!list || list.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无预约记录</div>';
+        return;
+    }
+
+    var html = '<table class="data-table"><thead><tr>' +
+        '<th>学员</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th>' +
+        '</tr></thead><tbody>';
+
+    list.forEach(function(item) {
+        var statusText = item.status === 'approved' ? '已通过' : (item.status === 'pending' ? '待审核' : '已拒绝');
+        var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
+        var startTime = item.startTime ? formatDateTime(item.startTime) : '-';
+        var endTime = item.endTime ? formatDateTime(item.endTime) : '-';
+
+        html += '<tr>' +
+            '<td>' + escapeHtml(studentName) + '</td>' +
+            '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+            '<td>' + startTime + '</td>' +
+            '<td>' + endTime + '</td>' +
+            '<td>' + statusText + '</td>' +
+            '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
 // 页面初始化
 // ============================================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -327,9 +409,11 @@ document.addEventListener('DOMContentLoaded', function() {
     loadPendingScores();
     loadComments();
     loadSchedule();
+    loadCoachBookings();  // 加载教练的已预约时间段
 });
 
-// 暴露必要函数到全局
+// 暴露到全局
+window.loadCoachBookings = loadCoachBookings;
 window.loadPendingScores = loadPendingScores;
 window.loadComments = loadComments;
 window.getCoachId = getCoachId;
