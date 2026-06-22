@@ -74,5 +74,55 @@ request.interceptors.response.use(
 window.axios = axios;           // 继续使用 axios.get/post
 window.request = request;       // 使用封装好的 request
 
+// ============================================================
+// 7. 通用工具函数（统一抽取，避免重复定义）
+// ============================================================
+
+// XSS防护函数
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+window.escapeHtml = escapeHtml;
+
+// 格式化时间戳（YYYY-MM-DD HH:MM）
+function formatTimestamp(timestamp) {
+    if (!timestamp) return '-';
+    var date = new Date(timestamp);
+    var year = date.getFullYear();
+    var month = String(date.getMonth() + 1).padStart(2, '0');
+    var day = String(date.getDate()).padStart(2, '0');
+    var hours = String(date.getHours()).padStart(2, '0');
+    var minutes = String(date.getMinutes()).padStart(2, '0');
+    return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
+}
+window.formatTimestamp = formatTimestamp;
+
+// 格式化日期时间（别名，与 formatTimestamp 功能相同）
+function formatDateTime(timestamp) {
+    return formatTimestamp(timestamp);
+}
+window.formatDateTime = formatDateTime;
+
+// 格式化时间（用于评价页面）
+function formatTime(timeStr) {
+    if (!timeStr) return '';
+    try {
+        var date = new Date(timeStr);
+        var year = date.getFullYear();
+        var month = String(date.getMonth() + 1).padStart(2, '0');
+        var day = String(date.getDate()).padStart(2, '0');
+        var hours = String(date.getHours()).padStart(2, '0');
+        var minutes = String(date.getMinutes()).padStart(2, '0');
+        return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes;
+    } catch (e) {
+        return timeStr;
+    }
+}
+window.formatTime = formatTime;
+
 // 输出加载信息
 console.log('✅ common.js 加载成功，BASE_URL =', BASE_URL);
+console.log('✅ 工具函数已挂载到 window: escapeHtml, formatTimestamp, formatDateTime, formatTime');
