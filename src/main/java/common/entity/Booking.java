@@ -17,4 +17,8 @@ public class Booking {
     private Boolean canExam;
     private Date createTime;
     private String comment;  // 学员对教练的评价内容
+
+    // 附加字段（用于显示）
+    private String studentName;  // 学员姓名
+    private String coachName;    // 教练姓名
 }

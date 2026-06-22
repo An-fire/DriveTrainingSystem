@@ -630,6 +630,176 @@
         .count-up {
             display: inline-block;
         }
+        /* 状态徽章 */
+        .status-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-badge.status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .status-badge.status-approved {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .status-badge.status-rejected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        /* 卡片网格布局 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            padding: 4px;
+        }
+        /* 报名审核卡片 */
+        .enrollment-card {
+            background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .enrollment-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .enrollment-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            border-color: rgba(59,130,246,0.3);
+        }
+        .enrollment-card:hover::before {
+            opacity: 1;
+        }
+        .enrollment-card .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .enrollment-card .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .enrollment-card .student-info {
+            flex: 1;
+        }
+        .enrollment-card .student-name {
+            color: #f1f5f9;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .enrollment-card .student-phone {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .enrollment-card .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .enrollment-card .info-row:last-child {
+            border-bottom: none;
+        }
+        .enrollment-card .info-label {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .enrollment-card .info-value {
+            color: #e2e8f0;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .enrollment-card .info-value.subject {
+            background: rgba(59,130,246,0.15);
+            color: #60a5fa;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        .enrollment-card .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        .enrollment-card .card-actions .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .enrollment-card .card-actions .btn-approve {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+        }
+        .enrollment-card .card-actions .btn-approve:hover {
+            background: linear-gradient(135deg, #059669, #047857);
+            transform: scale(1.02);
+        }
+        .enrollment-card .card-actions .btn-reject {
+            background: rgba(239,68,68,0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.3) !important;
+        }
+        .enrollment-card .card-actions .btn-reject:hover {
+            background: rgba(239,68,68,0.25);
+        }
+        .enrollment-card .status-pending {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(245,158,11,0.15);
+            color: #f59e0b;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .enrollment-card {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .enrollment-card.reveal {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -645,6 +815,7 @@
         <nav class="sidebar-nav">
             <a class="active" onclick="window.showTab('dashboard')">📊 数据概览</a>
             <a onclick="window.showTab('enrollments')">📄 报名审核</a>
+            <a onclick="window.showTab('drivingApplications')">📋 练车申请</a>
             <a onclick="window.showTab('bookings')">🚗 练车记录</a>
             <a onclick="window.showTab('staff')">👥 员工管理</a>
             <a onclick="window.showTab('students')">🎓 学员管理</a>
@@ -719,9 +890,12 @@
             <div class="section">
                 <div class="section-header">
                     <h3>待审核报名</h3>
-                    <button class="btn btn-primary btn-sm" onclick="window.loadPendingEnrollments()">刷新</button>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <span id="pendingCountBadge" style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;display:none;">0 人待审</span>
+                        <button class="btn btn-primary btn-sm" onclick="window.loadPendingEnrollments()">刷新</button>
+                    </div>
                 </div>
-                <div id="pendingList">
+                <div id="pendingList" class="card-grid">
                     <div class="empty-tip">加载中...</div>
                 </div>
             </div>
@@ -731,6 +905,37 @@
                     <button class="btn btn-primary btn-sm" onclick="window.loadAllEnrollments()">刷新</button>
                 </div>
                 <div id="allEnrollmentList">
+                    <div class="empty-tip">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 练车申请记录 -->
+        <div id="tab-drivingApplications" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h3>练车申请记录</h3>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        <span id="pendingApplicationBadge" style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:10px;font-size:12px;display:none;">0 待审核</span>
+                        <button class="btn btn-primary btn-sm" onclick="window.loadDrivingApplications()">刷新</button>
+                    </div>
+                </div>
+                <!-- 筛选条件 -->
+                <div class="filter-bar" style="margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                    <input type="text" id="appStudentName" placeholder="搜索学员姓名" style="padding:8px 12px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;width:140px;">
+                    <select id="appStatus" style="padding:8px 12px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;min-width:120px;">
+                        <option value="">全部状态</option>
+                        <option value="pending">待审核</option>
+                        <option value="approved">已批准</option>
+                        <option value="rejected">已拒绝</option>
+                    </select>
+                    <input type="date" id="appStartDate" placeholder="开始日期" style="padding:8px 12px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;width:140px;">
+                    <span style="color:#64748b;">至</span>
+                    <input type="date" id="appEndDate" placeholder="结束日期" style="padding:8px 12px;border:1px solid #334155;border-radius:6px;background:#1e293b;color:#e2e8f0;width:140px;">
+                    <button class="btn btn-primary btn-sm" onclick="window.loadDrivingApplications()">搜索</button>
+                    <button class="btn btn-secondary btn-sm" onclick="window.clearDrivingApplicationFilters()">重置</button>
+                </div>
+                <div id="drivingApplicationList">
                     <div class="empty-tip">加载中...</div>
                 </div>
             </div>

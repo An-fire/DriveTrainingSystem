@@ -495,4 +495,100 @@ public class BookingDAO {
         }
         return null;
     }
+
+    /**
+     * 查询练车申请记录（带学员姓名、教练姓名，支持筛选）
+     *
+     * @param status 状态筛选（可选，为空则查询所有）
+     * @param startDate 开始日期筛选（可选）
+     * @param endDate 结束日期筛选（可选）
+     * @param studentName 学员姓名模糊搜索（可选）
+     * @return 练车申请列表
+     */
+    public List<Booking> findApplications(String status, java.util.Date startDate, java.util.Date endDate, String studentName) {
+        StringBuilder sql = new StringBuilder("SELECT b.*, u.name AS studentName, s.name AS coachName FROM booking b ");
+        sql.append("LEFT JOIN user u ON b.studentId = u.id ");
+        sql.append("LEFT JOIN staff s ON b.coachId = s.id WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (status != null && !status.isEmpty()) {
+            sql.append("AND b.status = ? ");
+            params.add(status);
+        }
+        if (startDate != null) {
+            sql.append("AND b.startTime >= ? ");
+            params.add(new Timestamp(startDate.getTime()));
+        }
+        if (endDate != null) {
+            sql.append("AND b.startTime <= ? ");
+            params.add(new Timestamp(endDate.getTime()));
+        }
+        if (studentName != null && !studentName.isEmpty()) {
+            sql.append("AND u.name LIKE ? ");
+            params.add("%" + studentName + "%");
+        }
+
+        sql.append("ORDER BY b.createTime DESC");
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Booking> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                pstmt.setObject(i + 1, params.get(i));
+            }
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Booking booking = new Booking();
+                booking.setId(rs.getString("id"));
+                booking.setStudentId(rs.getString("studentId"));
+                booking.setCoachId(rs.getString("coachId"));
+                booking.setSubjectType(rs.getString("subjectType"));
+                booking.setStartTime(rs.getTimestamp("startTime"));
+                booking.setEndTime(rs.getTimestamp("endTime"));
+                booking.setStatus(rs.getString("status"));
+                booking.setStudentScore(rs.getInt("studentScore"));
+                booking.setCoachScore(rs.getInt("coachScore"));
+                booking.setCanExam(rs.getBoolean("canExam"));
+                booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
+                // 附加字段
+                booking.setStudentName(rs.getString("studentName"));
+                booking.setCoachName(rs.getString("coachName"));
+                list.add(booking);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
+    /**
+     * 统计待审核的练车申请数量
+     */
+    public int countPending() {
+        String sql = "SELECT COUNT(*) FROM booking WHERE status = 'pending'";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return 0;
+    }
 }

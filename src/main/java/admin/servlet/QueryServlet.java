@@ -69,6 +69,14 @@ public class QueryServlet extends HttpServlet {
                     Staff coach = staffDAO.findById(e.getCoachId());
                     obj.put("studentName", student != null ? student.getName() : "");
                     obj.put("coachName", coach != null ? coach.getName() : "");
+                    // 添加学员详细信息
+                    obj.put("studentPhone", student != null ? student.getPhone() : "");
+                    obj.put("studentIdCard", student != null ? student.getIdCard() : "");
+                    obj.put("coachPhone", coach != null ? coach.getPhone() : "");
+                    // 格式化申请时间
+                    if (e.getApplyTime() != null) {
+                        obj.put("applyTimeStr", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(e.getApplyTime()));
+                    }
                     array.add(obj);
                 }
                 result.put("code", 1);
@@ -89,6 +97,49 @@ public class QueryServlet extends HttpServlet {
                     result.put("code", 0);
                     result.put("msg", "参数错误");
                 }
+            } else if ("drivingApplications".equals(action)) {
+                // 练车申请记录查询
+                String status = request.getParameter("status");
+                String startDate = request.getParameter("startDate");
+                String endDate = request.getParameter("endDate");
+                String studentName = request.getParameter("studentName");
+
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                java.util.Date start = null;
+                java.util.Date end = null;
+                try {
+                    if (startDate != null && !startDate.isEmpty()) {
+                        start = sdf.parse(startDate);
+                    }
+                    if (endDate != null && !endDate.isEmpty()) {
+                        end = sdf.parse(endDate);
+                        // 设置为当天的23:59:59
+                        end = new java.util.Date(end.getTime() + 86400000 - 1);
+                    }
+                } catch (java.text.ParseException e) {
+                    e.printStackTrace();
+                }
+
+                List<Booking> list = bookingDAO.findApplications(status, start, end, studentName);
+                JSONArray array = new JSONArray();
+                for (Booking b : list) {
+                    JSONObject obj = (JSONObject) JSONObject.toJSON(b);
+                    // 格式化时间
+                    if (b.getStartTime() != null) {
+                        obj.put("startTimeStr", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(b.getStartTime()));
+                    }
+                    if (b.getEndTime() != null) {
+                        obj.put("endTimeStr", new java.text.SimpleDateFormat("HH:mm").format(b.getEndTime()));
+                    }
+                    if (b.getCreateTime() != null) {
+                        obj.put("createTimeStr", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(b.getCreateTime()));
+                    }
+                    array.add(obj);
+                }
+                result.put("code", 1);
+                result.put("data", array);
+                // 统计待审核数量
+                result.put("pendingCount", bookingDAO.countPending());
             } else if ("bookings".equals(action)) {
                 String status = request.getParameter("status");
                 List<Booking> list;

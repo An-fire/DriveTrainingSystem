@@ -161,6 +161,7 @@ window.showTab = function(tabName) {
     var titleMap = {
         'dashboard': '数据概览',
         'enrollments': '报名审核',
+        'drivingApplications': '练车申请',
         'bookings': '练车记录',
         'staff': '员工管理',
         'students': '学员管理'
@@ -191,6 +192,7 @@ window.showTab = function(tabName) {
         window.loadPendingEnrollments();
         window.loadAllEnrollments();
     }
+    if (tabName === 'drivingApplications') window.loadDrivingApplications();
     if (tabName === 'bookings') window.loadBookings();
     if (tabName === 'dashboard') window.loadDashboard();
 };
@@ -371,33 +373,65 @@ window.loadPendingEnrollments = function() {
             return;
         }
         var pending = data.filter(function(item) { return item.status === 'pending'; });
+
+        // 更新待审核徽章
+        if (pending.length > 0) {
+            var badge = document.getElementById('pendingCountBadge');
+            if (badge) {
+                badge.textContent = pending.length + ' 人待审';
+                badge.style.display = 'inline';
+            }
+        } else {
+            var badge = document.getElementById('pendingCountBadge');
+            if (badge) badge.style.display = 'none';
+        }
+
         if (pending.length === 0) {
             container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
             return;
         }
-        var html = '<table class="data-table"><thead><tr>' +
-            '<th><input type="checkbox" onclick="window.toggleAllEnrollment(this)"></th>' +
-            '<th>学员</th><th>教练</th><th>科目</th><th>状态</th><th>操作</th>' +
-            '</tr></thead><tbody>';
+
+        var html = '<div class="card-grid">';
         pending.forEach(function(item, index) {
-            var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
-            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
-                '<td><input type="checkbox" class="enroll-checkbox" value="' + item.id + '"></td>' +
-                '<td>' + (item.studentName || '') + '</td>' +
-                '<td>' + (item.coachName || '') + '</td>' +
-                '<td>' + (item.subjectType || '') + '</td>' +
-                '<td>' + statusText + '</td>' +
-                '<td>' +
-                '<button class="btn btn-sm btn-primary" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')" style="margin-right:5px">通过</button>' +
-                '<button class="btn btn-sm btn-danger" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">拒绝</button>' +
-                '</td>' +
-                '</tr>';
+            var studentName = item.studentName || '未知学员';
+            var phone = item.studentPhone || '-';
+            var idCard = item.studentIdCard || '-';
+            var subjectType = item.subjectType || '-';
+            var coachName = item.coachName || '未知教练';
+            var applyTime = item.applyTimeStr || '-';
+            // 取名字的首字母作为头像
+            var initial = studentName.charAt(0).toUpperCase();
+
+            html += '<div class="enrollment-card reveal" style="animation-delay: ' + (index * 80) + 'ms">' +
+                '<span class="status-pending">待审核</span>' +
+                '<div class="card-header">' +
+                '<div class="avatar">' + initial + '</div>' +
+                '<div class="student-info">' +
+                '<div class="student-name">' + escapeHtml(studentName) + '</div>' +
+                '<div class="student-phone">📞 ' + escapeHtml(phone) + '</div>' +
+                '</div></div>' +
+                '<div class="info-row">' +
+                '<span class="info-label">身份证号</span>' +
+                '<span class="info-value">' + escapeHtml(idCard) + '</span>' +
+                '</div>' +
+                '<div class="info-row">' +
+                '<span class="info-label">报考科目</span>' +
+                '<span class="info-value subject">' + escapeHtml(subjectType) + '</span>' +
+                '</div>' +
+                '<div class="info-row">' +
+                '<span class="info-label">意向教练</span>' +
+                '<span class="info-value">' + escapeHtml(coachName) + '</span>' +
+                '</div>' +
+                '<div class="info-row">' +
+                '<span class="info-label">申请时间</span>' +
+                '<span class="info-value">' + escapeHtml(applyTime) + '</span>' +
+                '</div>' +
+                '<div class="card-actions">' +
+                '<button class="btn btn-approve" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')">✅ 通过</button>' +
+                '<button class="btn btn-reject" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">❌ 拒绝</button>' +
+                '</div></div>';
         });
-        html += '</tbody></table>' +
-            '<div style="margin-top:10px;">' +
-            '<button class="btn btn-sm btn-primary" onclick="window.batchAudit(\'approved\')">批量通过</button> ' +
-            '<button class="btn btn-sm btn-danger" onclick="window.batchAudit(\'rejected\')">批量拒绝</button>' +
-            '</div>';
+        html += '</div>';
         container.innerHTML = html;
     });
 };
@@ -465,6 +499,104 @@ window.batchAudit = function(status) {
         loadPendingEnrollments();
         loadAllEnrollments();
     });
+};
+
+// ==================== 练车申请记录 ====================
+window.loadDrivingApplications = function() {
+    var container = document.getElementById('drivingApplicationList');
+    if (!container) {
+        console.error('[loadDrivingApplications] 容器 drivingApplicationList 不存在！');
+        return;
+    }
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+
+    // 获取筛选条件
+    var studentName = document.getElementById('appStudentName') ? document.getElementById('appStudentName').value : '';
+    var status = document.getElementById('appStatus') ? document.getElementById('appStatus').value : '';
+    var startDate = document.getElementById('appStartDate') ? document.getElementById('appStartDate').value : '';
+    var endDate = document.getElementById('appEndDate') ? document.getElementById('appEndDate').value : '';
+
+    // 构建查询参数
+    var params = [];
+    if (studentName) params.push('studentName=' + encodeURIComponent(studentName));
+    if (status) params.push('status=' + encodeURIComponent(status));
+    if (startDate) params.push('startDate=' + encodeURIComponent(startDate));
+    if (endDate) params.push('endDate=' + encodeURIComponent(endDate));
+    var queryString = params.length > 0 ? '&' + params.join('&') : '';
+
+    apiGet('/admin/query?action=drivingApplications' + queryString, function(data) {
+        console.log('[loadDrivingApplications] 原始数据:', data);
+        var list = [];
+        if (Array.isArray(data)) {
+            list = data;
+        } else if (data && typeof data === 'object') {
+            list = data.data || [];
+            // 更新待审核徽章
+            if (data.pendingCount !== undefined && data.pendingCount > 0) {
+                var badge = document.getElementById('pendingApplicationBadge');
+                if (badge) {
+                    badge.textContent = data.pendingCount + ' 待审核';
+                    badge.style.display = 'inline';
+                }
+            }
+        }
+        console.log('[loadDrivingApplications] 最终列表长度:', list.length);
+
+        if (list.length === 0) {
+            container.innerHTML = '<div class="empty-tip">暂无练车申请记录</div>';
+            return;
+        }
+
+        try {
+            var html = '<table class="data-table"><thead><tr>' +
+                '<th>申请ID</th><th>学员姓名</th><th>教练</th><th>科目</th>' +
+                '<th>申请日期</th><th>练车时段</th><th>状态</th>' +
+                '<th>可考试</th><th>备注</th>' +
+                '</tr></thead><tbody>';
+
+            list.forEach(function(item, index) {
+                var statusText = { pending: '待审核', approved: '已批准', rejected: '已拒绝' }[item.status] || item.status || '-';
+                var statusClass = { pending: 'status-pending', approved: 'status-approved', rejected: 'status-rejected' }[item.status] || '';
+                var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
+                var coachName = item.coachName || (item.coachId ? item.coachId.substring(0, 8) : '');
+                var createTime = item.createTimeStr || (item.createTime ? formatDateTime(item.createTime) : '-');
+                var timeSlot = (item.startTimeStr || '-') + ' 至 ' + (item.endTimeStr || '-');
+                var canExam = item.canExam ? '是' : '否';
+                var comment = item.comment || '-';
+
+                html += '<tr class="reveal" style="transition-delay: ' + (index * 40) + 'ms">' +
+                    '<td>' + escapeHtml(item.id ? item.id.substring(0, 8) : '-') + '</td>' +
+                    '<td>' + escapeHtml(studentName) + '</td>' +
+                    '<td>' + escapeHtml(coachName) + '</td>' +
+                    '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+                    '<td>' + createTime + '</td>' +
+                    '<td>' + timeSlot + '</td>' +
+                    '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                    '<td>' + canExam + '</td>' +
+                    '<td>' + escapeHtml(comment) + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+            console.log('[loadDrivingApplications] 渲染完成，共 ' + list.length + ' 条记录');
+        } catch (e) {
+            console.error('[loadDrivingApplications] 渲染出错:', e);
+            container.innerHTML = '<div class="empty-tip">数据渲染出错，请检查控制台</div>';
+        }
+    });
+};
+
+// 清空筛选条件
+window.clearDrivingApplicationFilters = function() {
+    var nameInput = document.getElementById('appStudentName');
+    var statusSelect = document.getElementById('appStatus');
+    var startDateInput = document.getElementById('appStartDate');
+    var endDateInput = document.getElementById('appEndDate');
+    if (nameInput) nameInput.value = '';
+    if (statusSelect) statusSelect.value = '';
+    if (startDateInput) startDateInput.value = '';
+    if (endDateInput) endDateInput.value = '';
+    window.loadDrivingApplications();
 };
 
 // ==================== 练车记录 ====================
