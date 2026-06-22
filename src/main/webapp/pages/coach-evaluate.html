@@ -42,7 +42,6 @@
             0% { transform: translateY(0) rotate(-4deg); }
             100% { transform: translateY(-28px) rotate(4deg); }
         }
-
         .page-wrap {
             position: relative;
             z-index: 1;
@@ -51,7 +50,6 @@
             max-width: 1000px;
             margin: 0 auto;
         }
-
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -139,7 +137,6 @@
             border-color: rgba(239,68,68,0.3);
             color: #f87171;
         }
-
         .page-title {
             color: var(--text-white);
             font-size: 28px;
@@ -154,7 +151,6 @@
             font-weight: 400;
             color: var(--muted-text);
         }
-
         .content-card {
             background: var(--card-bg);
             border-radius: var(--radius-lg);
@@ -173,7 +169,6 @@
             align-items: center;
             gap: 10px;
         }
-
         .form-select {
             width: 100%;
             height: 50px;
@@ -201,7 +196,6 @@
             background: #1a1f3a;
             color: #e2e8f0;
         }
-
         .form-textarea {
             width: 100%;
             min-height: 80px;
@@ -224,7 +218,6 @@
         .form-textarea::placeholder {
             color: rgba(255,255,255,0.25);
         }
-
         .star-rating {
             display: flex;
             gap: 8px;
@@ -256,7 +249,6 @@
             display: flex;
             align-items: center;
         }
-
         .long-gradient-btn {
             width: 100%;
             height: 50px;
@@ -280,8 +272,6 @@
             cursor: not-allowed;
             transform: none;
         }
-
-        /* 评价列表 */
         .comment-item {
             background: rgba(255,255,255,0.03);
             border-radius: 12px;
@@ -328,7 +318,6 @@
             padding: 30px 0;
             color: var(--muted-text);
         }
-
         .fade-reveal {
             opacity: 0;
             transform: translateY(18px);
@@ -338,7 +327,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-
         .success-msg {
             display: none;
             padding: 14px 20px;
@@ -354,12 +342,10 @@
             display: block;
             animation: fadeIn 0.4s ease;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         @media (max-width: 768px) {
             .page-wrap { padding: calc(var(--nav-h) + 16px) 16px 20px; }
             .content-card { padding: 20px 16px; }
@@ -443,13 +429,36 @@
     <div class="content-card fade-reveal">
         <div class="card-title">📋 历史评价</div>
         <div id="commentList">
-            <div class="empty-tip">选择教练后查看历史评价</div>
+            <div class="empty-tip">加载中...</div>
         </div>
     </div>
 </main>
 
 <script>
-    // ===== 检查登录 =====
+    // ============================================================
+    // 工具函数
+    // ============================================================
+    function escapeHtml(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function formatTime(timeStr) {
+        if (!timeStr) return '';
+        try {
+            var date = new Date(timeStr);
+            var pad = function(n) { return n < 10 ? '0' + n : n; };
+            return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+        } catch (e) {
+            return timeStr;
+        }
+    }
+
+    // ============================================================
+    // 检查登录
+    // ============================================================
     var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (!userInfo.id || userInfo.role !== 'student') {
         alert('请使用学员账号登录');
@@ -457,7 +466,9 @@
     }
     document.getElementById('studentNameDisplay').textContent = userInfo.name || '学员';
 
-    // ===== 退出登录 =====
+    // ============================================================
+    // 退出登录
+    // ============================================================
     function logout() {
         if (confirm('确定退出登录吗？')) {
             localStorage.removeItem('userInfo');
@@ -465,7 +476,9 @@
         }
     }
 
-    // ===== 星星评分 =====
+    // ============================================================
+    // 星星评分
+    // ============================================================
     var currentRating = 0;
 
     function setRating(score) {
@@ -485,76 +498,117 @@
         document.getElementById('starLabel').textContent = labels[score] || '请选择评分';
     }
 
-    // ===== 加载教练列表 =====
+    // ============================================================
+    // 加载教练列表
+    // ============================================================
     async function loadCoaches() {
         try {
             var res = await fetch(window.BASE_URL + '/student/enrollment?type=coach');
             var data = await res.json();
             var select = document.getElementById('coachSelect');
             select.innerHTML = '<option value="">— 请选择要评价的教练 —</option>';
-            if (data.success && data.data) {
+            if (data.success && data.data && data.data.length > 0) {
                 data.data.forEach(function(coach) {
                     var opt = document.createElement('option');
                     opt.value = coach.id;
                     opt.textContent = coach.name + ' | ' + (coach.subject || 'C2');
                     select.appendChild(opt);
                 });
+                // 加载第一个教练的评价
+                var firstCoachId = data.data[0].id;
+                select.value = firstCoachId;
+                await loadComments(firstCoachId);
+            } else {
+                document.getElementById('commentList').innerHTML = '<div class="empty-tip">暂无教练数据</div>';
             }
         } catch (e) {
             console.error('加载教练列表失败:', e);
         }
     }
 
-    // ===== 加载历史评价 =====
+    // ============================================================
+    // 加载历史评价
+    // ============================================================
     async function loadComments(coachId) {
         if (!coachId) {
             document.getElementById('commentList').innerHTML = '<div class="empty-tip">请选择教练查看评价</div>';
             return;
         }
         try {
+            console.log('[loadComments] 开始加载教练评价，coachId:', coachId);
             var res = await fetch(window.BASE_URL + '/coach/comments?coachId=' + encodeURIComponent(coachId));
             var data = await res.json();
-            var listEl = document.getElementById('commentList');
+            console.log('[loadComments] 接口响应:', data);
+            console.log('[loadComments] code:', data.code);
+            console.log('[loadComments] data字段:', data.data);
+            console.log('[loadComments] data长度:', data.data ? data.data.length : 'null');
 
-            if (data.code !== 200 || !data.data || data.data.length === 0) {
+            var listEl = document.getElementById('commentList');
+            if (!listEl) {
+                console.error('commentList 容器不存在');
+                return;
+            }
+
+            // 修复：兼容 code: 1 和 code: 200
+            // 如果 code 不是 1 或 200，或者 data 为空，则显示空数据提示
+            if (data.code !== 200 && data.code !== 1) {
+                console.log('[loadComments] code 不匹配，显示错误');
+                listEl.innerHTML = '<div class="empty-tip">加载评价失败：' + (data.message || '未知错误') + '</div>';
+                return;
+            }
+
+            if (!data.data || !Array.isArray(data.data) || data.data.length === 0) {
+                console.log('[loadComments] 无评价数据');
                 listEl.innerHTML = '<div class="empty-tip">📭 该教练暂无学员评价</div>';
                 return;
             }
 
+            console.log('[loadComments] 开始渲染', data.data.length, '条评价');
             var html = '';
             data.data.forEach(function(c) {
-                var stars = '★'.repeat(c.studentScore || 0) + '☆'.repeat(5 - (c.studentScore || 0));
+                console.log('[loadComments] 渲染评价:', c);
+                var score = c.studentScore || 0;
+                var stars = '★'.repeat(score) + '☆'.repeat(5 - score);
+                var commentText = c.comment && c.comment.trim() ? escapeHtml(c.comment) : '<span style="color:#64748b;">（仅评分，未填写评价内容）</span>';
+                var timeStr = c.createTime ? formatTime(c.createTime) : '';
                 html += `
-                    <div class="comment-item">
-                        <div class="comment-header">
-                            <span class="student-name">👤 ${c.studentName || '匿名学员'}</span>
-                            <span class="stars">${stars}</span>
-                            <span class="score-number">${c.studentScore || 0}分</span>
-                        </div>
-                        <div class="comment-text">${c.comment || '（无文字评价）'}</div>
-                        <div class="time">${c.createTime || ''}</div>
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <span class="student-name">👤 ${escapeHtml(c.studentName || '匿名学员')}</span>
+                        <span class="stars">${stars}</span>
+                        <span class="score-number">${score}分</span>
                     </div>
-                `;
+                    <div class="comment-text">${commentText}</div>
+                    <div class="time">${timeStr}</div>
+                </div>
+            `;
             });
             listEl.innerHTML = html;
-
+            console.log('[loadComments] 渲染完成');
         } catch (e) {
             console.error('加载评价失败:', e);
             document.getElementById('commentList').innerHTML = '<div class="empty-tip">加载评价失败，请稍后重试</div>';
         }
     }
 
-    // ===== 教练选择变化 =====
+    // ============================================================
+    // 教练选择变化
+    // ============================================================
     document.getElementById('coachSelect').addEventListener('change', function() {
         var coachId = this.value;
-        loadComments(coachId);
-        // 重置评分
+        if (coachId) {
+            loadComments(coachId);
+        } else {
+            document.getElementById('commentList').innerHTML = '<div class="empty-tip">请选择教练查看评价</div>';
+        }
         setRating(0);
         document.getElementById('commentText').value = '';
         document.getElementById('successMsg').classList.remove('show');
     });
 
-    // ===== 提交评价 =====
+    // ============================================================
+    // 提交评价
+    // ============================================================
     async function submitEvaluation() {
         var coachId = document.getElementById('coachSelect').value;
         if (!coachId) {
@@ -566,13 +620,24 @@
             return;
         }
 
+        var urlParams = new URLSearchParams(window.location.search);
+        var bookingId = urlParams.get('bookingId');
+        if (!bookingId) {
+            alert('缺少预约ID，请从预约记录中进入评价页面');
+            return;
+        }
+
         var comment = document.getElementById('commentText').value.trim();
+        var btn = document.querySelector('.long-gradient-btn');
+        btn.disabled = true;
+        btn.textContent = '提交中...';
 
         try {
             var res = await fetch(window.BASE_URL + '/student/rate', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    bookingId: bookingId,
                     coachId: coachId,
                     studentScore: currentRating,
                     comment: comment
@@ -585,32 +650,47 @@
                 setRating(0);
                 document.getElementById('commentText').value = '';
                 // 刷新评价列表
-                loadComments(coachId);
+                await loadComments(coachId);
+                // 通知父页面刷新预约记录
+                localStorage.setItem('bookingRefreshFlag', 'true');
+                if (window.opener && typeof window.opener.loadMyBooking === 'function') {
+                    window.opener.loadMyBooking();
+                }
             } else {
                 alert('评价失败：' + (data.msg || '未知错误'));
             }
         } catch (e) {
             alert('提交失败，请稍后重试');
             console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '提交评价';
         }
     }
 
-    // ===== 页面初始化 =====
+    // ============================================================
+    // 页面初始化
+    // ============================================================
     window.addEventListener('DOMContentLoaded', function() {
+        // 加载教练列表（自动加载第一个教练的评价）
+        loadCoaches();
+        // 淡入动画
         setTimeout(function() {
             document.querySelectorAll('.fade-reveal').forEach(function(el, idx) {
                 setTimeout(function() {
                     el.classList.add('show');
                 }, idx * 100);
             });
-            loadCoaches();
-        }, 80);
+        }, 100);
     });
 
-    // 暴露全局
+    // ============================================================
+    // 暴露全局（供 HTML onclick 调用）
+    // ============================================================
     window.setRating = setRating;
     window.submitEvaluation = submitEvaluation;
     window.logout = logout;
+    window.loadComments = loadComments;
 </script>
 </body>
 </html>

@@ -10,27 +10,41 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="947e7fea-3a30-4fe1-8878-c10632521e04" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/sqldialects.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/webContexts.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database/init.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/init-database.sql" beforeDir="false" afterPath="$PROJECT_DIR$/init-database.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/admin/service/AdminService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/admin/service/AdminService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/common/database/EnrollmentDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/database/EnrollmentDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/common/entity/Enrollment.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/entity/Enrollment.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/admin/service/AdminServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/admin/service/AdminServiceTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/coach/servlet/CoachBookingsServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/admin/servlet/AuditServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/admin/servlet/AuditServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/coach/service/CoachService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/coach/service/CoachService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/coach/servlet/CoachAvailabilityServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/coach/servlet/CoachAvailabilityServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/common/database/BookingDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/database/BookingDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/common/database/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/database/UserDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/common/entity/Booking.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/entity/Booking.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/common/filter/AuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/filter/AuthFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/student/servlet/EnrollmentServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/student/servlet/EnrollmentServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/student/servlet/StudentRateServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/student/servlet/StudentRateServlet.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/admin.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/admin.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/coach.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/coach.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/common.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/common.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/student.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/student.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/admin.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/coach-evaluate.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/coach-evaluate.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/coach.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/coach.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/student.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/student.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
   <component name="LogFilters">
     <option name="FILTER_ERRORS" value="false" />
@@ -43,10 +57,13 @@
     <commands />
     <urls />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 2
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="3FRRDLzmaxGjFuHNUVxtk1DYS7u" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -55,12 +72,15 @@
   "keyToString": {
     "Maven.DriveTrainingSystem [clean].executor": "Run",
     "Maven.DriveTrainingSystem [compile].executor": "Run",
+    "Maven.DriveTrainingSystem [package].executor": "Run",
+    "Maven.DriveTrainingSystem [validate].executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Tomcat 服务器.Tomcat 10.1.55.executor": "Run",
+    "Tomcat 服务器.Tomcat 10.1.55.executor": "Debug",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
@@ -71,6 +91,11 @@
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "configurable.group.appearance",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
   }
 }]]></component>
   <component name="RunDashboard">
@@ -87,92 +112,63 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="Tomcat 10.1.55" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 10.1.55" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
-      <option name="BROWSER_ID" value="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" />
-      <option name="UPDATING_POLICY" value="restart-server" />
-      <deployment>
-        <artifact name="DriveTrainingSystem:war exploded">
-          <settings>
-            <option name="CONTEXT_PATH" value="/DriveTrainingSystem" />
-          </settings>
-        </artifact>
-      </deployment>
+    <configuration name="Tomcat 10.1.55" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Remote" APPLICATION_SERVER_NAME="Tomcat 10.1.55" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
+      <option name="LOCAL" value="false" />
+      <deployment />
       <server-settings>
-        <option name="BASE_DIRECTORY_NAME" value="984688f5-cddc-4d39-a8e3-79fd2d5b7ebf" />
+        <data>
+          <option name="targets">
+            <list>
+              <WatchedTargetModelImpl>
+                <option name="name" value="CONTEXT_XML" />
+                <option name="transportStagingTarget">
+                  <TransportTarget>
+                    <option name="id" value="f60278d4-32ae-416a-a856-4832ae46e411" />
+                    <id>f60278d4-32ae-416a-a856-4832ae46e411</id>
+                  </TransportTarget>
+                </option>
+                <option name="watchedLocalPath" value="" />
+                <watched-path />
+                <name>CONTEXT_XML</name>
+                <transport-target>
+                  <TransportTarget>
+                    <option name="id" value="f60278d4-32ae-416a-a856-4832ae46e411" />
+                    <id>f60278d4-32ae-416a-a856-4832ae46e411</id>
+                  </TransportTarget>
+                </transport-target>
+              </WatchedTargetModelImpl>
+              <StagingTargetModelImpl>
+                <option name="name" value="STAGING" />
+                <option name="stagingRemotePath" value="" />
+                <option name="transportStagingTarget">
+                  <TransportTarget>
+                    <option name="id" value="5e4b0431-46b3-485f-9448-7107966de52b" />
+                    <id>5e4b0431-46b3-485f-9448-7107966de52b</id>
+                  </TransportTarget>
+                </option>
+                <staging-path />
+                <name>STAGING</name>
+                <transport-target>
+                  <TransportTarget>
+                    <option name="id" value="5e4b0431-46b3-485f-9448-7107966de52b" />
+                    <id>5e4b0431-46b3-485f-9448-7107966de52b</id>
+                  </TransportTarget>
+                </transport-target>
+              </StagingTargetModelImpl>
+            </list>
+          </option>
+          <option name="transportHostId" value="" />
+          <host-id />
+        </data>
       </server-settings>
       <predefined_log_file enabled="true" id="Tomcat" />
-      <predefined_log_file enabled="true" id="Tomcat Catalina" />
-      <predefined_log_file id="Tomcat Manager" />
-      <predefined_log_file id="Tomcat Host Manager" />
-      <predefined_log_file id="Tomcat Localhost Access" />
+      <predefined_log_file enabled="true" id="TOMCAT_LOCALHOST_LOG_ID" />
       <RunnerSettings RunnerId="Debug">
-        <option name="DEBUG_PORT" value="49959" />
+        <option name="DEBUG_PORT" value="60236" />
+        <option name="LOCAL" value="false" />
       </RunnerSettings>
-      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
-        <option name="USE_ENV_VARIABLES" value="true" />
-        <STARTUP>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </STARTUP>
-        <SHUTDOWN>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </SHUTDOWN>
-      </ConfigurationWrapper>
-      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
-        <option name="USE_ENV_VARIABLES" value="true" />
-        <STARTUP>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </STARTUP>
-        <SHUTDOWN>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </SHUTDOWN>
-      </ConfigurationWrapper>
-      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Profile">
-        <option name="USE_ENV_VARIABLES" value="true" />
-        <STARTUP>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </STARTUP>
-        <SHUTDOWN>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </SHUTDOWN>
-      </ConfigurationWrapper>
-      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
-        <option name="USE_ENV_VARIABLES" value="true" />
-        <STARTUP>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </STARTUP>
-        <SHUTDOWN>
-          <option name="USE_DEFAULT" value="true" />
-          <option name="SCRIPT" value="" />
-          <option name="VM_PARAMETERS" value="" />
-          <option name="PROGRAM_PARAMETERS" value="" />
-        </SHUTDOWN>
-      </ConfigurationWrapper>
       <method v="2">
         <option name="Make" enabled="true" />
-        <option name="BuildArtifacts" enabled="true">
-          <artifact name="DriveTrainingSystem:war exploded" />
-        </option>
       </method>
     </configuration>
   </component>
@@ -192,10 +188,22 @@
       <option name="presentableId" value="Default" />
       <updated>1782035774712</updated>
       <workItem from="1782035775753" duration="1162000" />
+      <workItem from="1782057049767" duration="33384000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

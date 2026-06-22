@@ -27,6 +27,14 @@ function showMsg(text, isError = false) {
     }, 2500);
 }
 
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+window.escapeHtml = escapeHtml;
+
 function formatTimestamp(timestamp) {
     if (!timestamp) return '-';
     var date = new Date(timestamp);
@@ -51,7 +59,6 @@ async function request(url, method, data) {
     var res = await fetch(window.BASE_URL + url, options);
     return await res.json();
 }
-
 
 // ============================================================
 // 2. Tab 切换
@@ -231,6 +238,13 @@ async function loadMyBooking() {
     var tbody = document.getElementById('bookTbody');
     if (!tbody) return;
 
+    // 检查是否有刷新标记（来自评价页面）
+    var refreshFlag = localStorage.getItem('bookingRefreshFlag');
+    if (refreshFlag === 'true') {
+        localStorage.removeItem('bookingRefreshFlag');
+        console.log('检测到评价提交，强制刷新预约记录');
+    }
+
     try {
         var res = await request('/student/booking');
         tbody.innerHTML = '';
@@ -268,7 +282,7 @@ async function loadMyBooking() {
 
             var actionHtml = '-';
             if (item.status === 'approved' && !item.studentScore) {
-                actionHtml = '<a href="coach-evaluate.html?coachId=' + item.coachId + '" class="btn-sm-gradient">去评价</a>';
+                actionHtml = '<a href="coach-evaluate.html?coachId=' + item.coachId + '&bookingId=' + item.id + '" class="btn-sm-gradient" target="_blank">去评价</a>';
             } else if (item.studentScore) {
                 actionHtml = '<span class="btn-sm-success">已评价</span>';
             }
@@ -325,26 +339,42 @@ async function loadCoachAvailability() {
         if (container) container.style.display = 'block';
         if (slotsDiv) slotsDiv.innerHTML = '<span class="time-slot unknown">⏳ 加载中...</span>';
 
-        // 请求后端接口
-        var url = '/student/availability?coachId=' + encodeURIComponent(coachId) + '&date=' + encodeURIComponent(queryDate);
-        var res = await request(url);
-
-        console.log('空闲时段响应:', res);  // 调试日志
+        // 请求后端接口（使用完整的BASE_URL路径）
+        var url = BASE_URL + '/student/availability?coachId=' + encodeURIComponent(coachId) + '&date=' + encodeURIComponent(queryDate);
+        console.log('请求URL:', url);
+        
+        var res = await axios.get(url);
+        console.log('空闲时段响应完整:', res);
+        console.log('响应数据:', res.data);
 
         // 检查响应
-        if (res.code !== 1) {
+        var resData = res.data;
+        if (!resData) {
             if (slotsDiv) slotsDiv.innerHTML = '<span class="time-slot unknown">加载失败，请稍后重试</span>';
             return;
         }
 
-        // 解析数据（新接口返回 { free: [...], occupied: [...] }）
-        var data = res.data || {};
+        if (resData.code !== 1) {
+            if (slotsDiv) slotsDiv.innerHTML = '<span class="time-slot unknown">加载失败：' + (resData.msg || '请稍后重试') + '</span>';
+            return;
+        }
+
+        // 解析数据
+        var data = resData.data || {};
         var freeSlots = data.free || [];
         var occupiedSlots = data.occupied || [];
+        var msg = data.msg || '';
+
+        console.log('空闲时段:', freeSlots);
+        console.log('占用时段:', occupiedSlots);
 
         // 如果都没有，显示提示
         if (freeSlots.length === 0 && occupiedSlots.length === 0) {
-            slotsDiv.innerHTML = '<span class="time-slot unknown">该教练当天暂无排班</span>';
+            if (msg.indexOf('无排班') !== -1) {
+                slotsDiv.innerHTML = '<span class="time-slot unknown">该教练当天暂无排班</span>';
+            } else {
+                slotsDiv.innerHTML = '<span class="time-slot unknown">该教练当天暂无排班或已无可预约时段</span>';
+            }
             return;
         }
 
@@ -352,24 +382,38 @@ async function loadCoachAvailability() {
 
         // ===== 显示可预约时段（绿色） =====
         if (freeSlots.length > 0) {
-            html += '<div style="margin-bottom:8px; font-size:12px; color:#94a3b8;">✅ 可预约时段：</div>';
+            html += '<div style="margin-bottom:12px;">' +
+                '<div style="font-size:13px; color:#4ade80; margin-bottom:10px; font-weight:500;">' +
+                '<span style="display:inline-block; width:10px; height:10px; background:#4ade80; border-radius:50%; margin-right:6px;"></span>' +
+                '可预约时段</div>';
             freeSlots.forEach(function(slot) {
                 // 提取时间部分 HH:mm
                 var startTime = slot.start ? slot.start.substring(11, 16) : '';
                 var endTime = slot.end ? slot.end.substring(11, 16) : '';
                 html += '<span class="time-slot free">🟢 ' + startTime + ' - ' + endTime + '</span>';
             });
+            html += '</div>';
         }
 
         // ===== 显示已占用时段（红色） =====
         if (occupiedSlots.length > 0) {
-            html += '<div style="margin:8px 0 4px; font-size:12px; color:#94a3b8;">🔴 已占用时段：</div>';
+            html += '<div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.06);">' +
+                '<div style="font-size:13px; color:#f87171; margin-bottom:10px; font-weight:500;">' +
+                '<span style="display:inline-block; width:10px; height:10px; background:#f87171; border-radius:50%; margin-right:6px;"></span>' +
+                '已预约时段（不可选）</div>';
             occupiedSlots.forEach(function(slot) {
-                var startTime = slot.start ? slot.start.substring(11, 16) : '';
-                var endTime = slot.end ? slot.end.substring(11, 16) : '';
-                html += '<span class="time-slot occupied">🔴 ' + startTime + ' - ' + endTime + '</span>';
+                var startTime = slot.start ? slot.start.substring(11, 16) : (slot.startTime || '');
+                var endTime = slot.end ? slot.end.substring(11, 16) : (slot.endTime || '');
+                html += '<span class="time-slot occupied" style="margin:4px 8px 4px 0; opacity:0.7;">' + startTime + ' - ' + endTime + '</span>';
             });
+            html += '</div>';
         }
+
+        // 添加图例说明
+        html += '<div style="margin-top:20px; padding-top:12px; border-top:1px dashed rgba(255,255,255,0.1); display:flex; gap:20px; font-size:12px; color:#94a3b8;">' +
+            '<span><span style="display:inline-block; width:10px; height:10px; background:#4ade80; border-radius:50%; vertical-align:middle; margin-right:4px;"></span>绿色为可预约</span>' +
+            '<span><span style="display:inline-block; width:10px; height:10px; background:#f87171; border-radius:50%; vertical-align:middle; margin-right:4px;"></span>红色为已预约</span>' +
+            '</div>';
 
         // 渲染到页面
         slotsDiv.innerHTML = html;
@@ -478,7 +522,7 @@ async function markAsRead(id) {
         });
         var data = await res.json();
         if (data.code === 1) {
-            loadNotifications(); // 刷新列表
+            loadNotifications();
         }
     } catch (e) {
         console.error('标记已读失败:', e);
@@ -487,7 +531,6 @@ async function markAsRead(id) {
 
 // 全部标记已读
 async function markAllRead() {
-    // 先获取所有未读 ID
     try {
         var res = await fetch(window.BASE_URL + '/student/notification?action=unread');
         var data = await res.json();
@@ -498,7 +541,6 @@ async function markAllRead() {
                 });
             }
             loadNotifications();
-            // 可选显示提示
             alert('✅ 所有通知已标记为已读');
         } else {
             alert('暂无未读通知');
@@ -513,7 +555,6 @@ document.addEventListener('click', function(e) {
     var panel = document.getElementById('notifPanel');
     var btn = document.querySelector('.header-btn-group .top-small-btn');
     if (panel && panel.style.display === 'block') {
-        // 如果点击的不是面板内部和按钮本身
         if (!panel.contains(e.target) && !btn.contains(e.target)) {
             panel.style.display = 'none';
         }
@@ -536,3 +577,7 @@ window.loadCoachAvailability = loadCoachAvailability;
 window.rateBooking = rateBooking;
 window.cancelBook = cancelBook;
 window.checkConflict = checkConflict;
+window.loadNotifications = loadNotifications;
+window.markAsRead = markAsRead;
+window.markAllRead = markAllRead;
+window.toggleNotifPanel = toggleNotifPanel;

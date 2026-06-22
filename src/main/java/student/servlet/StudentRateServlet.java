@@ -2,6 +2,7 @@ package student.servlet;
 
 import com.alibaba.fastjson.JSONObject;
 import common.database.BookingDAO;
+import common.entity.Booking;
 import common.entity.User;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +21,6 @@ public class StudentRateServlet extends BaseStudentServlet {
         resp.setContentType("application/json;charset=UTF-8");
         JSONObject result = new JSONObject();
 
-        // 验证登录
         User loginUser = getLoginUser(req, resp);
         if (loginUser == null) {
             return;
@@ -33,43 +33,49 @@ public class StudentRateServlet extends BaseStudentServlet {
             String scoreStr = params.get("studentScore");
             String comment = params.get("comment");
 
-            if (bookingId == null || bookingId.isEmpty() || scoreStr == null || scoreStr.isEmpty()) {
-                result.put("code", 0);
-                result.put("msg", "预约ID和评分不能为空");
-                resp.getWriter().write(result.toString());
-                return;
+            // ===== 打印接收到的参数 =====
+            System.out.println("=== StudentRateServlet 接收参数 ===");
+            System.out.println("bookingId: " + bookingId);
+            System.out.println("coachId: " + coachId);
+            System.out.println("scoreStr: " + scoreStr);
+            System.out.println("comment: " + comment);
+            System.out.println("loginUser.id: " + loginUser.getId());
+
+            int score = 0;
+            if (scoreStr != null && !scoreStr.isEmpty()) {
+                try {
+                    score = Integer.parseInt(scoreStr);
+                } catch (NumberFormatException e) {
+                    score = 5;
+                }
+            }
+            System.out.println("解析后的 score: " + score);
+
+            // ===== 先查询该预约是否存在 =====
+            Booking existingBooking = bookingDAO.findById(bookingId);
+            System.out.println("数据库中查询到的预约: " + (existingBooking != null ? existingBooking.getId() : "null"));
+            if (existingBooking != null) {
+                System.out.println("现有 studentScore: " + existingBooking.getStudentScore());
+                System.out.println("现有 comment: " + existingBooking.getComment());
             }
 
-            int score;
-            try {
-                score = Integer.parseInt(scoreStr);
-            } catch (NumberFormatException e) {
-                result.put("code", 0);
-                result.put("msg", "评分必须是数字");
-                resp.getWriter().write(result.toString());
-                return;
-            }
+            // ===== 执行更新 =====
+            int rows = bookingDAO.updateStudentScoreAndComment(bookingId, score, comment);
+            System.out.println("updateStudentScoreAndComment 返回 rows: " + rows);
 
-            if (score < 1 || score > 5) {
-                result.put("code", 0);
-                result.put("msg", "评分必须在1-5之间");
-                resp.getWriter().write(result.toString());
-                return;
-            }
-
-            int rows = bookingDAO.updateStudentScore(bookingId, score);
             if (rows > 0) {
                 result.put("code", 1);
-                result.put("msg", "评分成功，感谢您的评价！");
+                result.put("msg", "评价成功，感谢您的反馈！");
             } else {
+                // 如果 rows == 0，可能是 bookingId 不存在
                 result.put("code", 0);
-                result.put("msg", "评分失败，请确认预约记录是否存在且已通过练车");
+                result.put("msg", "评价失败，未找到对应的预约记录，请确认预约ID是否正确");
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             result.put("code", 0);
-            result.put("msg", "系统异常：" + e.getMessage());
+            result.put("msg", "系统异常: " + e.getMessage());
         }
 
         resp.getWriter().write(result.toString());
