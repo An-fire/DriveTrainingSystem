@@ -16,4 +16,5 @@ public class Booking {
     private Integer coachScore;
     private Boolean canExam;
     private Date createTime;
+    private String comment;  // 学员对教练的评价内容
 }

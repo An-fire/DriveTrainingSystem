@@ -32,7 +32,8 @@ public class AuthFilter implements Filter {
             "/login",
             "/register",
             "/register-staff",
-            "/logout"
+            "/logout",
+            "/coach/comments"
     ));
 
     @Override

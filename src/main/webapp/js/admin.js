@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 显示管理员名字
     var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (userInfo.name) {
-        document.getElementById('adminName').innerHTML = '👤 管理员 ' + userInfo.name;
+        var initial = userInfo.name.charAt(0).toUpperCase();
+        document.getElementById('adminAvatar').textContent = initial;
+        document.getElementById('adminNameText').textContent = userInfo.name;
     }
     window.loadDashboard();
     window.showTab('dashboard');
@@ -107,7 +109,15 @@ function apiGet(url, callback) {
             var data = res.data;
             if (data && data.code === 1) {
                 console.log('[apiGet] 业务成功，调用回调');
-                callback(data.data || data);
+                // 确保 callback 接收到正确的数据
+                // 如果 data.data 是数组，直接传递数组
+                // 如果 data.data 是 null/undefined，传递空数组
+                // 如果 data.data 是对象，传递该对象
+                var resultData = data.data;
+                if (resultData === null || resultData === undefined) {
+                    resultData = [];
+                }
+                callback(resultData);
             } else {
                 console.warn('[apiGet] 业务失败:', data);
                 alert(data ? (data.msg || '请求失败') : '请求失败');
@@ -460,34 +470,86 @@ window.batchAudit = function(status) {
 // ==================== 练车记录 ====================
 window.loadBookings = function() {
     var container = document.getElementById('bookingList');
-    if (!container) return;
+    console.log('[loadBookings] container:', container);
+    if (!container) {
+        console.error('[loadBookings] 容器 bookingList 不存在！');
+        return;
+    }
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/query?action=bookings', function(data) {
-        if (!data || data.length === 0) {
+        console.log('[loadBookings] 原始数据类型:', typeof data);
+        console.log('[loadBookings] 原始数据内容:', data);
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+            console.log('[loadBookings] 对象的所有键:', Object.keys(data));
+        }
+        var list = [];
+        if (Array.isArray(data)) {
+            list = data;
+        } else if (data && typeof data === 'object') {
+            list = data.data || data.list || data.bookings || data.rows || [];
+            if (!Array.isArray(list)) {
+                list = [];
+            }
+        }
+        console.log('[loadBookings] 最终列表长度:', list.length);
+
+        if (list.length === 0) {
             container.innerHTML = '<div class="empty-tip">暂无练车记录</div>';
             return;
         }
-        var html = '<table class="data-table"><thead><tr>' +
-            '<th>学员</th><th>教练</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th><th>学员评分</th><th>教练评分</th>' +
-            '</tr></thead><tbody>';
-        data.forEach(function(item) {
-            var statusText = { approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
-            html += '<tr>' +
-                '<td>' + (item.studentName || '') + '</td>' +
-                '<td>' + (item.coachName || '') + '</td>' +
-                '<td>' + (item.subjectType || '') + '</td>' +
-                '<td>' + formatDateTime(item.startTime) + '</td>' +
-                '<td>' + formatDateTime(item.endTime) + '</td>' +
-                '<td>' + statusText + '</td>' +
-                '<td>' + (item.studentScore || '-') + '</td>' +
-                '<td>' + (item.coachScore || '-') + '</td>' +
-                '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
+
+        try {
+            var html = '<table class="data-table"><thead><tr>' +
+                '<th>学员</th><th>教练</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th>' +
+                '<th>学员评分</th><th>教练评分</th><th>评价</th>' +
+                '</tr></thead><tbody>';
+
+            list.forEach(function(item, index) {
+                console.log('[loadBookings] 渲染第 ' + (index + 1) + ' 条:', item);
+                var statusText = { approved: '已通过', rejected: '已拒绝', pending: '待审核' }[item.status] || item.status || '-';
+                var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
+                var coachName = item.coachName || (item.coachId ? item.coachId.substring(0, 8) : '');
+                var startTime = item.startTime ? formatDateTime(item.startTime) : '-';
+                var endTime = item.endTime ? formatDateTime(item.endTime) : '-';
+                var studentScore = (item.studentScore && item.studentScore > 0) ? item.studentScore + '⭐' : '-';
+                var coachScore = (item.coachScore && item.coachScore > 0) ? item.coachScore + '⭐' : '-';
+
+                // ★★★ 修改关键：添加 class="reveal" ★★★
+                html += '<tr class="reveal">' +
+                    '<td>' + escapeHtml(studentName) + '</td>' +
+                    '<td>' + escapeHtml(coachName) + '</td>' +
+                    '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+                    '<td>' + startTime + '</td>' +
+                    '<td>' + endTime + '</td>' +
+                    '<td>' + statusText + '</td>' +
+                    '<td>' + studentScore + '</td>' +
+                    '<td>' + coachScore + '</td>' +
+                    '<td>' + escapeHtml(item.comment || '-') + '</td>' +
+                    '</tr>';
+            });
+            html += '</tbody></table>';
+            console.log('[loadBookings] HTML 拼接完成，长度:', html.length);
+            container.innerHTML = html;
+            console.log('[loadBookings] 渲染完成，共 ' + list.length + ' 条记录');
+
+            // 可选：触发 reveal 动画（但如果已在 tr 上加了 class，则不需要额外操作）
+        } catch (e) {
+            console.error('[loadBookings] 渲染出错:', e);
+            container.innerHTML = '<div class="empty-tip">数据渲染出错，请检查控制台</div>';
+        }
     });
+    var tab = document.getElementById('tab-bookings');
+    if (tab) tab.classList.add('active');
 };
+
+// XSS防护函数
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 function formatDateTime(timestamp) {
     if (!timestamp) return '-';

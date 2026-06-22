@@ -33,6 +33,7 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setSubject(rs.getString("subject"));
                 user.setCreateTime(rs.getTimestamp("createTime"));
+                user.setEnrollStatus(rs.getString("enrollStatus"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -86,6 +87,7 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setSubject(rs.getString("subject"));
                 user.setCreateTime(rs.getTimestamp("createTime"));
+                user.setEnrollStatus(rs.getString("enrollStatus"));
                 return user;
             }
         } catch (SQLException e) {
@@ -116,6 +118,7 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setSubject(rs.getString("subject"));
                 user.setCreateTime(rs.getTimestamp("createTime"));
+                user.setEnrollStatus(rs.getString("enrollStatus"));
                 return user;
             }
         } catch (SQLException e) {
@@ -146,6 +149,7 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setSubject(rs.getString("subject"));
                 user.setCreateTime(rs.getTimestamp("createTime"));
+                user.setEnrollStatus(rs.getString("enrollStatus"));
                 return user;
             }
         } catch (SQLException e) {
@@ -176,6 +180,7 @@ public class UserDAO {
                 user.setRole(rs.getString("role"));
                 user.setSubject(rs.getString("subject"));
                 user.setCreateTime(rs.getTimestamp("createTime"));
+                user.setEnrollStatus(rs.getString("enrollStatus"));
                 list.add(user);
             }
         } catch (SQLException e) {

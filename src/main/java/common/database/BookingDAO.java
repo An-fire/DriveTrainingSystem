@@ -21,8 +21,18 @@ public class BookingDAO {
             pstmt.setTimestamp(5, new Timestamp(booking.getStartTime().getTime()));
             pstmt.setTimestamp(6, new Timestamp(booking.getEndTime().getTime()));
             pstmt.setString(7, booking.getStatus());
-            pstmt.setInt(8, booking.getStudentScore() != null ? booking.getStudentScore() : 0);
-            pstmt.setInt(9, booking.getCoachScore() != null ? booking.getCoachScore() : 0);
+
+            if (booking.getStudentScore() != null) {
+                pstmt.setInt(8, booking.getStudentScore());
+            } else {
+                pstmt.setNull(8, Types.INTEGER);
+            }
+            if (booking.getCoachScore() != null) {
+                pstmt.setInt(9, booking.getCoachScore());
+            } else {
+                pstmt.setNull(9, Types.INTEGER);
+            }
+
             pstmt.setBoolean(10, booking.getCanExam() != null ? booking.getCanExam() : false);
             pstmt.setTimestamp(11, new Timestamp(System.currentTimeMillis()));
             return pstmt.executeUpdate();
@@ -58,6 +68,7 @@ public class BookingDAO {
                 booking.setCoachScore(rs.getInt("coachScore"));
                 booking.setCanExam(rs.getBoolean("canExam"));
                 booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
                 list.add(booking);
             }
         } catch (SQLException e) {
@@ -92,6 +103,7 @@ public class BookingDAO {
                 booking.setCoachScore(rs.getInt("coachScore"));
                 booking.setCanExam(rs.getBoolean("canExam"));
                 booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
                 list.add(booking);
             }
         } catch (SQLException e) {
@@ -196,6 +208,7 @@ public class BookingDAO {
                 booking.setCoachScore(rs.getInt("coachScore"));
                 booking.setCanExam(rs.getBoolean("canExam"));
                 booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
                 list.add(booking);
             }
         } catch (SQLException e) {
@@ -230,6 +243,7 @@ public class BookingDAO {
                 booking.setCoachScore(rs.getInt("coachScore"));
                 booking.setCanExam(rs.getBoolean("canExam"));
                 booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
                 list.add(booking);
             }
         } catch (SQLException e) {
@@ -300,18 +314,9 @@ public class BookingDAO {
     }
 
     public List<Booking> findByCoachIdAndDate(String coachId, java.util.Date date) {
-        // 计算当天的开始时间（00:00:00）和结束时间（23:59:59）
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.setTime(date);
-        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
-        cal.set(java.util.Calendar.MINUTE, 0);
-        cal.set(java.util.Calendar.SECOND, 0);
-        cal.set(java.util.Calendar.MILLISECOND, 0);
-        java.util.Date startDate = cal.getTime();
-        cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
-        java.util.Date endDate = cal.getTime();
+        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
 
-        String sql = "SELECT * FROM booking WHERE coachId = ? AND status = 'approved' AND startTime >= ? AND startTime < ? ORDER BY startTime ASC";
+        String sql = "SELECT * FROM booking WHERE coachId = ? AND status = 'approved' AND DATE(startTime) = ? ORDER BY startTime ASC";
         List<Booking> list = new ArrayList<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -320,8 +325,7 @@ public class BookingDAO {
             conn = DBCConnection.getConnection();
             pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, coachId);
-            pstmt.setTimestamp(2, new Timestamp(startDate.getTime()));
-            pstmt.setTimestamp(3, new Timestamp(endDate.getTime()));
+            pstmt.setDate(2, sqlDate);
             rs = pstmt.executeQuery();
             while (rs.next()) {
                 Booking booking = new Booking();
@@ -336,8 +340,10 @@ public class BookingDAO {
                 booking.setCoachScore(rs.getInt("coachScore"));
                 booking.setCanExam(rs.getBoolean("canExam"));
                 booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
                 list.add(booking);
             }
+            System.out.println("[BookingDAO] 查询到 " + list.size() + " 条已批准预约");
         } catch (SQLException e) {
             e.printStackTrace();
         } finally {
@@ -371,8 +377,8 @@ public class BookingDAO {
     // 评分分布统计（1-5分各有多少条）
     public java.util.Map<String, Integer> scoreDistribution(boolean isStudentScore) {
         String sql = isStudentScore
-            ? "SELECT studentScore AS score, COUNT(*) AS cnt FROM booking WHERE studentScore IS NOT NULL AND studentScore > 0 GROUP BY studentScore ORDER BY studentScore"
-            : "SELECT coachScore AS score, COUNT(*) AS cnt FROM booking WHERE coachScore IS NOT NULL AND coachScore > 0 GROUP BY coachScore ORDER BY coachScore";
+                ? "SELECT studentScore AS score, COUNT(*) AS cnt FROM booking WHERE studentScore IS NOT NULL AND studentScore > 0 GROUP BY studentScore ORDER BY studentScore"
+                : "SELECT coachScore AS score, COUNT(*) AS cnt FROM booking WHERE coachScore IS NOT NULL AND coachScore > 0 GROUP BY coachScore ORDER BY coachScore";
         java.util.Map<String, Integer> map = new java.util.LinkedHashMap<>();
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -434,5 +440,59 @@ public class BookingDAO {
             DBCConnection.close(conn, pstmt, rs);
         }
         return map;
+    }
+
+    // 更新学员评分和评论
+    public int updateStudentScoreAndComment(String bookingId, Integer studentScore, String comment) {
+        String sql = "UPDATE booking SET studentScore = ?, comment = ? WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, studentScore != null ? studentScore : 0);
+            pstmt.setString(2, comment);
+            pstmt.setString(3, bookingId);
+            return pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            DBCConnection.close(conn, pstmt);
+        }
+    }
+
+    public Booking findById(String id) {
+        String sql = "SELECT * FROM booking WHERE id = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, id);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Booking booking = new Booking();
+                booking.setId(rs.getString("id"));
+                booking.setStudentId(rs.getString("studentId"));
+                booking.setCoachId(rs.getString("coachId"));
+                booking.setSubjectType(rs.getString("subjectType"));
+                booking.setStartTime(rs.getTimestamp("startTime"));
+                booking.setEndTime(rs.getTimestamp("endTime"));
+                booking.setStatus(rs.getString("status"));
+                booking.setStudentScore(rs.getInt("studentScore"));
+                booking.setCoachScore(rs.getInt("coachScore"));
+                booking.setCanExam(rs.getBoolean("canExam"));
+                booking.setCreateTime(rs.getTimestamp("createTime"));
+                booking.setComment(rs.getString("comment"));
+                return booking;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return null;
     }
 }
