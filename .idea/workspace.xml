@@ -9,27 +9,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="947e7fea-3a30-4fe1-8878-c10632521e04" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/coach/servlet/CoachBookingsServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/admin/servlet/AuditServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/admin/servlet/AuditServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/coach/service/CoachService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/coach/service/CoachService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/coach/servlet/CoachAvailabilityServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/coach/servlet/CoachAvailabilityServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/common/database/BookingDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/database/BookingDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/common/database/UserDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/database/UserDAO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/common/entity/Booking.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/entity/Booking.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/common/filter/AuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/filter/AuthFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/student/servlet/EnrollmentServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/student/servlet/EnrollmentServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/student/servlet/StudentRateServlet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/student/servlet/StudentRateServlet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/admin.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/admin.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/coach.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/coach.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/common.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/common.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/student.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/student.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/admin.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/admin.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/coach-evaluate.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/coach-evaluate.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/coach.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/coach.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/student.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/student.html" afterDir="false" />
-    </list>
+    <list default="true" id="947e7fea-3a30-4fe1-8878-c10632521e04" name="更改" comment="通用工具函数（统一抽取，避免重复定义）" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -188,8 +168,41 @@
       <option name="presentableId" value="Default" />
       <updated>1782035774712</updated>
       <workItem from="1782035775753" duration="1162000" />
-      <workItem from="1782057049767" duration="33384000" />
+      <workItem from="1782057049767" duration="33722000" />
     </task>
+    <task id="LOCAL-00001" summary="修复admin查看练车记录">
+      <option name="closed" value="true" />
+      <created>1782147174579</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1782147174579</updated>
+    </task>
+    <task id="LOCAL-00002" summary="增加coach查看教练评价和预约记录">
+      <option name="closed" value="true" />
+      <created>1782147277532</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1782147277532</updated>
+    </task>
+    <task id="LOCAL-00003" summary="修复student查看教练空闲状态和教练历史评价">
+      <option name="closed" value="true" />
+      <created>1782147355312</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1782147355312</updated>
+    </task>
+    <task id="LOCAL-00004" summary="通用工具函数（统一抽取，避免重复定义）">
+      <option name="closed" value="true" />
+      <created>1782147383945</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1782147383945</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -205,5 +218,12 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="修复admin查看练车记录" />
+    <MESSAGE value="增加coach查看教练评价和预约记录" />
+    <MESSAGE value="修复student查看教练空闲状态和教练历史评价" />
+    <MESSAGE value="通用工具函数（统一抽取，避免重复定义）" />
+    <option name="LAST_COMMIT_MESSAGE" value="通用工具函数（统一抽取，避免重复定义）" />
   </component>
 </project>
