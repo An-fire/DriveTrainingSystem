@@ -447,11 +447,22 @@
             background: rgba(59, 130, 246, 0.05);
         }
 
+        /* 通知面板 - 完全顶层 + 完全不透明 */
         #notifPanel {
-            background: #1a1f3a;
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 14px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            position: fixed !important;
+            top: 76px !important;
+            right: 20px !important;
+            width: 380px !important;
+            max-height: 420px !important;
+            overflow-y: auto !important;
+            background: #0a0f1f !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9) !important;
+            z-index: 99999 !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            pointer-events: auto !important;
         }
         #notifPanel .notif-item {
             padding: 14px 18px;
@@ -463,13 +474,16 @@
             background: rgba(255,255,255,0.06);
         }
         #notifPanel .notif-item .content {
-            color: #e2e8f0;
+            color: #f1f5f9 !important;
             font-size: 14px;
         }
         #notifPanel .notif-item .time {
-            color: #94a3b8;
+            color: #94a3b8 !important;
             font-size: 11px;
             margin-top: 4px;
+        }
+        #notifPanel button {
+            color: #60a5fa !important;
         }
 
         .availability-container {
@@ -578,7 +592,7 @@
                 </div>
                 <div id="notifList" style="padding:4px 0;"></div>
                 <div style="padding:10px 18px; border-top:1px solid rgba(255,255,255,0.06); text-align:center; background:rgba(255,255,255,0.02); border-radius:0 0 14px 14px;">
-                    <button onclick="markAllRead()" style="background:transparent; border:none; color:#3b82f6; font-size:13px; cursor:pointer; padding:6px 12px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">全部标记已读</button>
+                    <button onclick="markAllRead(event)" style="background:transparent; border:none; color:#3b82f6; font-size:13px; cursor:pointer; padding:6px 12px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">全部标记已读</button>
                 </div>
             </div>
 
@@ -613,7 +627,7 @@
         </div>
         <div class="form-item">
             <label class="form-label">报考驾照类型</label>
-            <select id="enrollSubject" class="form-select">
+            <select id="enrollSubject" class="form-select" onchange="filterCoachList(this.value)">
                 <option value="C1" selected>C1 手动挡</option>
                 <option value="C2">C2 自动挡</option>
                 <option value="C3">C3 低速载货汽车</option>

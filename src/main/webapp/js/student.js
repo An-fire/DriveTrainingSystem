@@ -94,6 +94,8 @@ function safeLogout() {
 // 4. 加载教练列表
 // ============================================================
 
+var allCoaches = [];
+
 async function loadCoach() {
     var res = await request('/student/enrollment?type=coach');
     var enrollCoach = document.getElementById('enrollCoach');
@@ -109,12 +111,31 @@ async function loadCoach() {
         return;
     }
 
-    res.data.forEach(function(item) {
-        var text = item.name + ' | ' + item.subject;
-        var opt1 = new Option(text, item.id);
-        var opt2 = new Option(text, item.id);
-        if (enrollCoach) enrollCoach.appendChild(opt1);
-        if (bookCoach) bookCoach.appendChild(opt2);
+    // 存储全部教练到全局变量
+    allCoaches = res.data;
+
+    // 根据当前选中的科目过滤并渲染
+    var currentSubject = document.getElementById('enrollSubject') ? document.getElementById('enrollSubject').value : 'C1';
+    filterCoachList(currentSubject);
+}
+
+// 新增过滤函数，根据科目过滤教练并渲染到下拉框
+function filterCoachList(subject) {
+    var enrollCoach = document.getElementById('enrollCoach');
+    if (!enrollCoach) return;
+
+    var filtered = allCoaches.filter(function(coach) {
+        return coach.subject === subject;
+    });
+
+    enrollCoach.innerHTML = '';
+    if (filtered.length === 0) {
+        enrollCoach.innerHTML = '<option value="">该科目暂无教练</option>';
+        return;
+    }
+    filtered.forEach(function(item) {
+        var opt = new Option(item.name + ' | ' + item.subject, item.id);
+        enrollCoach.appendChild(opt);
     });
 }
 
@@ -204,6 +225,49 @@ async function submitBook() {
 
     var sTime = startTime.replace('T', ' ');
     var eTime = endTime.replace('T', ' ');
+
+    // ===== 新增：验证所选时间是否为教练当前有效的空闲时间 =====
+    try {
+        // 获取教练最新的空闲时段
+        console.log('[submitBook] 验证教练空闲时间有效性，coachId:', coachId);
+        var dateStr = startTime.split('T')[0]; // 获取日期部分
+        var availRes = await request('/student/availability?coachId=' + coachId + '&date=' + dateStr);
+        var availData = availRes.data || {};
+        var freeSlots = availData.freeSlots || [];
+        
+        console.log('[submitBook] 获取到的空闲时段:', freeSlots);
+        
+        // 验证所选时间是否在空闲时段内
+        var isSlotValid = false;
+        var selectedStart = new Date(startTime).getTime();
+        var selectedEnd = new Date(endTime).getTime();
+        
+        for (var i = 0; i < freeSlots.length; i++) {
+            var slot = freeSlots[i];
+            var slotStart = slot.start ? new Date(slot.start).getTime() : 0;
+            var slotEnd = slot.end ? new Date(slot.end).getTime() : 0;
+            
+            // 检查所选时间段是否完全包含在某个空闲时段内
+            if (selectedStart >= slotStart && selectedEnd <= slotEnd) {
+                isSlotValid = true;
+                break;
+            }
+        }
+        
+        if (!isSlotValid) {
+            showMsg('所选时间不是教练当前有效的空闲时间，请重新选择', true);
+            // 刷新教练空闲时段显示
+            loadCoachAvailability();
+            return;
+        }
+        
+        console.log('[submitBook] 时间验证通过，所选时段为有效空闲时间');
+    } catch (e) {
+        console.error('[submitBook] 验证空闲时间出错：', e);
+        showMsg('验证空闲时间失败，请稍后重试', true);
+        return;
+    }
+    // ===== 时间有效性验证结束 =====
 
     try {
         var res = await request('/student/booking', 'POST', {
@@ -560,6 +624,33 @@ document.addEventListener('click', function(e) {
         }
     }
 });
+
+// 全部标记已读（增加 event 参数和错误捕获）
+window.markAllRead = async function(event) {
+    if (event) {
+        event.stopPropagation(); // 阻止点击冒泡
+        event.preventDefault();  // 阻止默认行为（如果有）
+    }
+    try {
+        var res = await fetch(window.BASE_URL + '/student/notification?action=unread');
+        var data = await res.json();
+        if (data.code === 1 && data.data && data.data.length > 0) {
+            for (var item of data.data) {
+                await fetch(window.BASE_URL + '/student/notification?id=' + item.id, {
+                    method: 'PUT'
+                });
+            }
+            // 重新加载通知列表和未读数量
+            await loadNotifications();
+            alert('✅ 所有通知已标记为已读');
+        } else {
+            alert('暂无未读通知');
+        }
+    } catch (e) {
+        console.error('全部标记已读失败:', e);
+        alert('操作失败，请重试');
+    }
+};
 
 
 // ============================================================

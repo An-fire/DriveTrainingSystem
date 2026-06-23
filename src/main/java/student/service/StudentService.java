@@ -69,6 +69,15 @@ public class StudentService {
             throw new StudentException("你已有待审核的报考申请，不可重复提交");
         }
 
+        // ===== 新增：校验教练是否匹配所选科目 =====
+        Staff coach = staffDAO.findById(coachId);
+        if (coach == null) {
+            throw new StudentException("教练不存在，请重新选择");
+        }
+        if (!subjectType.equals(coach.getSubject())) {
+            throw new StudentException("所选教练不教授 " + subjectType + " 科目，请选择匹配的教练");
+        }
+
         Enrollment enroll = new Enrollment();
         enroll.setId(UUID.randomUUID().toString());
         enroll.setStudentId(studentId);
@@ -84,6 +93,7 @@ public class StudentService {
     public int addBooking(String studentId, String coachId, String subjectType,
                           String startTime, String endTime) {
         StudentValidator.checkSubject(subjectType);
+
         Timestamp startTs;
         Timestamp endTs;
         try {
@@ -93,6 +103,9 @@ public class StudentService {
             throw new StudentException("时间格式错误，请使用 yyyy-MM-dd HH:mm");
         }
         StudentValidator.checkTime(startTs, endTs);
+        if (startTs.before(new Timestamp(System.currentTimeMillis()))) {
+            throw new StudentException("预约时间不能早于当前时间，请选择未来的空闲时段");
+        }
         // 跨天校验
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String startDate = dateFormat.format(startTs);

@@ -22,27 +22,40 @@ public class CoachValidator {
         if (coachId == null || coachId.trim().isEmpty()) {
             return false;
         }
-        try {
-            UUID.fromString(coachId.trim());
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
+        String id = coachId.trim();
+        // 1) 标准UUID格式（带连字符）
+        if (id.length() == 36 && id.indexOf('-') != -1) {
+            try {
+                UUID.fromString(id);
+                return true;
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
         }
+        // 2) 无连字符格式（32位十六进制）
+        if (id.length() == 32 && id.matches("[0-9a-fA-F]+")) {
+            return true;
+        }
+        return false;
     }
 
-    /**
-     * 校验预约ID是否有效（UUID格式）
-     */
     public static boolean isValidBookingId(String bookingId) {
         if (bookingId == null || bookingId.trim().isEmpty()) {
             return false;
         }
-        try {
-            UUID.fromString(bookingId.trim());
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
+        String id = bookingId.trim();
+        if (id.length() == 36 && id.indexOf('-') != -1) {
+            try {
+                UUID.fromString(id);
+                return true;
+            } catch (IllegalArgumentException e) {
+                return false;
+            }
         }
+        if (id.length() == 32 && id.matches("[0-9a-fA-F]+")) {
+            return true;
+        }
+        return false;
     }
 
     /**
