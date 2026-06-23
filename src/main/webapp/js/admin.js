@@ -111,32 +111,20 @@ function animateValue(element, start, end, duration) {
 }
 
 function apiGet(url, callback) {
-    console.log('[apiGet] 开始请求:', BASE_URL + url);
     axios.get(BASE_URL + url, { responseType: 'json' })
         .then(function(res) {
-            console.log('[apiGet] 响应状态:', res.status);
-            console.log('[apiGet] 响应数据:', res.data);
-            console.log('[apiGet] code:', res.data ? res.data.code : 'undefined');
-            console.log('[apiGet] data字段:', res.data ? res.data.data : 'undefined');
             var data = res.data;
             if (data && data.code === 1) {
-                console.log('[apiGet] 业务成功，调用回调');
-                // 确保 callback 接收到正确的数据
-                // 如果 data.data 是数组，直接传递数组
-                // 如果 data.data 是 null/undefined，传递空数组
-                // 如果 data.data 是对象，传递该对象
                 var resultData = data.data;
                 if (resultData === null || resultData === undefined) {
                     resultData = [];
                 }
                 callback(resultData);
             } else {
-                console.warn('[apiGet] 业务失败:', data);
                 alert(data ? (data.msg || '请求失败') : '请求失败');
             }
         })
         .catch(function(err) {
-            console.error('[apiGet] 请求失败:', err);
             alert('请求失败，请检查网络');
         });
 }

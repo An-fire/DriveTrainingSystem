@@ -343,8 +343,8 @@ public class BookingDAO {
                 booking.setComment(rs.getString("comment"));
                 list.add(booking);
             }
-            System.out.println("[BookingDAO] 查询到 " + list.size() + " 条已批准预约");
-        } catch (SQLException e) {
+                // System.out.println("[BookingDAO] 查询到 " + list.size() + " 条已批准预约");
+            } catch (SQLException e) {
             e.printStackTrace();
         } finally {
             DBCConnection.close(conn, pstmt, rs);
