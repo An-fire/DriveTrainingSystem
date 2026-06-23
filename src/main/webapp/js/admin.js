@@ -2,19 +2,31 @@
 
 var BASE_URL = window.BASE_URL || '';
 
+var pageDataCache = {
+    staff: null,
+    enrollments: null,
+    drivingApplications: null,
+    bookings: null
+};
+
+var isLoading = {
+    staff: false,
+    enrollments: false,
+    drivingApplications: false,
+    bookings: false
+};
+
 // 页面加载完成后初始化动画
 document.addEventListener('DOMContentLoaded', function() {
     initParticleCanvas();
     initRevealAnimations();
-    // 显示管理员名字
     var userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
     if (userInfo.name) {
         var initial = userInfo.name.charAt(0).toUpperCase();
         document.getElementById('adminAvatar').textContent = initial;
         document.getElementById('adminNameText').textContent = userInfo.name;
     }
-    window.loadDashboard();
-    window.showTab('dashboard');
+    window.showTab('enrollments');
 });
 
 // 粒子背景动画
@@ -58,7 +70,7 @@ function initParticleCanvas() {
 
 // 滚动 reveal 动画
 function initRevealAnimations() {
-    var elements = document.querySelectorAll('.stat-card, .chart-box, .section');
+    var elements = document.querySelectorAll('.section');
     var observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry, index) {
             if (entry.isIntersecting) {
@@ -159,14 +171,12 @@ window.showTab = function(tabName) {
     if (targetTab) targetTab.classList.add('active');
 
     var titleMap = {
-        'dashboard': '数据概览',
         'enrollments': '报名审核',
         'drivingApplications': '练车申请',
         'bookings': '练车记录',
-        'staff': '员工管理',
-        'students': '学员管理'
+        'staff': '员工管理'
     };
-    document.getElementById('pageTitle').innerText = titleMap[tabName] || '数据概览';
+    document.getElementById('pageTitle').innerText = titleMap[tabName] || '报名审核';
 
     document.querySelectorAll('.sidebar-nav a').forEach(function(el) {
         if (el.getAttribute('onclick') && el.getAttribute('onclick').includes("'" + tabName + "'")) {
@@ -175,67 +185,71 @@ window.showTab = function(tabName) {
     });
 
     setTimeout(function() {
-        var elements = targetTab.querySelectorAll('.stat-card, .chart-box, .section');
+        var elements = targetTab.querySelectorAll('.section');
         elements.forEach(function(el, index) {
             el.classList.remove('reveal');
             setTimeout(function() {
                 el.classList.add('reveal');
-            }, index * 80);
+            }, index * 30);
         });
-        // 不再处理 tbody tr，因为数据加载函数已经处理了
-    }, 100);
+    }, 50);
 
-    // 加载对应数据
-    if (tabName === 'staff') window.loadStaffList();
-    if (tabName === 'students') window.loadStudents();
+    if (tabName === 'staff') window.loadStaffList(true);
     if (tabName === 'enrollments') {
-        window.loadPendingEnrollments();
-        window.loadAllEnrollments();
+        window.loadPendingEnrollments(true);
+        window.loadAllEnrollments(true);
     }
-    if (tabName === 'drivingApplications') window.loadDrivingApplications();
-    if (tabName === 'bookings') window.loadBookings();
-    if (tabName === 'dashboard') window.loadDashboard();
+    if (tabName === 'drivingApplications') window.loadDrivingApplications(true);
+    if (tabName === 'bookings') window.loadBookings(true);
 };
 
 // ==================== 员工管理 ====================
-window.loadStaffList = function() {
-    console.log('[loadStaffList] 开始执行');
+window.loadStaffList = function(hasCache) {
     var container = document.getElementById('staffList');
-    console.log('[loadStaffList] container:', container);
+    if (!container) return;
+
+    if (hasCache && pageDataCache.staff && !isLoading.staff) {
+        renderStaffList(pageDataCache.staff);
+        return;
+    }
+
+    if (isLoading.staff) return;
+    isLoading.staff = true;
+
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/staff?action=list', function(list) {
-        console.log('[loadStaffList] 收到数据:', list);
-        console.log('[loadStaffList] 数据类型:', typeof list);
-        console.log('[loadStaffList] 数据长度:', list ? list.length : 'null');
-        if (!list || list.length === 0) {
-            console.log('[loadStaffList] 数据为空');
-            container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
-            return;
-        }
-        console.log('[loadStaffList] 开始渲染', list.length, '条数据');
-        var html = '<table class="data-table"><thead><tr>' +
-            '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
-            '</tr></thead><tbody>';
-        list.forEach(function(item, index) {
-            console.log('[loadStaffList] 渲染item:', item);
-            var roleText = item.role === 'admin' ? '管理员' : '教练';
-            var subjectText = item.subject || '-';
-            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
-                '<td>' + (item.name || '') + '</td>' +
-                '<td>' + (item.phone || '') + '</td>' +
-                '<td>' + roleText + '</td>' +
-                '<td>' + subjectText + '</td>' +
-                '<td>' +
-                '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
-                '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
-                '</td>' +
-                '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        console.log('[loadStaffList] 渲染完成');
+        isLoading.staff = false;
+        pageDataCache.staff = list;
+        renderStaffList(list);
     });
+};
+
+function renderStaffList(list) {
+    var container = document.getElementById('staffList');
+    if (!list || list.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无员工数据</div>';
+        return;
+    }
+    var html = '<table class="data-table"><thead><tr>' +
+        '<th>姓名</th><th>手机号</th><th>角色</th><th>科目</th><th>操作</th>' +
+        '</tr></thead><tbody>';
+    list.forEach(function(item, index) {
+        var roleText = item.role === 'admin' ? '管理员' : '教练';
+        var subjectText = item.subject || '-';
+        html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
+            '<td>' + (item.name || '') + '</td>' +
+            '<td>' + (item.phone || '') + '</td>' +
+            '<td>' + roleText + '</td>' +
+            '<td>' + subjectText + '</td>' +
+            '<td>' +
+            '<button class="btn btn-sm" onclick="window.editStaff(\'' + item.id + '\')" style="margin-right:5px;background:rgba(255,255,255,0.1)">编辑</button>' +
+            '<button class="btn btn-sm btn-danger" onclick="window.deleteStaff(\'' + item.id + '\')">删除</button>' +
+            '</td>' +
+            '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
 };
 
 window.openAddStaffModal = function() {
@@ -298,6 +312,7 @@ window.saveStaff = function() {
 
     var url = id ? '/admin/staff?action=update&id=' + id : '/admin/staff?action=add';
     apiPost(url, params.toString(), function() {
+        pageDataCache.staff = null;
         window.closeModal();
         window.loadStaffList();
     });
@@ -311,8 +326,9 @@ window.editStaff = function(id) {
         document.getElementById('modalStaffRole').value = data.role || 'coach';
         document.getElementById('modalStaffSubject').value = data.subject || 'C1';
         document.getElementById('modalStaffPassword').value = '';
+        document.getElementById('modalStaffUsb').value = data.usbToken || '';
         document.getElementById('staffModalTitle').innerText = '编辑员工';
-        document.getElementById('modalPasswordGroup').style.display = 'none';
+        document.getElementById('modalPasswordGroup').style.display = 'block';
         window.toggleSubjectField();
         document.getElementById('staffModal').classList.add('show');
     });
@@ -321,119 +337,97 @@ window.editStaff = function(id) {
 window.deleteStaff = function(id) {
     if (!confirm('确定删除该员工吗？')) return;
     apiPost('/admin/staff?action=delete&id=' + id, '', function() {
+        pageDataCache.staff = null;
         window.loadStaffList();
     });
 };
 
-// ==================== 学员管理 ====================
-window.loadStudents = function() {
-    console.log('[loadStudents] 开始执行');
-    var container = document.getElementById('studentList');
-    console.log('[loadStudents] container:', container);
-    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+// ==================== 报名审核 ====================
+window.loadPendingEnrollments = function(hasCache) {
+    var container = document.getElementById('pendingList');
+    if (!container) return;
 
-    apiGet('/admin/query?action=students', function(data) {
-        console.log('[loadStudents] 收到数据:', data);
-        console.log('[loadStudents] 数据类型:', typeof data);
-        console.log('[loadStudents] 数据长度:', data ? data.length : 'null');
-        if (!data || data.length === 0) {
-            console.log('[loadStudents] 数据为空');
-            container.innerHTML = '<div class="empty-tip">暂无学员数据</div>';
-            return;
-        }
-        console.log('[loadStudents] 开始渲染', data.length, '条数据');
-        var statusMap = { 'pending': '待审核', 'approved': '已通过', 'rejected': '已拒绝' };
-        var html = '<table class="data-table"><thead><tr>' +
-            '<th>姓名</th><th>手机号</th><th>身份证号</th><th>报名状态</th>' +
-            '</tr></thead><tbody>';
-        data.forEach(function(item, index) {
-            console.log('[loadStudents] 渲染item:', item);
-            var statusText = statusMap[item.enrollStatus] || '未报名';
-            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
-                '<td>' + (item.name || '') + '</td>' +
-                '<td>' + (item.phone || '') + '</td>' +
-                '<td>' + (item.idCard || '') + '</td>' +
-                '<td>' + statusText + '</td>' +
-                '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-        console.log('[loadStudents] 渲染完成');
+    if (hasCache && pageDataCache.enrollments && !isLoading.enrollments) {
+        renderPendingEnrollments(pageDataCache.enrollments);
+        return;
+    }
+
+    if (isLoading.enrollments) return;
+    isLoading.enrollments = true;
+
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+    apiGet('/admin/query?action=enrollments', function(data) {
+        isLoading.enrollments = false;
+        pageDataCache.enrollments = data;
+        renderPendingEnrollments(data);
     });
 };
 
-// ==================== 报名审核 ====================
-window.loadPendingEnrollments = function() {
+function renderPendingEnrollments(data) {
     var container = document.getElementById('pendingList');
-    if (!container) return;
-    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
-    apiGet('/admin/query?action=enrollments', function(data) {
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
-            return;
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
+        return;
+    }
+    var pending = data.filter(function(item) { return item.status === 'pending'; });
+
+    if (pending.length > 0) {
+        var badge = document.getElementById('pendingCountBadge');
+        if (badge) {
+            badge.textContent = pending.length + ' 人待审';
+            badge.style.display = 'inline';
         }
-        var pending = data.filter(function(item) { return item.status === 'pending'; });
+    } else {
+        var badge = document.getElementById('pendingCountBadge');
+        if (badge) badge.style.display = 'none';
+    }
 
-        // 更新待审核徽章
-        if (pending.length > 0) {
-            var badge = document.getElementById('pendingCountBadge');
-            if (badge) {
-                badge.textContent = pending.length + ' 人待审';
-                badge.style.display = 'inline';
-            }
-        } else {
-            var badge = document.getElementById('pendingCountBadge');
-            if (badge) badge.style.display = 'none';
-        }
+    if (pending.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
+        return;
+    }
 
-        if (pending.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无待审核报名</div>';
-            return;
-        }
+    var html = '<div class="card-grid">';
+    pending.forEach(function(item, index) {
+        var studentName = item.studentName || '未知学员';
+        var phone = item.studentPhone || '-';
+        var idCard = item.studentIdCard || '-';
+        var subjectType = item.subjectType || '-';
+        var coachName = item.coachName || '未知教练';
+        var applyTime = item.applyTimeStr || '-';
+        var initial = studentName.charAt(0).toUpperCase();
 
-        var html = '<div class="card-grid">';
-        pending.forEach(function(item, index) {
-            var studentName = item.studentName || '未知学员';
-            var phone = item.studentPhone || '-';
-            var idCard = item.studentIdCard || '-';
-            var subjectType = item.subjectType || '-';
-            var coachName = item.coachName || '未知教练';
-            var applyTime = item.applyTimeStr || '-';
-            // 取名字的首字母作为头像
-            var initial = studentName.charAt(0).toUpperCase();
-
-            html += '<div class="enrollment-card reveal" style="animation-delay: ' + (index * 80) + 'ms">' +
-                '<span class="status-pending">待审核</span>' +
-                '<div class="card-header">' +
-                '<div class="avatar">' + initial + '</div>' +
-                '<div class="student-info">' +
-                '<div class="student-name">' + escapeHtml(studentName) + '</div>' +
-                '<div class="student-phone">📞 ' + escapeHtml(phone) + '</div>' +
-                '</div></div>' +
-                '<div class="info-row">' +
-                '<span class="info-label">身份证号</span>' +
-                '<span class="info-value">' + escapeHtml(idCard) + '</span>' +
-                '</div>' +
-                '<div class="info-row">' +
-                '<span class="info-label">报考科目</span>' +
-                '<span class="info-value subject">' + escapeHtml(subjectType) + '</span>' +
-                '</div>' +
-                '<div class="info-row">' +
-                '<span class="info-label">意向教练</span>' +
-                '<span class="info-value">' + escapeHtml(coachName) + '</span>' +
-                '</div>' +
-                '<div class="info-row">' +
-                '<span class="info-label">申请时间</span>' +
-                '<span class="info-value">' + escapeHtml(applyTime) + '</span>' +
-                '</div>' +
-                '<div class="card-actions">' +
-                '<button class="btn btn-approve" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')">✅ 通过</button>' +
-                '<button class="btn btn-reject" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">❌ 拒绝</button>' +
-                '</div></div>';
-        });
-        html += '</div>';
-        container.innerHTML = html;
+        html += '<div class="enrollment-card reveal" style="animation-delay: ' + (index * 80) + 'ms">' +
+            '<span class="status-pending">待审核</span>' +
+            '<div class="card-header">' +
+            '<div class="avatar">' + initial + '</div>' +
+            '<div class="student-info">' +
+            '<div class="student-name">' + escapeHtml(studentName) + '</div>' +
+            '<div class="student-phone">📞 ' + escapeHtml(phone) + '</div>' +
+            '</div></div>' +
+            '<div class="info-row">' +
+            '<span class="info-label">身份证号</span>' +
+            '<span class="info-value">' + escapeHtml(idCard) + '</span>' +
+            '</div>' +
+            '<div class="info-row">' +
+            '<span class="info-label">报考科目</span>' +
+            '<span class="info-value subject">' + escapeHtml(subjectType) + '</span>' +
+            '</div>' +
+            '<div class="info-row">' +
+            '<span class="info-label">意向教练</span>' +
+            '<span class="info-value">' + escapeHtml(coachName) + '</span>' +
+            '</div>' +
+            '<div class="info-row">' +
+            '<span class="info-label">申请时间</span>' +
+            '<span class="info-value">' + escapeHtml(applyTime) + '</span>' +
+            '</div>' +
+            '<div class="card-actions">' +
+            '<button class="btn btn-approve" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')">✅ 通过</button>' +
+            '<button class="btn btn-reject" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">❌ 拒绝</button>' +
+            '</div></div>';
     });
+    html += '</div>';
+    container.innerHTML = html;
 };
 
 window.toggleAllEnrollment = function(master) {
@@ -442,30 +436,44 @@ window.toggleAllEnrollment = function(master) {
     });
 };
 
-window.loadAllEnrollments = function() {
+window.loadAllEnrollments = function(hasCache) {
     var container = document.getElementById('allEnrollmentList');
     if (!container) return;
+
+    if (hasCache && pageDataCache.enrollments && !isLoading.enrollments) {
+        renderAllEnrollments(pageDataCache.enrollments);
+        return;
+    }
+
+    if (isLoading.enrollments) return;
+
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
     apiGet('/admin/query?action=enrollments', function(data) {
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无报名记录</div>';
-            return;
-        }
-        var html = '<table class="data-table"><thead><tr>' +
-            '<th>学员</th><th>教练</th><th>科目</th><th>状态</th>' +
-            '</tr></thead><tbody>';
-        data.forEach(function(item, index) {
-            var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
-            html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
-                '<td>' + (item.studentName || '') + '</td>' +
-                '<td>' + (item.coachName || '') + '</td>' +
-                '<td>' + (item.subjectType || '') + '</td>' +
-                '<td>' + statusText + '</td>' +
-                '</tr>';
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
+        pageDataCache.enrollments = data;
+        renderAllEnrollments(data);
     });
+};
+
+function renderAllEnrollments(data) {
+    var container = document.getElementById('allEnrollmentList');
+    if (!data || data.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无报名记录</div>';
+        return;
+    }
+    var html = '<table class="data-table"><thead><tr>' +
+        '<th>学员</th><th>教练</th><th>科目</th><th>状态</th>' +
+        '</tr></thead><tbody>';
+    data.forEach(function(item, index) {
+        var statusText = { pending: '待审核', approved: '已通过', rejected: '已拒绝' }[item.status] || item.status;
+        html += '<tr class="reveal" style="transition-delay: ' + (index * 60) + 'ms">' +
+            '<td>' + (item.studentName || '') + '</td>' +
+            '<td>' + (item.coachName || '') + '</td>' +
+            '<td>' + (item.subjectType || '') + '</td>' +
+            '<td>' + statusText + '</td>' +
+            '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
 };
 
 window.auditEnrollment = function(id, status) {
@@ -476,6 +484,7 @@ window.auditEnrollment = function(id, status) {
     params.append('status', status);
     if (remark) params.append('remark', remark);
     apiPost('/admin/audit', params.toString(), function() {
+        pageDataCache.enrollments = null;
         loadPendingEnrollments();
         loadAllEnrollments();
     });
@@ -496,27 +505,32 @@ window.batchAudit = function(status) {
     if (remark) params.append('remark', remark);
     apiPost('/admin/audit', params.toString(), function(data) {
         alert(data.msg || '操作完成');
+        pageDataCache.enrollments = null;
         loadPendingEnrollments();
         loadAllEnrollments();
     });
 };
 
 // ==================== 练车申请记录 ====================
-window.loadDrivingApplications = function() {
+window.loadDrivingApplications = function(hasCache) {
     var container = document.getElementById('drivingApplicationList');
-    if (!container) {
-        console.error('[loadDrivingApplications] 容器 drivingApplicationList 不存在！');
-        return;
-    }
-    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+    if (!container) return;
 
-    // 获取筛选条件
     var studentName = document.getElementById('appStudentName') ? document.getElementById('appStudentName').value : '';
     var status = document.getElementById('appStatus') ? document.getElementById('appStatus').value : '';
     var startDate = document.getElementById('appStartDate') ? document.getElementById('appStartDate').value : '';
     var endDate = document.getElementById('appEndDate') ? document.getElementById('appEndDate').value : '';
 
-    // 构建查询参数
+    if (hasCache && !studentName && !status && !startDate && !endDate && pageDataCache.drivingApplications && !isLoading.drivingApplications) {
+        renderDrivingApplications(pageDataCache.drivingApplications);
+        return;
+    }
+
+    if (isLoading.drivingApplications) return;
+    isLoading.drivingApplications = true;
+
+    container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
+
     var params = [];
     if (studentName) params.push('studentName=' + encodeURIComponent(studentName));
     if (status) params.push('status=' + encodeURIComponent(status));
@@ -525,65 +539,70 @@ window.loadDrivingApplications = function() {
     var queryString = params.length > 0 ? '&' + params.join('&') : '';
 
     apiGet('/admin/query?action=drivingApplications' + queryString, function(data) {
-        console.log('[loadDrivingApplications] 原始数据:', data);
-        var list = [];
-        if (Array.isArray(data)) {
-            list = data;
-        } else if (data && typeof data === 'object') {
-            list = data.data || [];
-            // 更新待审核徽章
-            if (data.pendingCount !== undefined && data.pendingCount > 0) {
-                var badge = document.getElementById('pendingApplicationBadge');
-                if (badge) {
-                    badge.textContent = data.pendingCount + ' 待审核';
-                    badge.style.display = 'inline';
-                }
+        isLoading.drivingApplications = false;
+        if (!studentName && !status && !startDate && !endDate) {
+            pageDataCache.drivingApplications = data;
+        }
+        renderDrivingApplications(data);
+    });
+};
+
+function renderDrivingApplications(data) {
+    var container = document.getElementById('drivingApplicationList');
+    if (!container) return;
+
+    var list = [];
+    if (Array.isArray(data)) {
+        list = data;
+    } else if (data && typeof data === 'object') {
+        list = data.data || [];
+        if (data.pendingCount !== undefined && data.pendingCount > 0) {
+            var badge = document.getElementById('pendingApplicationBadge');
+            if (badge) {
+                badge.textContent = data.pendingCount + ' 待审核';
+                badge.style.display = 'inline';
             }
         }
-        console.log('[loadDrivingApplications] 最终列表长度:', list.length);
+    }
 
-        if (list.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无练车申请记录</div>';
-            return;
-        }
+    if (list.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无练车申请记录</div>';
+        return;
+    }
 
-        try {
-            var html = '<table class="data-table"><thead><tr>' +
-                '<th>申请ID</th><th>学员姓名</th><th>教练</th><th>科目</th>' +
-                '<th>申请日期</th><th>练车时段</th><th>状态</th>' +
-                '<th>可考试</th><th>备注</th>' +
-                '</tr></thead><tbody>';
+    try {
+        var html = '<table class="data-table"><thead><tr>' +
+            '<th>申请ID</th><th>学员姓名</th><th>教练</th><th>科目</th>' +
+            '<th>申请日期</th><th>练车时段</th><th>状态</th>' +
+            '<th>可考试</th>' +
+            '</tr></thead><tbody>';
 
-            list.forEach(function(item, index) {
-                var statusText = { pending: '待审核', approved: '已批准', rejected: '已拒绝' }[item.status] || item.status || '-';
-                var statusClass = { pending: 'status-pending', approved: 'status-approved', rejected: 'status-rejected' }[item.status] || '';
-                var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
-                var coachName = item.coachName || (item.coachId ? item.coachId.substring(0, 8) : '');
-                var createTime = item.createTimeStr || (item.createTime ? formatDateTime(item.createTime) : '-');
-                var timeSlot = (item.startTimeStr || '-') + ' 至 ' + (item.endTimeStr || '-');
-                var canExam = item.canExam ? '是' : '否';
-                var comment = item.comment || '-';
+        list.forEach(function(item, index) {
+            var statusText = { pending: '待审核', approved: '已批准', rejected: '已拒绝' }[item.status] || item.status || '-';
+            var statusClass = { pending: 'status-pending', approved: 'status-approved', rejected: 'status-rejected' }[item.status] || '';
+            var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
+            var coachName = item.coachName || (item.coachId ? item.coachId.substring(0, 8) : '');
+            var createTime = item.createTimeStr || (item.createTime ? formatDateTime(item.createTime) : '-');
+            var timeSlot = (item.startTimeStr || '-') + ' 至 ' + (item.endTimeStr || '-');
+            var canExam = item.canExam ? '是' : '否';
 
-                html += '<tr class="reveal" style="transition-delay: ' + (index * 40) + 'ms">' +
-                    '<td>' + escapeHtml(item.id ? item.id.substring(0, 8) : '-') + '</td>' +
-                    '<td>' + escapeHtml(studentName) + '</td>' +
-                    '<td>' + escapeHtml(coachName) + '</td>' +
-                    '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
-                    '<td>' + createTime + '</td>' +
-                    '<td>' + timeSlot + '</td>' +
-                    '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
-                    '<td>' + canExam + '</td>' +
-                    '<td>' + escapeHtml(comment) + '</td>' +
-                    '</tr>';
-            });
-            html += '</tbody></table>';
-            container.innerHTML = html;
-            console.log('[loadDrivingApplications] 渲染完成，共 ' + list.length + ' 条记录');
-        } catch (e) {
-            console.error('[loadDrivingApplications] 渲染出错:', e);
-            container.innerHTML = '<div class="empty-tip">数据渲染出错，请检查控制台</div>';
-        }
-    });
+            html += '<tr class="reveal" style="transition-delay: ' + (index * 40) + 'ms">' +
+                '<td>' + escapeHtml(item.id || '-') + '</td>' +
+                '<td>' + escapeHtml(studentName) + '</td>' +
+                '<td>' + escapeHtml(coachName) + '</td>' +
+                '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+                '<td>' + createTime + '</td>' +
+                '<td>' + timeSlot + '</td>' +
+                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                '<td>' + canExam + '</td>' +
+                '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (e) {
+        console.error('[renderDrivingApplications] 渲染出错:', e);
+        container.innerHTML = '<div class="empty-tip">数据渲染出错，请检查控制台</div>';
+    }
 };
 
 // 清空筛选条件
@@ -600,79 +619,79 @@ window.clearDrivingApplicationFilters = function() {
 };
 
 // ==================== 练车记录 ====================
-window.loadBookings = function() {
+window.loadBookings = function(hasCache) {
     var container = document.getElementById('bookingList');
-    console.log('[loadBookings] container:', container);
-    if (!container) {
-        console.error('[loadBookings] 容器 bookingList 不存在！');
+    if (!container) return;
+
+    if (hasCache && pageDataCache.bookings && !isLoading.bookings) {
+        renderBookings(pageDataCache.bookings);
         return;
     }
+
+    if (isLoading.bookings) return;
+    isLoading.bookings = true;
+
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
     apiGet('/admin/query?action=bookings', function(data) {
-        console.log('[loadBookings] 原始数据类型:', typeof data);
-        console.log('[loadBookings] 原始数据内容:', data);
-        if (data && typeof data === 'object' && !Array.isArray(data)) {
-            console.log('[loadBookings] 对象的所有键:', Object.keys(data));
-        }
-        var list = [];
-        if (Array.isArray(data)) {
-            list = data;
-        } else if (data && typeof data === 'object') {
-            list = data.data || data.list || data.bookings || data.rows || [];
-            if (!Array.isArray(list)) {
-                list = [];
-            }
-        }
-        console.log('[loadBookings] 最终列表长度:', list.length);
-
-        if (list.length === 0) {
-            container.innerHTML = '<div class="empty-tip">暂无练车记录</div>';
-            return;
-        }
-
-        try {
-            var html = '<table class="data-table"><thead><tr>' +
-                '<th>学员</th><th>教练</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th>' +
-                '<th>学员评分</th><th>教练评分</th><th>评价</th>' +
-                '</tr></thead><tbody>';
-
-            list.forEach(function(item, index) {
-                console.log('[loadBookings] 渲染第 ' + (index + 1) + ' 条:', item);
-                var statusText = { approved: '已通过', rejected: '已拒绝', pending: '待审核' }[item.status] || item.status || '-';
-                var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
-                var coachName = item.coachName || (item.coachId ? item.coachId.substring(0, 8) : '');
-                var startTime = item.startTime ? formatDateTime(item.startTime) : '-';
-                var endTime = item.endTime ? formatDateTime(item.endTime) : '-';
-                var studentScore = (item.studentScore && item.studentScore > 0) ? item.studentScore + '⭐' : '-';
-                var coachScore = (item.coachScore && item.coachScore > 0) ? item.coachScore + '⭐' : '-';
-
-                // ★★★ 修改关键：添加 class="reveal" ★★★
-                html += '<tr class="reveal">' +
-                    '<td>' + escapeHtml(studentName) + '</td>' +
-                    '<td>' + escapeHtml(coachName) + '</td>' +
-                    '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
-                    '<td>' + startTime + '</td>' +
-                    '<td>' + endTime + '</td>' +
-                    '<td>' + statusText + '</td>' +
-                    '<td>' + studentScore + '</td>' +
-                    '<td>' + coachScore + '</td>' +
-                    '<td>' + escapeHtml(item.comment || '-') + '</td>' +
-                    '</tr>';
-            });
-            html += '</tbody></table>';
-            console.log('[loadBookings] HTML 拼接完成，长度:', html.length);
-            container.innerHTML = html;
-            console.log('[loadBookings] 渲染完成，共 ' + list.length + ' 条记录');
-
-            // 可选：触发 reveal 动画（但如果已在 tr 上加了 class，则不需要额外操作）
-        } catch (e) {
-            console.error('[loadBookings] 渲染出错:', e);
-            container.innerHTML = '<div class="empty-tip">数据渲染出错，请检查控制台</div>';
-        }
+        isLoading.bookings = false;
+        pageDataCache.bookings = data;
+        renderBookings(data);
     });
-    var tab = document.getElementById('tab-bookings');
-    if (tab) tab.classList.add('active');
+};
+
+function renderBookings(data) {
+    var container = document.getElementById('bookingList');
+    if (!container) return;
+
+    var list = [];
+    if (Array.isArray(data)) {
+        list = data;
+    } else if (data && typeof data === 'object') {
+        list = data.data || data.list || data.bookings || data.rows || [];
+        if (!Array.isArray(list)) {
+            list = [];
+        }
+    }
+
+    if (list.length === 0) {
+        container.innerHTML = '<div class="empty-tip">暂无练车记录</div>';
+        return;
+    }
+
+    try {
+        var html = '<table class="data-table"><thead><tr>' +
+            '<th>学员</th><th>教练</th><th>科目</th><th>开始时间</th><th>结束时间</th><th>状态</th>' +
+            '<th>学员评分</th><th>教练评分</th><th>评价</th>' +
+            '</tr></thead><tbody>';
+
+        list.forEach(function(item, index) {
+            var statusText = { approved: '已通过', rejected: '已拒绝', pending: '待审核' }[item.status] || item.status || '-';
+            var studentName = item.studentName || (item.studentId ? item.studentId.substring(0, 8) : '');
+            var coachName = item.coachName || (item.coachId ? item.coachId.substring(0, 8) : '');
+            var startTime = item.startTime ? formatDateTime(item.startTime) : '-';
+            var endTime = item.endTime ? formatDateTime(item.endTime) : '-';
+            var studentScore = (item.studentScore && item.studentScore > 0) ? item.studentScore + '⭐' : '-';
+            var coachScore = (item.coachScore && item.coachScore > 0) ? item.coachScore + '⭐' : '-';
+
+            html += '<tr class="reveal">' +
+                '<td>' + escapeHtml(studentName) + '</td>' +
+                '<td>' + escapeHtml(coachName) + '</td>' +
+                '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+                '<td>' + startTime + '</td>' +
+                '<td>' + endTime + '</td>' +
+                '<td>' + statusText + '</td>' +
+                '<td>' + studentScore + '</td>' +
+                '<td>' + coachScore + '</td>' +
+                '<td>' + escapeHtml(item.comment || '-') + '</td>' +
+                '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    } catch (e) {
+        console.error('[renderBookings] 渲染出错:', e);
+        container.innerHTML = '<div class="empty-tip">数据渲染出错，请检查控制台</div>';
+    }
 };
 
 // XSS防护函数
@@ -690,325 +709,6 @@ function formatDateTime(timestamp) {
     return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + ' ' +
         pad(date.getHours()) + ':' + pad(date.getMinutes());
 }
-
-// ==================== 数据概览 & ECharts 可视化 ====================
-var chartInstances = {};
-
-function getChartOption(title, type, labels, values, colorList) {
-    var common = {
-        backgroundColor: 'transparent',
-        textStyle: { color: '#94a3b8', fontSize: 11 },
-        tooltip: {
-            trigger: type === 'pie' ? 'item' : 'axis',
-            backgroundColor: '#1e293b',
-            borderColor: 'rgba(255,255,255,0.1)',
-            textStyle: { color: '#e2e8f0' }
-        }
-    };
-    if (type === 'pie') {
-        var pieData = [];
-        for (var i = 0; i < labels.length; i++) {
-            pieData.push({ name: labels[i], value: values[i] });
-        }
-        return Object.assign(common, {
-            series: [{
-                type: 'pie',
-                radius: ['40%', '70%'],
-                center: ['50%', '55%'],
-                itemStyle: { borderRadius: 6, borderColor: '#1e293b', borderWidth: 2 },
-                label: { color: '#94a3b8', fontSize: 11, formatter: '{b}: {c} ({d}%)' },
-                data: pieData,
-                color: colorList || ['#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa']
-            }]
-        });
-    }
-    if (type === 'line') {
-        return Object.assign(common, {
-            grid: { top: 30, right: 20, bottom: 30, left: 40 },
-            xAxis: {
-                type: 'category',
-                data: labels,
-                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            yAxis: {
-                type: 'value',
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            series: [{
-                type: 'line',
-                data: values,
-                smooth: true,
-                symbol: 'circle',
-                symbolSize: 6,
-                lineStyle: { width: 3, color: '#60a5fa' },
-                itemStyle: { color: '#60a5fa' },
-                areaStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: 'rgba(96,165,250,0.3)' },
-                        { offset: 1, color: 'rgba(96,165,250,0.01)' }
-                    ])
-                }
-            }]
-        });
-    }
-    if (type === 'bar') {
-        return Object.assign(common, {
-            grid: { top: 30, right: 20, bottom: 30, left: 40 },
-            xAxis: {
-                type: 'category',
-                data: labels,
-                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            yAxis: {
-                type: 'value',
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            series: [{
-                type: 'bar',
-                data: values,
-                barWidth: '50%',
-                itemStyle: {
-                    borderRadius: [4, 4, 0, 0],
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: '#34d399' },
-                        { offset: 1, color: '#059669' }
-                    ])
-                }
-            }]
-        });
-    }
-}
-
-window.loadDashboard = function() {
-    apiGet('/admin/query?action=stats', function(data) {
-        if (!data) return;
-        animateValue(document.getElementById('statStudents'), 0, data.totalStudents || 0, 1000);
-        animateValue(document.getElementById('statCoaches'), 0, data.totalCoaches || 0, 1000);
-        animateValue(document.getElementById('statPendingEnroll'), 0, data.pendingEnrollments || 0, 1000);
-        animateValue(document.getElementById('statApprovedEnroll'), 0, data.approvedEnrollments || 0, 1000);
-        animateValue(document.getElementById('statBookings'), 0, data.totalBookings || 0, 1000);
-        animateValue(document.getElementById('statApprovedBook'), 0, data.approvedBookings || 0, 1000);
-    });
-
-    apiGet('/admin/query?action=statsDetail', function(detail) {
-        if (!detail) return;
-
-        var ss = detail.studentSubject || {};
-        var ssLabels = Object.keys(ss);
-        var ssValues = Object.values(ss);
-        if (ssLabels.length === 0) { ssLabels = ['暂无数据']; ssValues = [0]; }
-        var chartSS = echarts.init(document.getElementById('chartStudentSubject'));
-        chartSS.setOption(getChartOption(null, 'pie', ssLabels, ssValues, ['#60a5fa', '#34d399', '#fbbf24']));
-        chartInstances.studentSubject = chartSS;
-
-        var cs = detail.coachSubject || {};
-        var csLabels = Object.keys(cs);
-        var csValues = Object.values(cs);
-        if (csLabels.length === 0) { csLabels = ['暂无数据']; csValues = [0]; }
-        var chartCS = echarts.init(document.getElementById('chartCoachSubject'));
-        chartCS.setOption(getChartOption(null, 'pie', csLabels, csValues, ['#f87171', '#a78bfa', '#fbbf24']));
-        chartInstances.coachSubject = chartCS;
-
-        var bm = detail.bookingMonth || {};
-        var bmLabels = Object.keys(bm);
-        var bmValues = Object.values(bm);
-        if (bmLabels.length === 0) { bmLabels = ['近6个月']; bmValues = [0]; }
-        var chartBM = echarts.init(document.getElementById('chartBookingMonth'));
-        chartBM.setOption(getChartOption(null, 'line', bmLabels, bmValues));
-        chartInstances.bookingMonth = chartBM;
-
-        var stuScore = detail.studentScore || {};
-        var coaScore = detail.coachScore || {};
-        var scoreLabels = ['1分', '2分', '3分', '4分', '5分'];
-        var stuValues = [];
-        var coaValues = [];
-        for (var s = 1; s <= 5; s++) {
-            stuValues.push(stuScore[String(s)] || 0);
-            coaValues.push(coaScore[String(s)] || 0);
-        }
-        var chartScore = echarts.init(document.getElementById('chartScore'));
-        chartScore.setOption({
-            backgroundColor: 'transparent',
-            textStyle: { color: '#94a3b8', fontSize: 11 },
-            tooltip: {
-                trigger: 'axis',
-                backgroundColor: '#1e293b',
-                borderColor: 'rgba(255,255,255,0.1)',
-                textStyle: { color: '#e2e8f0' }
-            },
-            legend: {
-                data: ['学员评分', '教练评分'],
-                textStyle: { color: '#94a3b8', fontSize: 11 },
-                top: 0
-            },
-            grid: { top: 30, right: 20, bottom: 30, left: 40 },
-            xAxis: {
-                type: 'category',
-                data: scoreLabels,
-                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            yAxis: {
-                type: 'value',
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            series: [
-                {
-                    name: '学员评分',
-                    type: 'bar',
-                    data: stuValues,
-                    barWidth: '30%',
-                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#60a5fa' }
-                },
-                {
-                    name: '教练评分',
-                    type: 'bar',
-                    data: coaValues,
-                    barWidth: '30%',
-                    itemStyle: { borderRadius: [4, 4, 0, 0], color: '#34d399' }
-                }
-            ]
-        });
-        chartInstances.score = chartScore;
-
-        // 新增图表：教练排行、报名趋势、预约状态
-        var coachRank = detail.coachBookingRank || {};
-        var coachNames = Object.keys(coachRank);
-        var coachCounts = Object.values(coachRank);
-        if (coachNames.length === 0) { coachNames = ['暂无数据']; coachCounts = [0]; }
-        if (coachNames.length > 10) {
-            coachNames = coachNames.slice(0, 10);
-            coachCounts = coachCounts.slice(0, 10);
-        }
-        var chartRank = echarts.init(document.getElementById('chartCoachRank'));
-        chartRank.setOption({
-            backgroundColor: 'transparent',
-            textStyle: { color: '#94a3b8', fontSize: 11 },
-            tooltip: {
-                trigger: 'axis',
-                backgroundColor: '#1e293b',
-                borderColor: 'rgba(255,255,255,0.1)',
-                textStyle: { color: '#e2e8f0' }
-            },
-            grid: { top: 30, right: 20, bottom: 50, left: 50 },
-            xAxis: {
-                type: 'category',
-                data: coachNames,
-                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10, interval: 0, rotate: 25 }
-            },
-            yAxis: {
-                type: 'value',
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            series: [{
-                type: 'bar',
-                data: coachCounts,
-                barWidth: '45%',
-                itemStyle: {
-                    borderRadius: [4, 4, 0, 0],
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: '#f59e0b' },
-                        { offset: 1, color: '#d97706' }
-                    ])
-                }
-            }]
-        });
-        chartInstances.coachRank = chartRank;
-
-        var enrollMonth = detail.enrollMonth || {};
-        var emLabels = Object.keys(enrollMonth);
-        var emValues = Object.values(enrollMonth);
-        if (emLabels.length === 0) { emLabels = ['近6个月']; emValues = [0]; }
-        var chartEM = echarts.init(document.getElementById('chartEnrollMonth'));
-        chartEM.setOption({
-            backgroundColor: 'transparent',
-            textStyle: { color: '#94a3b8', fontSize: 11 },
-            tooltip: {
-                trigger: 'axis',
-                backgroundColor: '#1e293b',
-                borderColor: 'rgba(255,255,255,0.1)',
-                textStyle: { color: '#e2e8f0' }
-            },
-            grid: { top: 30, right: 20, bottom: 30, left: 40 },
-            xAxis: {
-                type: 'category',
-                data: emLabels,
-                axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            yAxis: {
-                type: 'value',
-                axisLine: { show: false },
-                splitLine: { lineStyle: { color: 'rgba(255,255,255,0.05)' } },
-                axisLabel: { color: '#94a3b8', fontSize: 10 }
-            },
-            series: [{
-                type: 'line',
-                data: emValues,
-                smooth: true,
-                symbol: 'circle',
-                symbolSize: 6,
-                lineStyle: { width: 3, color: '#a78bfa' },
-                itemStyle: { color: '#a78bfa' },
-                areaStyle: {
-                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: 'rgba(167,139,250,0.3)' },
-                        { offset: 1, color: 'rgba(167,139,250,0.01)' }
-                    ])
-                }
-            }]
-        });
-        chartInstances.enrollMonth = chartEM;
-
-        var bookingStatus = detail.bookingStatus || {};
-        var statusMap = { 'approved': '已通过', 'pending': '待审核', 'rejected': '已拒绝' };
-        var statusLabels = [];
-        var statusValues = [];
-        for (var key in bookingStatus) {
-            statusLabels.push(statusMap[key] || key);
-            statusValues.push(bookingStatus[key]);
-        }
-        if (statusLabels.length === 0) { statusLabels = ['暂无数据']; statusValues = [0]; }
-        var chartBS = echarts.init(document.getElementById('chartBookingStatus'));
-        chartBS.setOption({
-            backgroundColor: 'transparent',
-            textStyle: { color: '#94a3b8', fontSize: 11 },
-            tooltip: {
-                trigger: 'item',
-                backgroundColor: '#1e293b',
-                borderColor: 'rgba(255,255,255,0.1)',
-                textStyle: { color: '#e2e8f0' }
-            },
-            series: [{
-                type: 'pie',
-                radius: ['40%', '70%'],
-                center: ['50%', '55%'],
-                itemStyle: { borderRadius: 6, borderColor: '#1e293b', borderWidth: 2 },
-                label: { color: '#94a3b8', fontSize: 11, formatter: '{b}: {c} ({d}%)' },
-                data: statusLabels.map(function(label, index) {
-                    return { name: label, value: statusValues[index] };
-                }),
-                color: ['#34d399', '#fbbf24', '#f87171']
-            }]
-        });
-        chartInstances.bookingStatus = chartBS;
-    });
-};
-
-window.addEventListener('resize', function() {
-    Object.values(chartInstances).forEach(function(c) { c && c.resize(); });
-});
 
 window.logout = function() {
     if (confirm('确定退出登录吗？')) {

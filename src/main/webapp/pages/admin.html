@@ -6,7 +6,6 @@
     <title>管理员后台 - SuperDriver</title>
     <link rel="stylesheet" href="../css/auth-common.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="../js/common.js"></script>
     <script src="../js/admin.js?v=2026062109"></script>
     <style>
@@ -220,114 +219,6 @@
             justify-content: center;
             font-weight: 600;
             font-size: 14px;
-        }
-        /* 统计卡片 */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-            margin-bottom: 28px;
-        }
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 24px;
-            backdrop-filter: var(--blur);
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        .stat-card.reveal {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--primary-2));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
-        }
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-        .stat-card .stat-label {
-            font-size: 13px;
-            color: var(--muted);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .stat-card .stat-label::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--primary);
-            border-radius: 50%;
-        }
-        .stat-card .stat-value {
-            font-size: 32px;
-            font-weight: 800;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-        .stat-card .stat-icon {
-            position: absolute;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 40px;
-            opacity: 0.1;
-        }
-        /* 图表容器 */
-        .chart-row {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-        .chart-box {
-            flex: 1;
-            min-width: 300px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            backdrop-filter: var(--blur);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        .chart-box.reveal {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        .chart-box:hover {
-            border-color: rgba(59, 130, 246, 0.3);
-            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
-        }
-        .chart-box h4 {
-            color: var(--muted);
-            font-size: 14px;
-            margin-bottom: 16px;
-            font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
         /* 内容区块 */
         .section {
@@ -656,7 +547,7 @@
         /* 卡片网格布局 */
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 16px;
             padding: 4px;
         }
@@ -665,7 +556,7 @@
             background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
-            padding: 20px;
+            padding: 14px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -692,41 +583,46 @@
         .enrollment-card .card-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 1px solid rgba(255,255,255,0.06);
         }
         .enrollment-card .avatar {
-            width: 48px;
-            height: 48px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
+            flex-shrink: 0;
         }
         .enrollment-card .student-info {
             flex: 1;
+            min-width: 0;
         }
         .enrollment-card .student-name {
             color: #f1f5f9;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .enrollment-card .student-phone {
             color: #64748b;
-            font-size: 13px;
+            font-size: 12px;
         }
         .enrollment-card .info-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
+            padding: 5px 0;
             border-bottom: 1px solid rgba(255,255,255,0.04);
         }
         .enrollment-card .info-row:last-child {
@@ -734,12 +630,18 @@
         }
         .enrollment-card .info-label {
             color: #64748b;
-            font-size: 13px;
+            font-size: 12px;
+            flex-shrink: 0;
         }
         .enrollment-card .info-value {
             color: #e2e8f0;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 60%;
         }
         .enrollment-card .info-value.subject {
             background: rgba(59,130,246,0.15);
@@ -750,16 +652,16 @@
         }
         .enrollment-card .card-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 16px;
-            padding-top: 12px;
+            gap: 8px;
+            margin-top: 10px;
+            padding-top: 8px;
             border-top: 1px solid rgba(255,255,255,0.06);
         }
         .enrollment-card .card-actions .btn {
             flex: 1;
-            padding: 10px;
+            padding: 8px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
@@ -813,12 +715,10 @@
             <p>管理员控制台</p>
         </div>
         <nav class="sidebar-nav">
-            <a class="active" onclick="window.showTab('dashboard')">📊 数据概览</a>
-            <a onclick="window.showTab('enrollments')">📄 报名审核</a>
+            <a class="active" onclick="window.showTab('enrollments')">📄 报名审核</a>
             <a onclick="window.showTab('drivingApplications')">📋 练车申请</a>
             <a onclick="window.showTab('bookings')">🚗 练车记录</a>
             <a onclick="window.showTab('staff')">👥 员工管理</a>
-            <a onclick="window.showTab('students')">🎓 学员管理</a>
         </nav>
         <div class="sidebar-footer">
             <button onclick="window.logout()">退出登录</button>
@@ -827,61 +727,14 @@
 
     <main class="main">
         <div class="main-header">
-            <h1 id="pageTitle">数据概览</h1>
+            <h1 id="pageTitle">报名审核</h1>
             <div id="adminName" style="display:flex;align-items:center;gap:10px;font-size:14px;">
                 <div class="admin-avatar" id="adminAvatar" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;text-transform:uppercase;">管</div>
                 <div class="admin-info">
                     <span class="admin-role-badge" style="background:rgba(59,130,246,0.15);color:#60a5fa;padding:2px 12px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid rgba(59,130,246,0.2);">管理员</span>
                     <span class="admin-name" id="adminNameText" style="color:#e2e8f0;font-weight:500;margin-left:6px;"></span>
                 </div>
-            </div>
-        </div>
-
-        <!-- 数据概览 -->
-        <div id="tab-dashboard" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-label">学员总数</div><div class="stat-value" id="statStudents">-</div></div>
-                <div class="stat-card"><div class="stat-label">教练总数</div><div class="stat-value" id="statCoaches">-</div></div>
-                <div class="stat-card"><div class="stat-label">待审核报名</div><div class="stat-value" id="statPendingEnroll">-</div></div>
-                <div class="stat-card"><div class="stat-label">已审核报名</div><div class="stat-value" id="statApprovedEnroll">-</div></div>
-                <div class="stat-card"><div class="stat-label">练车预约总数</div><div class="stat-value" id="statBookings">-</div></div>
-                <div class="stat-card"><div class="stat-label">已同意预约</div><div class="stat-value" id="statApprovedBook">-</div></div>
-            </div>
-            <div class="chart-row" style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
-                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">学员报考科目分布</h4>
-                    <div id="chartStudentSubject" style="width:100%;height:260px;"></div>
-                </div>
-                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">教练负责科目分布</h4>
-                    <div id="chartCoachSubject" style="width:100%;height:260px;"></div>
-                </div>
-            </div>
-            <div class="chart-row" style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;">
-                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">近6个月练车预约趋势</h4>
-                    <div id="chartBookingMonth" style="width:100%;height:260px;"></div>
-                </div>
-                <div class="chart-box" style="flex:1;min-width:320px;background:#1e293b;border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8;font-size:13px;margin-bottom:12px;">评分分布</h4>
-                    <div id="chartScore" style="width:100%;height:260px;"></div>
-                </div>
-            </div>
-            <div class="chart-row" style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap;">
-                <div class="chart-box" style="flex:1; min-width:300px; background:#1e293b; border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8; font-size:13px; margin-bottom:12px;">🏆 教练预约排行</h4>
-                    <div id="chartCoachRank" style="width:100%; height:260px;"></div>
-                </div>
-                <div class="chart-box" style="flex:1; min-width:300px; background:#1e293b; border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8; font-size:13px; margin-bottom:12px;">📈 报名月度趋势</h4>
-                    <div id="chartEnrollMonth" style="width:100%; height:260px;"></div>
-                </div>
-            </div>
-            <div class="chart-row" style="display:flex; gap:16px; margin-top:16px; flex-wrap:wrap;">
-                <div class="chart-box" style="flex:1; min-width:300px; background:#1e293b; border-radius:12px; padding:16px; border:1px solid rgba(255,255,255,0.06);">
-                    <h4 style="color:#94a3b8; font-size:13px; margin-bottom:12px;">📊 预约状态分布</h4>
-                    <div id="chartBookingStatus" style="width:100%; height:260px;"></div>
-                </div>
+                <button onclick="window.logout()" style="padding:6px 16px;border:none;border-radius:8px;background:rgba(239,68,68,0.15);color:#f87171;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;">退出登录</button>
             </div>
         </div>
 
@@ -945,7 +798,7 @@
         <div id="tab-bookings" class="tab-content">
             <div class="section">
                 <div class="section-header">
-                    <h3>所有练车预约</h3>
+                    <h3>所有练车记录</h3>
                     <button class="btn btn-primary btn-sm" onclick="window.loadBookings()">刷新</button>
                 </div>
                 <div id="bookingList">
@@ -967,18 +820,6 @@
             </div>
         </div>
 
-        <!-- 学员管理 -->
-        <div id="tab-students" class="tab-content">
-            <div class="section">
-                <div class="section-header">
-                    <h3>学员列表</h3>
-                    <button class="btn btn-primary btn-sm" onclick="window.loadStudents()">刷新</button>
-                </div>
-                <div id="studentList">
-                    <div class="empty-tip">加载中...</div>
-                </div>
-            </div>
-        </div>
     </main>
 </div>
 
@@ -1012,7 +853,7 @@
         </div>
         <div class="form-group" id="modalPasswordGroup">
             <label>密码</label>
-            <input type="password" id="modalStaffPassword" placeholder="至少6位">
+            <input type="password" id="modalStaffPassword" placeholder="留空则保持原密码">
         </div>
         <div class="form-group" id="modalUsbGroup">
             <label>USB安全令牌</label>

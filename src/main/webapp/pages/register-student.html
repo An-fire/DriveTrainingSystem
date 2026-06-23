@@ -102,39 +102,6 @@
             background: #1e293b;
             color: var(--text);
         }
-        .subject-options {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 8px;
-        }
-        .subject-option {
-            padding: 12px 8px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.12);
-            background: rgba(5,6,10,0.7);
-            text-align: center;
-            cursor: pointer;
-            transition: border-color .2s, background .2s;
-            user-select: none;
-        }
-        .subject-option input {
-            display: none;
-        }
-        .subject-option.active {
-            border-color: rgba(16,185,129,0.6);
-            background: rgba(16,185,129,0.12);
-        }
-        .subject-option span {
-            display: block;
-            font-weight: 700;
-            font-size: 15px;
-            margin-bottom: 2px;
-        }
-        .subject-option small {
-            font-size: 11px;
-            color: var(--muted);
-        }
         .btn-row {
             margin-top: 12px;
         }
@@ -195,27 +162,6 @@
             </div>
 
             <div class="form-group">
-                <label>报考科目</label>
-                <div class="subject-options">
-                    <label class="subject-option active">
-                        <input type="radio" name="regSubject" value="C1" checked>
-                        <span>C1</span>
-                        <small>小型手动挡</small>
-                    </label>
-                    <label class="subject-option">
-                        <input type="radio" name="regSubject" value="C2">
-                        <span>C2</span>
-                        <small>小型自动挡</small>
-                    </label>
-                    <label class="subject-option">
-                        <input type="radio" name="regSubject" value="C3">
-                        <span>C3</span>
-                        <small>低速载货</small>
-                    </label>
-                </div>
-            </div>
-
-            <div class="form-group">
                 <label>设置密码</label>
                 <input type="password" id="regPassword" placeholder="至少 6 位" autocomplete="new-password">
             </div>
@@ -238,20 +184,10 @@
 
 <script src="../js/home.js"></script>
 <script>
-    document.querySelectorAll('.subject-option').forEach(option => {
-        option.addEventListener('click', () => {
-            document.querySelectorAll('.subject-option').forEach(o => o.classList.remove('active'));
-            option.classList.add('active');
-            const input = option.querySelector('input');
-            if (input) input.checked = true;
-        });
-    });
-
     function handleRegister() {
         const name = document.getElementById('regName').value.trim();
         const idCard = document.getElementById('regIdCard').value.trim();
         const phone = document.getElementById('regPhone').value.trim();
-        const subject = document.querySelector('input[name="regSubject"]:checked').value;
         const password = document.getElementById('regPassword').value;
         const confirmPassword = document.getElementById('regConfirmPassword').value;
 
@@ -279,8 +215,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'name=' + encodeURIComponent(name) + '&idCard=' + encodeURIComponent(idCard) +
-                  '&phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(password) +
-                  '&subject=' + encodeURIComponent(subject)
+                  '&phone=' + encodeURIComponent(phone) + '&password=' + encodeURIComponent(password)
         }).then(res => res.json()).then(data => {
             if (data.code === 1) {
                 alert(data.msg);

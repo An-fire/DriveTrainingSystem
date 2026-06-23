@@ -50,12 +50,7 @@ public class QueryServlet extends HttpServlet {
         String action = request.getParameter("action");
 
         try {
-            if ("students".equals(action)) {
-                List<User> list = userDAO.findAll();
-                JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
-                result.put("code", 1);
-                result.put("data", array);
-            } else if ("coaches".equals(action)) {
+            if ("coaches".equals(action)) {
                 List<Staff> list = staffDAO.findAllCoaches();
                 JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
                 result.put("code", 1);
@@ -170,36 +165,6 @@ public class QueryServlet extends HttpServlet {
                     result.put("code", 0);
                     result.put("msg", "参数错误");
                 }
-            } else if ("stats".equals(action)) {
-                JSONObject stats = new JSONObject();
-                stats.put("totalStudents", userDAO.countAll());
-                stats.put("totalCoaches", staffDAO.countCoaches());
-                stats.put("pendingEnrollments", enrollmentDAO.countByStatus("pending"));
-                stats.put("approvedEnrollments", enrollmentDAO.countByStatus("approved"));
-                stats.put("totalBookings", bookingDAO.countAll());
-                stats.put("approvedBookings", bookingDAO.countByStatus("approved"));
-                result.put("code", 1);
-                result.put("data", stats);
-            } else if ("statsDetail".equals(action)) {
-                JSONObject detail = new JSONObject();
-                detail.put("studentSubject", userDAO.countBySubject());
-                detail.put("coachSubject", staffDAO.countBySubject());
-                detail.put("bookingMonth", bookingDAO.countByMonth());
-                detail.put("studentScore", bookingDAO.scoreDistribution(true));
-                detail.put("coachScore", bookingDAO.scoreDistribution(false));
-                java.util.Map<String, Integer> rankMap = bookingDAO.countByCoach();
-                java.util.Map<String, Integer> nameMap = new java.util.LinkedHashMap<>();
-                StaffDAO staffDAO = new StaffDAO();
-                for (java.util.Map.Entry<String, Integer> entry : rankMap.entrySet()) {
-                    Staff coach = staffDAO.findById(entry.getKey());
-                    String name = (coach != null) ? coach.getName() : entry.getKey().substring(0, 8);
-                    nameMap.put(name, entry.getValue());
-                }
-                detail.put("coachBookingRank", nameMap);
-                detail.put("enrollMonth", enrollmentDAO.countByMonth());
-                detail.put("bookingStatus", bookingDAO.countByStatusGroup());
-                result.put("code", 1);
-                result.put("data", detail);
             } else {
                 result.put("code", 0);
                 result.put("msg", "无效的操作");
