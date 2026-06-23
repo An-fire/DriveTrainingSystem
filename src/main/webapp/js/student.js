@@ -91,9 +91,8 @@ function safeLogout() {
 
 
 // ============================================================
-// 4. 加载教练列表
+// 4. 加载教练列表（修改：根据报名状态决定过滤策略）
 // ============================================================
-
 var allCoaches = [];
 
 async function loadCoach() {
@@ -111,19 +110,20 @@ async function loadCoach() {
         return;
     }
 
-    // 存储全部教练到全局变量
-    allCoaches = res.data;
+    allCoaches = res.data;  // 存储全部教练
 
-    // 根据当前选中的科目过滤并渲染
-    var currentSubject = document.getElementById('enrollSubject') ? document.getElementById('enrollSubject').value : 'C1';
-    filterCoachList(currentSubject);
+    // 调用过滤函数（根据当前报名状态）
+    filterEnrollCoachList();
+    filterBookCoachList();
 }
-
-// 新增过滤函数，根据科目过滤教练并渲染到下拉框
-function filterCoachList(subject) {
+// ============================================================
+// 报名面板：根据选中的科目过滤教练
+// ============================================================
+function filterEnrollCoachList() {
     var enrollCoach = document.getElementById('enrollCoach');
     if (!enrollCoach) return;
 
+    var subject = document.getElementById('enrollSubject').value;
     var filtered = allCoaches.filter(function(coach) {
         return coach.subject === subject;
     });
@@ -131,14 +131,43 @@ function filterCoachList(subject) {
     enrollCoach.innerHTML = '';
     if (filtered.length === 0) {
         enrollCoach.innerHTML = '<option value="">该科目暂无教练</option>';
-        return;
+    } else {
+        filtered.forEach(function(item) {
+            var opt = new Option(item.name + ' | ' + item.subject, item.id);
+            enrollCoach.appendChild(opt);
+        });
     }
-    filtered.forEach(function(item) {
-        var opt = new Option(item.name + ' | ' + item.subject, item.id);
-        enrollCoach.appendChild(opt);
-    });
 }
 
+// ============================================================
+// 预约面板：根据报名状态过滤教练
+// ============================================================
+function filterBookCoachList() {
+    var bookCoach = document.getElementById('bookCoach');
+    if (!bookCoach) return;
+
+    // 报名审核通过 → 只显示报名科目对应的教练
+    var shouldFilter = (enrollStatus === 'approved' && enrollSubject);
+    var filtered;
+
+    if (shouldFilter) {
+        filtered = allCoaches.filter(function(coach) {
+            return coach.subject === enrollSubject;
+        });
+    } else {
+        filtered = allCoaches.slice();
+    }
+
+    bookCoach.innerHTML = '';
+    if (filtered.length === 0) {
+        bookCoach.innerHTML = '<option value="">' + (shouldFilter ? '该科目暂无教练' : '暂无教练数据') + '</option>';
+    } else {
+        filtered.forEach(function(item) {
+            var opt = new Option(item.name + ' | ' + item.subject, item.id);
+            bookCoach.appendChild(opt);
+        });
+    }
+}
 
 // ============================================================
 // 5. 提交驾校报名
@@ -165,11 +194,11 @@ async function submitEnroll() {
         showMsg(res.msg || '提交失败', true);
     }
 }
-
-
 // ============================================================
 // 6. 加载我的报名信息
 // ============================================================
+var enrollStatus = null;
+var enrollSubject = null;
 
 async function loadMyEnrollInfo() {
     var res = await request('/student/enrollment?type=myEnroll');
@@ -177,10 +206,19 @@ async function loadMyEnrollInfo() {
 
     if (!res.data || Object.keys(res.data).length === 0) {
         if (infoBox) infoBox.innerHTML = '暂无报名记录';
+        enrollStatus = null;
+        enrollSubject = null;
+        filterBookCoachList();  // 刷新预约面板
         return;
     }
 
     var d = res.data;
+    enrollStatus = d.status;
+    enrollSubject = d.subjectType;
+
+    // 刷新预约面板（报名状态变化时更新教练列表）
+    filterBookCoachList();
+
     var statusMap = {
         'pending': '待审核',
         'approved': '审核通过',
@@ -205,6 +243,11 @@ async function loadMyEnrollInfo() {
 // ============================================================
 
 async function submitBook() {
+    if (enrollStatus !== 'approved') {
+        showMsg('您的报名尚未通过审核，无法预约练车', true);
+        return;
+    }
+
     var coachId = document.getElementById('bookCoach').value;
     var subjectType = document.getElementById('bookSubject').value;
     var startTime = document.getElementById('startTime').value;
@@ -652,6 +695,15 @@ window.markAllRead = async function(event) {
     }
 };
 
+window.toggleNotifPanel = function() {
+    var panel = document.getElementById('notifPanel');
+    if (panel) {
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        if (panel.style.display === 'block') {
+            loadNotifications();
+        }
+    }
+};
 
 // ============================================================
 // 14. 暴露全局函数（供 HTML onclick 调用）

@@ -106,6 +106,14 @@ public class StudentService {
         if (startTs.before(new Timestamp(System.currentTimeMillis()))) {
             throw new StudentException("预约时间不能早于当前时间，请选择未来的空闲时段");
         }
+        // ========== 校验学员报名状态 ==========
+        User user = userDAO.findById(studentId);
+        if (user == null) {
+            throw new StudentException("学员信息不存在");
+        }
+        if (!"approved".equals(user.getEnrollStatus())) {
+            throw new StudentException("您的报名尚未通过审核，无法预约练车，请等待管理员审核");
+        }
         // 跨天校验
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         String startDate = dateFormat.format(startTs);

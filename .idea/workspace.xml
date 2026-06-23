@@ -9,7 +9,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="947e7fea-3a30-4fe1-8878-c10632521e04" name="更改" comment="通用工具函数（统一抽取，避免重复定义）" />
+    <list default="true" id="947e7fea-3a30-4fe1-8878-c10632521e04" name="更改" comment="修复练车记录渲染问题，优化角色名称和通知面板样式">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/student/service/StudentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/student/service/StudentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/student.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/student.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/student.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/student.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -60,7 +65,7 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "Tomcat 服务器.Tomcat 10.1.55.executor": "Debug",
+    "Tomcat 服务器.Tomcat 10.1.55.executor": "Run",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
@@ -92,63 +97,91 @@
     </option>
   </component>
   <component name="RunManager">
-    <configuration name="Tomcat 10.1.55" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Remote" APPLICATION_SERVER_NAME="Tomcat 10.1.55" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
-      <option name="LOCAL" value="false" />
-      <deployment />
+    <configuration name="Tomcat 10.1.55" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 10.1.55" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
+      <option name="UPDATING_POLICY" value="restart-server" />
+      <deployment>
+        <artifact name="DriveTrainingSystem:war exploded">
+          <settings>
+            <option name="CONTEXT_PATH" value="/DriveTrainingSystem" />
+          </settings>
+        </artifact>
+      </deployment>
       <server-settings>
-        <data>
-          <option name="targets">
-            <list>
-              <WatchedTargetModelImpl>
-                <option name="name" value="CONTEXT_XML" />
-                <option name="transportStagingTarget">
-                  <TransportTarget>
-                    <option name="id" value="f60278d4-32ae-416a-a856-4832ae46e411" />
-                    <id>f60278d4-32ae-416a-a856-4832ae46e411</id>
-                  </TransportTarget>
-                </option>
-                <option name="watchedLocalPath" value="" />
-                <watched-path />
-                <name>CONTEXT_XML</name>
-                <transport-target>
-                  <TransportTarget>
-                    <option name="id" value="f60278d4-32ae-416a-a856-4832ae46e411" />
-                    <id>f60278d4-32ae-416a-a856-4832ae46e411</id>
-                  </TransportTarget>
-                </transport-target>
-              </WatchedTargetModelImpl>
-              <StagingTargetModelImpl>
-                <option name="name" value="STAGING" />
-                <option name="stagingRemotePath" value="" />
-                <option name="transportStagingTarget">
-                  <TransportTarget>
-                    <option name="id" value="5e4b0431-46b3-485f-9448-7107966de52b" />
-                    <id>5e4b0431-46b3-485f-9448-7107966de52b</id>
-                  </TransportTarget>
-                </option>
-                <staging-path />
-                <name>STAGING</name>
-                <transport-target>
-                  <TransportTarget>
-                    <option name="id" value="5e4b0431-46b3-485f-9448-7107966de52b" />
-                    <id>5e4b0431-46b3-485f-9448-7107966de52b</id>
-                  </TransportTarget>
-                </transport-target>
-              </StagingTargetModelImpl>
-            </list>
-          </option>
-          <option name="transportHostId" value="" />
-          <host-id />
-        </data>
+        <option name="BASE_DIRECTORY_NAME" value="347de7eb-cf05-4a95-b2eb-36a07c5bbc2d" />
       </server-settings>
       <predefined_log_file enabled="true" id="Tomcat" />
-      <predefined_log_file enabled="true" id="TOMCAT_LOCALHOST_LOG_ID" />
+      <predefined_log_file enabled="true" id="Tomcat Catalina" />
+      <predefined_log_file id="Tomcat Manager" />
+      <predefined_log_file id="Tomcat Host Manager" />
+      <predefined_log_file id="Tomcat Localhost Access" />
       <RunnerSettings RunnerId="Debug">
-        <option name="DEBUG_PORT" value="60236" />
-        <option name="LOCAL" value="false" />
+        <option name="DEBUG_PORT" value="50386" />
       </RunnerSettings>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Cover">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Debug">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Profile">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
+      <ConfigurationWrapper VM_VAR="JAVA_OPTS" RunnerId="Run">
+        <option name="USE_ENV_VARIABLES" value="true" />
+        <STARTUP>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </STARTUP>
+        <SHUTDOWN>
+          <option name="USE_DEFAULT" value="true" />
+          <option name="SCRIPT" value="" />
+          <option name="VM_PARAMETERS" value="" />
+          <option name="PROGRAM_PARAMETERS" value="" />
+        </SHUTDOWN>
+      </ConfigurationWrapper>
       <method v="2">
         <option name="Make" enabled="true" />
+        <option name="BuildArtifacts" enabled="true">
+          <artifact name="DriveTrainingSystem:war exploded" />
+        </option>
       </method>
     </configuration>
   </component>
@@ -168,7 +201,8 @@
       <option name="presentableId" value="Default" />
       <updated>1782035774712</updated>
       <workItem from="1782035775753" duration="1162000" />
-      <workItem from="1782057049767" duration="33722000" />
+      <workItem from="1782057049767" duration="34613000" />
+      <workItem from="1782215346754" duration="13630000" />
     </task>
     <task id="LOCAL-00001" summary="修复admin查看练车记录">
       <option name="closed" value="true" />
@@ -202,7 +236,15 @@
       <option name="project" value="LOCAL" />
       <updated>1782147383945</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="修复练车记录渲染问题，优化角色名称和通知面板样式">
+      <option name="closed" value="true" />
+      <created>1782147604275</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1782147604275</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -224,6 +266,7 @@
     <MESSAGE value="增加coach查看教练评价和预约记录" />
     <MESSAGE value="修复student查看教练空闲状态和教练历史评价" />
     <MESSAGE value="通用工具函数（统一抽取，避免重复定义）" />
-    <option name="LAST_COMMIT_MESSAGE" value="通用工具函数（统一抽取，避免重复定义）" />
+    <MESSAGE value="修复练车记录渲染问题，优化角色名称和通知面板样式" />
+    <option name="LAST_COMMIT_MESSAGE" value="修复练车记录渲染问题，优化角色名称和通知面板样式" />
   </component>
 </project>

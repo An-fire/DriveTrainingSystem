@@ -585,16 +585,6 @@
                 🔔
                 <span id="notifBadge" style="position:absolute; top:-6px; right:-6px; background:#ef4444; color:#fff; border-radius:50%; width:20px; height:20px; font-size:11px; display:flex; align-items:center; justify-content:center; font-weight:700; display:none;">0</span>
             </button>
-            <div id="notifPanel" style="display:none; position:absolute; top:50px; right:0; width:380px; max-height:420px; overflow-y:auto; background:#1a1f3a; border:1px solid rgba(255,255,255,0.12); border-radius:14px; box-shadow:0 20px 60px rgba(0,0,0,0.6); z-index:999; padding:0;">
-                <div style="padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:600; color:#e2e8f0; font-size:15px; background:rgba(255,255,255,0.03); border-radius:14px 14px 0 0;">
-                    📬 通知
-                    <span id="notifCountText" style="font-weight:400; color:#94a3b8; font-size:13px; margin-left:8px;"></span>
-                </div>
-                <div id="notifList" style="padding:4px 0;"></div>
-                <div style="padding:10px 18px; border-top:1px solid rgba(255,255,255,0.06); text-align:center; background:rgba(255,255,255,0.02); border-radius:0 0 14px 14px;">
-                    <button onclick="markAllRead(event)" style="background:transparent; border:none; color:#3b82f6; font-size:13px; cursor:pointer; padding:6px 12px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">全部标记已读</button>
-                </div>
-            </div>
 
             <span class="user-badge" id="userBadge">
         <span class="user-role-badge">学员</span>
@@ -627,7 +617,7 @@
         </div>
         <div class="form-item">
             <label class="form-label">报考驾照类型</label>
-            <select id="enrollSubject" class="form-select" onchange="filterCoachList(this.value)">
+            <select id="enrollSubject" class="form-select" onchange="filterEnrollCoachList()">
                 <option value="C1" selected>C1 手动挡</option>
                 <option value="C2">C2 自动挡</option>
                 <option value="C3">C3 低速载货汽车</option>
@@ -704,6 +694,18 @@
             <a href="coach-evaluate.html" target="_blank" class="btn btn-primary btn-large" style="margin-top:10px;">去评价教练</a>
         </div>
         <!-- 可选：直接嵌入评价列表，但因为是内联框架，保持简单 -->
+    </div>
+
+    <div id="notifPanel" style="display:none;">
+        <!-- 面板内部结构保持不变 -->
+        <div style="padding:14px 18px; border-bottom:1px solid rgba(255,255,255,0.06); font-weight:600; color:#e2e8f0; font-size:15px; background:rgba(255,255,255,0.03); border-radius:14px 14px 0 0;">
+            📬 通知
+            <span id="notifCountText" style="font-weight:400; color:#94a3b8; font-size:13px; margin-left:8px;"></span>
+        </div>
+        <div id="notifList" style="padding:4px 0;"></div>
+        <div style="padding:10px 18px; border-top:1px solid rgba(255,255,255,0.06); text-align:center; background:rgba(255,255,255,0.02); border-radius:0 0 14px 14px;">
+            <button onclick="markAllRead(event)" style="background:transparent; border:none; color:#3b82f6; font-size:13px; cursor:pointer; padding:6px 12px; border-radius:6px; transition:background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">全部标记已读</button>
+        </div>
     </div>
 </main>
 
