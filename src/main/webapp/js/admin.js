@@ -578,7 +578,7 @@ function renderDrivingApplications(data) {
                 '<td>' + escapeHtml(item.id || '-') + '</td>' +
                 '<td>' + escapeHtml(studentName) + '</td>' +
                 '<td>' + escapeHtml(coachName) + '</td>' +
-                '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+                '<td>' + escapeHtml(convertBookingSubject(item.subjectType) || '-') + '</td>' +
                 '<td>' + createTime + '</td>' +
                 '<td>' + timeSlot + '</td>' +
                 '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
@@ -665,7 +665,7 @@ function renderBookings(data) {
             html += '<tr class="reveal">' +
                 '<td>' + escapeHtml(studentName) + '</td>' +
                 '<td>' + escapeHtml(coachName) + '</td>' +
-                '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+                '<td>' + escapeHtml(convertBookingSubject(item.subjectType) || '-') + '</td>' +
                 '<td>' + startTime + '</td>' +
                 '<td>' + endTime + '</td>' +
                 '<td>' + statusText + '</td>' +

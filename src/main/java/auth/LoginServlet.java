@@ -85,6 +85,7 @@ public class LoginServlet extends HttpServlet {
                 result.put("msg", "登录成功");
                 result.put("userId", staff.getId());
                 result.put("name", staff.getName());
+                result.put("subject", staff.getSubject());
 
                 if ("admin".equals(staff.getRole())) {
                     result.put("url", request.getContextPath() + "/pages/admin.html");

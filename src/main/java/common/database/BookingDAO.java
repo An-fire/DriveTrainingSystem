@@ -453,7 +453,14 @@ public class BookingDAO {
             pstmt.setInt(1, studentScore != null ? studentScore : 0);
             pstmt.setString(2, comment);
             pstmt.setString(3, bookingId);
-            return pstmt.executeUpdate();
+            int rows = pstmt.executeUpdate();
+            
+            // 显式提交事务，确保数据立即写入
+            if (!conn.getAutoCommit()) {
+                conn.commit();
+            }
+            
+            return rows;
         } catch (SQLException e) {
             e.printStackTrace();
             return 0;

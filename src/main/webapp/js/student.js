@@ -219,6 +219,9 @@ async function loadMyEnrollInfo() {
     // 刷新预约面板（报名状态变化时更新教练列表）
     filterBookCoachList();
 
+    // 注意：报名科目（C1/C2/C3）和练车科目（科目二/科目三）是不同的概念
+    // 学员可以自由选择练习科目二或科目三，不需要自动设置
+
     var statusMap = {
         'pending': '待审核',
         'approved': '审核通过',
@@ -268,49 +271,6 @@ async function submitBook() {
 
     var sTime = startTime.replace('T', ' ');
     var eTime = endTime.replace('T', ' ');
-
-    // ===== 新增：验证所选时间是否为教练当前有效的空闲时间 =====
-    try {
-        // 获取教练最新的空闲时段
-        console.log('[submitBook] 验证教练空闲时间有效性，coachId:', coachId);
-        var dateStr = startTime.split('T')[0]; // 获取日期部分
-        var availRes = await request('/student/availability?coachId=' + coachId + '&date=' + dateStr);
-        var availData = availRes.data || {};
-        var freeSlots = availData.freeSlots || [];
-        
-        console.log('[submitBook] 获取到的空闲时段:', freeSlots);
-        
-        // 验证所选时间是否在空闲时段内
-        var isSlotValid = false;
-        var selectedStart = new Date(startTime).getTime();
-        var selectedEnd = new Date(endTime).getTime();
-        
-        for (var i = 0; i < freeSlots.length; i++) {
-            var slot = freeSlots[i];
-            var slotStart = slot.start ? new Date(slot.start).getTime() : 0;
-            var slotEnd = slot.end ? new Date(slot.end).getTime() : 0;
-            
-            // 检查所选时间段是否完全包含在某个空闲时段内
-            if (selectedStart >= slotStart && selectedEnd <= slotEnd) {
-                isSlotValid = true;
-                break;
-            }
-        }
-        
-        if (!isSlotValid) {
-            showMsg('所选时间不是教练当前有效的空闲时间，请重新选择', true);
-            // 刷新教练空闲时段显示
-            loadCoachAvailability();
-            return;
-        }
-        
-        console.log('[submitBook] 时间验证通过，所选时段为有效空闲时间');
-    } catch (e) {
-        console.error('[submitBook] 验证空闲时间出错：', e);
-        showMsg('验证空闲时间失败，请稍后重试', true);
-        return;
-    }
-    // ===== 时间有效性验证结束 =====
 
     try {
         var res = await request('/student/booking', 'POST', {
@@ -398,7 +358,7 @@ async function loadMyBooking() {
             tr.innerHTML =
                 '<td>' + item.id.substring(0, 8) + '...</td>' +
                 '<td>' + coachName + '</td>' +
-                '<td>' + item.subjectType + '</td>' +
+                '<td>' + convertBookingSubject(item.subjectType) + '</td>' +
                 '<td>' + formatTimestamp(item.startTime) + '</td>' +
                 '<td>' + formatTimestamp(item.endTime) + '</td>' +
                 '<td>' + statusText + '</td>' +
@@ -449,7 +409,7 @@ async function loadCoachAvailability() {
         // 请求后端接口（使用完整的BASE_URL路径）
         var url = BASE_URL + '/student/availability?coachId=' + encodeURIComponent(coachId) + '&date=' + encodeURIComponent(queryDate);
         console.log('请求URL:', url);
-        
+
         var res = await axios.get(url);
         console.log('空闲时段响应完整:', res);
         console.log('响应数据:', res.data);
