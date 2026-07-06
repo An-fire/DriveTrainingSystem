@@ -1,0 +1,7 @@
+target/
+.git/
+.idea/
+*.iml
+*.doc
+*.docx
+*.pdf

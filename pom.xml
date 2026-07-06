@@ -17,6 +17,12 @@
     <maven.compiler.target>17</maven.compiler.target>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>aliyunmaven</id>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </repository>
+  </repositories>
   <dependencies>
     <!-- Servlet API (Tomcat 10+ 使用 Jakarta EE) -->
     <dependency>
