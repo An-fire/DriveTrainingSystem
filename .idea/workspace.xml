@@ -11,9 +11,7 @@
   <component name="ChangeListManager">
     <list default="true" id="947e7fea-3a30-4fe1-8878-c10632521e04" name="更改" comment="修复练车记录渲染问题，优化角色名称和通知面板样式">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/student/service/StudentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/student/service/StudentService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/js/student.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/js/student.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/webapp/pages/student.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/webapp/pages/student.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/common/database/BookingDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/common/database/BookingDAO.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +29,18 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "An-fire"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/An-fire/DriveTrainingSystem.git",
+    "accountId": "723e5833-6f3a-456a-8cbb-079e5ce7cdd3"
+  }
+}]]></component>
   <component name="LogFilters">
     <option name="FILTER_ERRORS" value="false" />
     <option name="FILTER_WARNINGS" value="false" />
@@ -74,7 +84,7 @@
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "configurable.group.appearance",
+    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
@@ -98,6 +108,7 @@
   </component>
   <component name="RunManager">
     <configuration name="Tomcat 10.1.55" type="#com.intellij.j2ee.web.tomcat.TomcatRunConfigurationFactory" factoryName="Local" APPLICATION_SERVER_NAME="Tomcat 10.1.55" ALTERNATIVE_JRE_ENABLED="false" nameIsGenerated="true">
+      <option name="BROWSER_ID" value="98ca6316-2f89-46d9-a9e5-fa9e2b0625b3" />
       <option name="UPDATING_POLICY" value="restart-server" />
       <deployment>
         <artifact name="DriveTrainingSystem:war exploded">
@@ -203,6 +214,9 @@
       <workItem from="1782035775753" duration="1162000" />
       <workItem from="1782057049767" duration="34613000" />
       <workItem from="1782215346754" duration="13630000" />
+      <workItem from="1783151678147" duration="1225000" />
+      <workItem from="1783234466973" duration="5895000" />
+      <workItem from="1783335935673" duration="3800000" />
     </task>
     <task id="LOCAL-00001" summary="修复admin查看练车记录">
       <option name="closed" value="true" />
