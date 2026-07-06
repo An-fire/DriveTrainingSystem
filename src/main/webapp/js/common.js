@@ -1,8 +1,5 @@
 
-var BASE_URL = '/DriveTrainingSystem';
-
-// 如果后端接口地址是完整的域名+端口，可以改为：
-// var BASE_URL = 'http://localhost:8080/DriveTrainingSystem';
+var BASE_URL = window.location.origin + '/DriveTrainingSystem';
 
 // 暴露到全局
 window.BASE_URL = BASE_URL;

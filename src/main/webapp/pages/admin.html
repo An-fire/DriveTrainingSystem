@@ -547,22 +547,25 @@
             color: #ef4444;
             border: 1px solid rgba(239, 68, 68, 0.3);
         }
-        /* 卡片网格布局 */
+        /* 卡片网格布局 - 横向排列 */
         .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             padding: 4px;
         }
-        /* 报名审核卡片 */
+        /* 报名审核卡片 - 横向布局 */
         .enrollment-card {
             background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 12px;
-            padding: 14px;
+            padding: 16px;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
         .enrollment-card::before {
             content: '';
@@ -587,13 +590,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
         }
         .enrollment-card .avatar {
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             display: flex;
@@ -605,28 +606,24 @@
             flex-shrink: 0;
         }
         .enrollment-card .student-info {
-            flex: 1;
-            min-width: 0;
+            flex-shrink: 0;
         }
         .enrollment-card .student-name {
             color: #f1f5f9;
             font-size: 14px;
             font-weight: 600;
-            margin-bottom: 2px;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
         .enrollment-card .student-phone {
             color: #64748b;
             font-size: 12px;
+            white-space: nowrap;
         }
         .enrollment-card .info-row {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            gap: 8px;
+            white-space: nowrap;
         }
         .enrollment-card .info-row:last-child {
             border-bottom: none;
@@ -640,11 +637,7 @@
             color: #e2e8f0;
             font-size: 13px;
             font-weight: 500;
-            text-align: right;
-            overflow: hidden;
-            text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 60%;
         }
         .enrollment-card .info-value.subject {
             background: rgba(59,130,246,0.15);
@@ -656,13 +649,11 @@
         .enrollment-card .card-actions {
             display: flex;
             gap: 8px;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+            margin-left: auto;
         }
         .enrollment-card .card-actions .btn {
-            flex: 1;
-            padding: 8px;
+            padding: 8px 16px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 500;

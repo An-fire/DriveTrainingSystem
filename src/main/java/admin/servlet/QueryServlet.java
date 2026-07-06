@@ -58,19 +58,32 @@ public class QueryServlet extends HttpServlet {
             } else if ("enrollments".equals(action)) {
                 List<Enrollment> list = enrollmentDAO.findAll();
                 JSONArray array = new JSONArray();
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+                
+                java.util.Map<String, User> userMap = new java.util.HashMap<>();
+                java.util.Map<String, Staff> staffMap = new java.util.HashMap<>();
+                
                 for (Enrollment e : list) {
+                    String studentId = e.getStudentId();
+                    String coachId = e.getCoachId();
+                    
+                    if (!userMap.containsKey(studentId)) {
+                        userMap.put(studentId, userDAO.findById(studentId));
+                    }
+                    if (!staffMap.containsKey(coachId)) {
+                        staffMap.put(coachId, staffDAO.findById(coachId));
+                    }
+                    
                     JSONObject obj = (JSONObject) JSONObject.toJSON(e);
-                    User student = userDAO.findById(e.getStudentId());
-                    Staff coach = staffDAO.findById(e.getCoachId());
+                    User student = userMap.get(studentId);
+                    Staff coach = staffMap.get(coachId);
                     obj.put("studentName", student != null ? student.getName() : "");
                     obj.put("coachName", coach != null ? coach.getName() : "");
-                    // 添加学员详细信息
                     obj.put("studentPhone", student != null ? student.getPhone() : "");
                     obj.put("studentIdCard", student != null ? student.getIdCard() : "");
                     obj.put("coachPhone", coach != null ? coach.getPhone() : "");
-                    // 格式化申请时间
                     if (e.getApplyTime() != null) {
-                        obj.put("applyTimeStr", new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(e.getApplyTime()));
+                        obj.put("applyTimeStr", sdf.format(e.getApplyTime()));
                     }
                     array.add(obj);
                 }

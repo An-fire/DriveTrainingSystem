@@ -347,6 +347,7 @@ window.loadPendingEnrollments = function(hasCache) {
     apiGet('/admin/query?action=enrollments', function(data) {
         isLoading.enrollments = false;
         pageDataCache.enrollments = data;
+        console.log('报名数据:', data);
         renderPendingEnrollments(data);
     });
 };
@@ -385,7 +386,7 @@ function renderPendingEnrollments(data) {
         var applyTime = item.applyTimeStr || '-';
         var initial = studentName.charAt(0).toUpperCase();
 
-        html += '<div class="enrollment-card reveal" style="animation-delay: ' + (index * 80) + 'ms">' +
+        html += '<div class="enrollment-card reveal">' +
             '<span class="status-pending">待审核</span>' +
             '<div class="card-header">' +
             '<div class="avatar">' + initial + '</div>' +
@@ -393,22 +394,10 @@ function renderPendingEnrollments(data) {
             '<div class="student-name">' + escapeHtml(studentName) + '</div>' +
             '<div class="student-phone">📞 ' + escapeHtml(phone) + '</div>' +
             '</div></div>' +
-            '<div class="info-row">' +
-            '<span class="info-label">身份证号</span>' +
-            '<span class="info-value">' + escapeHtml(idCard) + '</span>' +
-            '</div>' +
-            '<div class="info-row">' +
-            '<span class="info-label">报考科目</span>' +
-            '<span class="info-value subject">' + escapeHtml(subjectType) + '</span>' +
-            '</div>' +
-            '<div class="info-row">' +
-            '<span class="info-label">意向教练</span>' +
-            '<span class="info-value">' + escapeHtml(coachName) + '</span>' +
-            '</div>' +
-            '<div class="info-row">' +
-            '<span class="info-label">申请时间</span>' +
-            '<span class="info-value">' + escapeHtml(applyTime) + '</span>' +
-            '</div>' +
+            '<div class="info-row"><span class="info-label">身份证</span><span class="info-value">' + escapeHtml(idCard) + '</span></div>' +
+            '<div class="info-row"><span class="info-label">科目</span><span class="info-value subject">' + escapeHtml(subjectType) + '</span></div>' +
+            '<div class="info-row"><span class="info-label">教练</span><span class="info-value">' + escapeHtml(coachName) + '</span></div>' +
+            '<div class="info-row"><span class="info-label">时间</span><span class="info-value">' + escapeHtml(applyTime) + '</span></div>' +
             '<div class="card-actions">' +
             '<button class="btn btn-approve" onclick="window.auditEnrollment(\'' + item.id + '\', \'approved\')">✅ 通过</button>' +
             '<button class="btn btn-reject" onclick="window.auditEnrollment(\'' + item.id + '\', \'rejected\')">❌ 拒绝</button>' +

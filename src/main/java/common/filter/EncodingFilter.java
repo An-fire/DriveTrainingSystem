@@ -15,9 +15,10 @@ public class EncodingFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
         String uri = request.getRequestURI();
 
-        // 只对 HTML 页面设置 Content-Type
         if (uri.endsWith(".html") || uri.endsWith("/")) {
             resp.setContentType("text/html;charset=utf-8");
+        } else if (uri.contains("/admin/") || uri.contains("/coach/") || uri.contains("/student/") || uri.contains("/login") || uri.contains("/register")) {
+            resp.setContentType("application/json;charset=UTF-8");
         }
 
         req.setCharacterEncoding("utf-8");

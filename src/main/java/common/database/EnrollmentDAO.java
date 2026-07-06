@@ -266,6 +266,55 @@ public class EnrollmentDAO {
     }
 
     /**
+     * 查询所有报名记录（包含学员和教练信息，使用JOIN优化查询）
+     * 避免N+1查询问题，一次SQL获取所有数据
+     *
+     * @return 报名列表（包含关联的学员和教练信息），按申请时间降序排列
+     */
+    public List<java.util.Map<String, Object>> findAllWithDetails() {
+        String sql = "SELECT e.id, e.studentId, e.coachId, e.subjectType, e.status, " +
+                     "e.applyTime, e.auditTime, e.auditRemark, e.adminId, " +
+                     "s.name AS studentName, s.phone AS studentPhone, s.idCard AS studentIdCard, " +
+                     "c.name AS coachName, c.phone AS coachPhone " +
+                     "FROM enrollment e " +
+                     "LEFT JOIN user s ON e.studentId = s.id " +
+                     "LEFT JOIN staff c ON e.coachId = c.id " +
+                     "ORDER BY e.applyTime DESC";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<java.util.Map<String, Object>> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            rs = pstmt.executeQuery();
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm");
+            while (rs.next()) {
+                java.util.Map<String, Object> map = new java.util.HashMap<>();
+                map.put("id", rs.getString("id"));
+                map.put("studentId", rs.getString("studentId"));
+                map.put("coachId", rs.getString("coachId"));
+                map.put("subjectType", rs.getString("subjectType"));
+                map.put("status", rs.getString("status"));
+                map.put("applyTimeStr", rs.getTimestamp("applyTime") != null ? sdf.format(rs.getTimestamp("applyTime")) : null);
+                map.put("auditRemark", rs.getString("auditRemark"));
+                map.put("adminId", rs.getString("adminId"));
+                map.put("studentName", rs.getString("studentName"));
+                map.put("studentPhone", rs.getString("studentPhone"));
+                map.put("studentIdCard", rs.getString("studentIdCard"));
+                map.put("coachName", rs.getString("coachName"));
+                map.put("coachPhone", rs.getString("coachPhone"));
+                list.add(map);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
+    /**
      * 根据状态统计报名数量
      *
      * @param status 报名状态
