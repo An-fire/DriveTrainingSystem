@@ -371,7 +371,7 @@ function renderCoachBookings(list) {
 
         html += '<tr>' +
             '<td>' + escapeHtml(studentName) + '</td>' +
-            '<td>' + escapeHtml(item.subjectType || '-') + '</td>' +
+            '<td>' + escapeHtml(convertBookingSubject(item.subjectType) || '-') + '</td>' +
             '<td>' + startTime + '</td>' +
             '<td>' + endTime + '</td>' +
             '<td>' + statusText + '</td>' +

@@ -120,6 +120,14 @@ function formatTime(timeStr) {
 }
 window.formatTime = formatTime;
 
+// 练车预约科目显示转换（兼容旧数据 C1/C2/C3 → 科目二/科目三）
+function convertBookingSubject(subjectType) {
+    if (!subjectType) return '-';
+    var map = { 'C1': '科目二', 'C2': '科目二', 'C3': '科目三' };
+    return map[subjectType] || subjectType;
+}
+window.convertBookingSubject = convertBookingSubject;
+
 // 输出加载信息
 console.log('✅ common.js 加载成功，BASE_URL =', BASE_URL);
-console.log('✅ 工具函数已挂载到 window: escapeHtml, formatTimestamp, formatDateTime, formatTime');
+console.log('✅ 工具函数已挂载到 window: escapeHtml, formatTimestamp, formatDateTime, formatTime, convertBookingSubject');

@@ -31,13 +31,14 @@ public class StudentValidator {
         }
     }
 
-    // 报考/练科目校验
+    // 报考/练车科目校验（报名用C1/C2/C3，预约用科目二/科目三）
     public static void checkSubject(String subject) {
         if (subject == null || subject.isBlank()) {
-            throw new StudentException("驾照类型不能为空");
+            throw new StudentException("科目不能为空");
         }
-        if (!"C1".equals(subject) && !"C2".equals(subject) && !"C3".equals(subject)) {
-            throw new StudentException("仅支持 C1 / C2 / C3 驾照类型");
+        if (!"C1".equals(subject) && !"C2".equals(subject) && !"C3".equals(subject)
+                && !"科目二".equals(subject) && !"科目三".equals(subject)) {
+            throw new StudentException("无效的科目类型");
         }
     }
 

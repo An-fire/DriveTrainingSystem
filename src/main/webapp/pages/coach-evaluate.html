@@ -514,10 +514,35 @@
                     opt.textContent = coach.name + ' | ' + (coach.subject || 'C2');
                     select.appendChild(opt);
                 });
-                // 加载第一个教练的评价
-                var firstCoachId = data.data[0].id;
-                select.value = firstCoachId;
-                await loadComments(firstCoachId);
+
+                // 检查URL中是否有coachId参数
+                var urlParams = new URLSearchParams(window.location.search);
+                var urlCoachId = urlParams.get('coachId');
+                var selectedCoachId = null;
+
+                // 如果URL中有coachId，优先选择该教练
+                if (urlCoachId) {
+                    var coachExists = data.data.some(function(coach) {
+                        return coach.id === urlCoachId;
+                    });
+                    if (coachExists) {
+                        selectedCoachId = urlCoachId;
+                    }
+                }
+
+                // 如果没有找到URL中的教练，选择第一个教练
+                if (!selectedCoachId) {
+                    selectedCoachId = data.data[0].id;
+                }
+
+                select.value = selectedCoachId;
+                await loadComments(selectedCoachId);
+
+                // 如果是从预约记录进入，禁用教练选择
+                if (urlCoachId) {
+                    select.disabled = true;
+                    select.title = '您只能评价本次预约的教练';
+                }
             } else {
                 document.getElementById('commentList').innerHTML = '<div class="empty-tip">暂无教练数据</div>';
             }
@@ -649,8 +674,14 @@
                 document.getElementById('successMsg').classList.add('show');
                 setRating(0);
                 document.getElementById('commentText').value = '';
-                // 刷新评价列表
-                await loadComments(coachId);
+                
+                // 延迟刷新评价列表，确保数据库已更新
+                setTimeout(async function() {
+                    console.log('[submitEvaluation] 开始刷新评价列表，coachId:', coachId);
+                    await loadComments(coachId);
+                    console.log('[submitEvaluation] 评价列表刷新完成');
+                }, 500);
+                
                 // 通知父页面刷新预约记录
                 localStorage.setItem('bookingRefreshFlag', 'true');
                 if (window.opener && typeof window.opener.loadMyBooking === 'function') {
