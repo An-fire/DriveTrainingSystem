@@ -248,7 +248,54 @@ public class StaffDAO {
         return list;
     }
 
-    // 按科目统计教练数量
+    public List<Staff> search(String keyword, String role) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM staff WHERE 1=1");
+        java.util.List<String> params = new java.util.ArrayList<>();
+
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            sql.append(" AND (name LIKE ? OR phone LIKE ?)");
+            params.add("%" + keyword.trim() + "%");
+            params.add("%" + keyword.trim() + "%");
+        }
+
+        if (role != null && !role.trim().isEmpty() && !"all".equals(role)) {
+            sql.append(" AND role = ?");
+            params.add(role);
+        }
+
+        sql.append(" ORDER BY createTime DESC");
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        List<Staff> list = new ArrayList<>();
+        try {
+            conn = DBCConnection.getConnection();
+            pstmt = conn.prepareStatement(sql.toString());
+            for (int i = 0; i < params.size(); i++) {
+                pstmt.setString(i + 1, params.get(i));
+            }
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Staff staff = new Staff();
+                staff.setId(rs.getString("id"));
+                staff.setName(rs.getString("name"));
+                staff.setPhone(rs.getString("phone"));
+                staff.setPassword(rs.getString("password"));
+                staff.setRole(rs.getString("role"));
+                staff.setSubject(rs.getString("subject"));
+                staff.setUsbToken(rs.getString("usbToken"));
+                staff.setCreateTime(rs.getTimestamp("createTime"));
+                list.add(staff);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DBCConnection.close(conn, pstmt, rs);
+        }
+        return list;
+    }
+
     public java.util.Map<String, Integer> countBySubject() {
         String sql = "SELECT subject, COUNT(*) AS cnt FROM staff WHERE role = 'coach' AND subject IS NOT NULL AND subject != '' GROUP BY subject";
         java.util.Map<String, Integer> map = new java.util.HashMap<>();

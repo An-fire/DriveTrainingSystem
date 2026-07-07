@@ -192,11 +192,11 @@ window.showTab = function(tabName) {
 };
 
 // ==================== 员工管理 ====================
-window.loadStaffList = function(hasCache) {
+window.loadStaffList = function(hasCache, keyword, role) {
     var container = document.getElementById('staffList');
     if (!container) return;
 
-    if (hasCache && pageDataCache.staff && !isLoading.staff) {
+    if (hasCache && !keyword && !role && pageDataCache.staff && !isLoading.staff) {
         renderStaffList(pageDataCache.staff);
         return;
     }
@@ -206,11 +206,36 @@ window.loadStaffList = function(hasCache) {
 
     container.innerHTML = '<div class="empty-tip loading">加载中...</div>';
 
-    apiGet('/admin/staff?action=list', function(list) {
+    var url = '/admin/staff?action=';
+    var params = [];
+    if (keyword || role) {
+        url += 'search';
+        if (keyword) params.push('keyword=' + encodeURIComponent(keyword));
+        if (role) params.push('role=' + encodeURIComponent(role));
+    } else {
+        url += 'list';
+    }
+    if (params.length > 0) url += '&' + params.join('&');
+
+    apiGet(url, function(list) {
         isLoading.staff = false;
-        pageDataCache.staff = list;
+        if (!keyword && !role) {
+            pageDataCache.staff = list;
+        }
         renderStaffList(list);
     });
+};
+
+window.searchStaff = function() {
+    var keyword = document.getElementById('staffSearchKeyword').value;
+    var role = document.getElementById('staffSearchRole').value;
+    window.loadStaffList(false, keyword, role);
+};
+
+window.resetStaffSearch = function() {
+    document.getElementById('staffSearchKeyword').value = '';
+    document.getElementById('staffSearchRole').value = 'all';
+    window.loadStaffList(true);
 };
 
 function renderStaffList(list) {
