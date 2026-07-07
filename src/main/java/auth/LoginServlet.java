@@ -5,6 +5,7 @@ import common.database.UserDAO;
 import common.entity.Staff;
 import common.entity.User;
 import common.util.MD5Util;
+import common.util.USBKeyReader;
 import com.alibaba.fastjson.JSONObject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -53,6 +54,15 @@ public class LoginServlet extends HttpServlet {
 
             Staff staff = staffDAO.login(phone, md5Pwd);
             if (staff != null) {
+                if ("admin".equals(staff.getRole()) && staff.getUsbToken() != null && !staff.getUsbToken().isEmpty()) {
+                    String usbToken = USBKeyReader.readUSBToken();
+                    if (usbToken == null || !staff.getUsbToken().equals(MD5Util.md5(usbToken))) {
+                        result.put("code", 0);
+                        result.put("msg", "请插入管理员U盘验证");
+                        response.getWriter().write(result.toString());
+                        return;
+                    }
+                }
                 session.setAttribute("staff", staff);
                 session.setAttribute("role", staff.getRole());
                 result.put("code", 1);
