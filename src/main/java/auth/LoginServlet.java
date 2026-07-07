@@ -26,7 +26,6 @@ public class LoginServlet extends HttpServlet {
 
         String phone = request.getParameter("phone");
         String pwd = request.getParameter("password");
-        String usbToken = request.getParameter("usbToken");
 
         if (phone == null || "".equals(phone) || pwd == null || "".equals(pwd)) {
             result.put("code", 0);
@@ -36,7 +35,6 @@ public class LoginServlet extends HttpServlet {
         }
 
         String md5Pwd = MD5Util.md5(pwd);
-        String md5UsbToken = (usbToken != null && !"".equals(usbToken)) ? MD5Util.md5(usbToken) : null;
         HttpSession session = request.getSession();
 
         try {
@@ -55,30 +53,6 @@ public class LoginServlet extends HttpServlet {
 
             Staff staff = staffDAO.login(phone, md5Pwd);
             if (staff != null) {
-                System.out.println("[LoginServlet] 管理员登录 - 数据库中usbToken: " + (staff.getUsbToken() == null ? "null" : staff.getUsbToken()));
-                System.out.println("[LoginServlet] 管理员登录 - 用户输入usbToken: " + (usbToken == null ? "null" : usbToken));
-                if ("admin".equals(staff.getRole())) {
-                    String dbUsbToken = staff.getUsbToken();
-                    if (dbUsbToken == null || dbUsbToken.isEmpty()) {
-                        result.put("code", 0);
-                        result.put("msg", "管理员未设置USB令牌，请联系系统管理员");
-                        response.getWriter().write(result.toString());
-                        return;
-                    }
-                    if (md5UsbToken == null || md5UsbToken.isEmpty()) {
-                        result.put("code", 0);
-                        result.put("msg", "请输入USB安全令牌");
-                        response.getWriter().write(result.toString());
-                        return;
-                    }
-                    if (!dbUsbToken.equals(md5UsbToken)) {
-                        result.put("code", 0);
-                        result.put("msg", "USB安全令牌错误");
-                        response.getWriter().write(result.toString());
-                        return;
-                    }
-                }
-
                 session.setAttribute("staff", staff);
                 session.setAttribute("role", staff.getRole());
                 result.put("code", 1);

@@ -215,10 +215,6 @@
                 <label>🔒 密码</label>
                 <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" value="123456">
             </div>
-            <div class="form-group" id="usbGroup">
-                <label>💾 USB 安全令牌</label>
-                <input type="password" id="usbToken" placeholder="输入管理员 USB 令牌 (DRIVE2026)">
-            </div>
             <div class="btn-row">
                 <button type="submit" class="btn btn-primary btn-large btn-block light-sweep">登 录</button>
             </div>
@@ -242,17 +238,10 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="../js/common.js"></script>
 <script>
-    // 角色切换：显示/隐藏 USB 令牌
-    document.getElementById('roleSelect').addEventListener('change', function() {
-        var usbGroup = document.getElementById('usbGroup');
-        usbGroup.style.display = (this.value === 'admin') ? 'block' : 'none';
-    });
-
     function handleLogin() {
         var role = document.getElementById('roleSelect').value;
         var phone = document.getElementById('phone').value.trim();
         var password = document.getElementById('password').value.trim();
-        var usbToken = document.getElementById('usbToken').value.trim();
 
         if (!phone || !password) {
             alert('请填写完整信息');
@@ -262,9 +251,6 @@
         var params = new URLSearchParams();
         params.append('phone', phone);
         params.append('password', password);
-        if (role === 'admin') {
-            params.append('usbToken', usbToken);
-        }
 
         axios.post(window.BASE_URL + '/login', params.toString(), {
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
