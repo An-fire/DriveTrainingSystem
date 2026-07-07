@@ -56,9 +56,15 @@ public class LoginServlet extends HttpServlet {
             if (staff != null) {
                 if ("admin".equals(staff.getRole()) && staff.getUsbToken() != null && !staff.getUsbToken().isEmpty()) {
                     String usbToken = USBKeyReader.readUSBToken();
-                    if (usbToken == null || !staff.getUsbToken().equals(MD5Util.md5(usbToken))) {
+                    if (usbToken == null) {
                         result.put("code", 0);
-                        result.put("msg", "请插入管理员U盘验证");
+                        result.put("msg", "请插入管理员U盘（需包含 usb_key.txt 文件）");
+                        response.getWriter().write(result.toString());
+                        return;
+                    }
+                    if (!staff.getUsbToken().equals(MD5Util.md5(usbToken))) {
+                        result.put("code", 0);
+                        result.put("msg", "U盘密钥验证失败，请确认密钥正确");
                         response.getWriter().write(result.toString());
                         return;
                     }
