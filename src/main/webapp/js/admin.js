@@ -192,11 +192,11 @@ window.showTab = function(tabName) {
 };
 
 // ==================== 员工管理 ====================
-window.loadStaffList = function(hasCache, keyword, role) {
+window.loadStaffList = function(hasCache, keyword, role, subject) {
     var container = document.getElementById('staffList');
     if (!container) return;
 
-    if (hasCache && !keyword && !role && pageDataCache.staff && !isLoading.staff) {
+    if (hasCache && !keyword && !role && !subject && pageDataCache.staff && !isLoading.staff) {
         renderStaffList(pageDataCache.staff);
         return;
     }
@@ -208,10 +208,11 @@ window.loadStaffList = function(hasCache, keyword, role) {
 
     var url = '/admin/staff?action=';
     var params = [];
-    if (keyword || role) {
+    if (keyword || role || subject) {
         url += 'search';
         if (keyword) params.push('keyword=' + encodeURIComponent(keyword));
         if (role) params.push('role=' + encodeURIComponent(role));
+        if (subject) params.push('subject=' + encodeURIComponent(subject));
     } else {
         url += 'list';
     }
@@ -219,7 +220,7 @@ window.loadStaffList = function(hasCache, keyword, role) {
 
     apiGet(url, function(list) {
         isLoading.staff = false;
-        if (!keyword && !role) {
+        if (!keyword && !role && !subject) {
             pageDataCache.staff = list;
         }
         renderStaffList(list);
@@ -229,12 +230,14 @@ window.loadStaffList = function(hasCache, keyword, role) {
 window.searchStaff = function() {
     var keyword = document.getElementById('staffSearchKeyword').value;
     var role = document.getElementById('staffSearchRole').value;
-    window.loadStaffList(false, keyword, role);
+    var subject = document.getElementById('staffSearchSubject').value;
+    window.loadStaffList(false, keyword, role, subject);
 };
 
 window.resetStaffSearch = function() {
     document.getElementById('staffSearchKeyword').value = '';
     document.getElementById('staffSearchRole').value = 'all';
+    document.getElementById('staffSearchSubject').value = 'all';
     window.loadStaffList(true);
 };
 

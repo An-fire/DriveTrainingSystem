@@ -809,11 +809,17 @@
                     <button class="btn btn-primary btn-sm" onclick="window.openAddStaffModal()">+ 新增员工</button>
                 </div>
                 <div class="search-bar" style="display:flex;gap:12px;margin-bottom:16px;align-items:center;">
-                    <input type="text" id="staffSearchKeyword" placeholder="搜索姓名或手机号" onkeyup="if(event.keyCode===13)window.searchStaff()" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:14px;">
+                    <input type="text" id="staffSearchKeyword" placeholder="智能搜索：姓名、手机号、科目" onkeyup="if(event.keyCode===13)window.searchStaff()" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:14px;">
                     <select id="staffSearchRole" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:14px;">
                         <option value="all">全部角色</option>
                         <option value="admin">管理员</option>
                         <option value="coach">教练</option>
+                    </select>
+                    <select id="staffSearchSubject" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:14px;">
+                        <option value="all">全部科目</option>
+                        <option value="C1">C1 手动挡</option>
+                        <option value="C2">C2 自动挡</option>
+                        <option value="C3">C3 低速货车</option>
                     </select>
                     <button class="btn btn-sm" onclick="window.searchStaff()" style="padding:8px 16px;">搜索</button>
                     <button class="btn btn-sm" onclick="window.resetStaffSearch()" style="padding:8px 16px;background:rgba(255,255,255,0.1);">重置</button>

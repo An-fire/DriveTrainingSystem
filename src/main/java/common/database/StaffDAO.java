@@ -248,19 +248,26 @@ public class StaffDAO {
         return list;
     }
 
-    public List<Staff> search(String keyword, String role) {
+    public List<Staff> search(String keyword, String role, String subject) {
         StringBuilder sql = new StringBuilder("SELECT * FROM staff WHERE 1=1");
         java.util.List<String> params = new java.util.ArrayList<>();
 
         if (keyword != null && !keyword.trim().isEmpty()) {
-            sql.append(" AND (name LIKE ? OR phone LIKE ?)");
-            params.add("%" + keyword.trim() + "%");
-            params.add("%" + keyword.trim() + "%");
+            String kw = "%" + keyword.trim() + "%";
+            sql.append(" AND (name LIKE ? OR phone LIKE ? OR subject LIKE ?)");
+            params.add(kw);
+            params.add(kw);
+            params.add(kw);
         }
 
         if (role != null && !role.trim().isEmpty() && !"all".equals(role)) {
             sql.append(" AND role = ?");
             params.add(role);
+        }
+
+        if (subject != null && !subject.trim().isEmpty() && !"all".equals(subject)) {
+            sql.append(" AND subject = ?");
+            params.add(subject);
         }
 
         sql.append(" ORDER BY createTime DESC");

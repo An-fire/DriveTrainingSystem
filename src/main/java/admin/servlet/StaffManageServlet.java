@@ -267,7 +267,8 @@ public class StaffManageServlet extends HttpServlet {
             } else if ("search".equals(action)) {
                 String keyword = request.getParameter("keyword");
                 String role = request.getParameter("role");
-                List<Staff> list = staffDAO.search(keyword, role);
+                String subject = request.getParameter("subject");
+                List<Staff> list = staffDAO.search(keyword, role, subject);
                 JSONArray array = JSONArray.parseArray(JSONArray.toJSONString(list));
                 result.put("code", 1);
                 result.put("data", array);
